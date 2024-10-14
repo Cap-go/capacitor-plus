@@ -152,10 +152,8 @@ public class MessageHandler implements IMessageHandler {
     }
 
     private void callCordovaPluginMethod(String callbackId, String service, String action, String actionArgs) {
-        bridge.execute(
-            () -> {
-                cordovaPluginManager.exec(service, action, callbackId, actionArgs);
-            }
-        );
+        bridge.execute(() -> {
+            cordovaPluginManager.exec(service, action, callbackId, actionArgs);
+        });
     }
 }
