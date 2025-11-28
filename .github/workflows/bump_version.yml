@@ -1,0 +1,73 @@
+name: Bump version
+
+on:
+  push:
+    branches:
+      - plus
+    paths-ignore:
+      - '**.md'
+      - '.github/**'
+
+jobs:
+  # Run all tests first before creating any tags
+  test:
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release):') && !startsWith(github.event.head_commit.message, 'Release') }}
+    uses: ./.github/workflows/ci.yml
+
+  # Only bump version and create tag if all tests pass
+  bump-version:
+    needs: [test]
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(release):') && !startsWith(github.event.head_commit.message, 'Release') }}
+    runs-on: ubuntu-latest
+    name: "Bump version and create tag"
+    steps:
+      - name: Check out
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: '${{ secrets.PERSONAL_ACCESS_TOKEN }}'
+          ref: plus
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Git config
+        run: |
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Build packages
+        run: |
+          npm run build --workspace=core
+          npm run build --workspace=cli
+
+      - name: Bump version and create tag
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          # Use lerna to bump version with conventional commits
+          npx lerna version patch \
+            --conventional-commits \
+            --force-publish \
+            --yes \
+            --no-push
+
+          # Get the new version
+          VERSION=$(node -p "require('./core/package.json').version")
+          echo "New version: $VERSION"
+
+          # Create a unified tag for all packages
+          git tag -d "v$VERSION" 2>/dev/null || true
+          git tag "plus/v$VERSION"
+
+      - name: Push to origin
+        run: |
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          remote_repo="https://${GITHUB_ACTOR}:${{ secrets.PERSONAL_ACCESS_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git"
+          git pull $remote_repo $CURRENT_BRANCH || true
+          git push $remote_repo HEAD:$CURRENT_BRANCH --follow-tags --tags

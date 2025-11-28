@@ -1,0 +1,112 @@
+name: Build and publish
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+on:
+  push:
+    tags:
+      - "plus/v*"
+
+jobs:
+  # Tests already passed before tag was created, so just build and deploy
+  deploy:
+    runs-on: ubuntu-latest
+    name: "Build and publish to npm"
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Check out
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22.x
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Extract version from tag
+        id: extract
+        run: |
+          TAG=${{ github.ref_name }}
+          VERSION=$(echo $TAG | sed 's|plus/v||')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Publishing version: $VERSION"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build packages
+        run: |
+          npm run build --workspace=core
+          npm run build --workspace=cli
+
+      - name: Generate AI changelog
+        id: changelog
+        uses: mistricky/ccc@v0.2.3
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          model: claude-sonnet-4-5-20250929
+
+      - name: Publish all packages to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          VERSION=${{ steps.extract.outputs.version }}
+
+          # Determine if this is a prerelease
+          if [[ "$VERSION" == *"-"* ]]; then
+            NPM_TAG="next"
+          else
+            NPM_TAG="latest"
+          fi
+
+          echo "Publishing with tag: $NPM_TAG"
+
+          # Publish each package
+          for pkg in core cli android ios; do
+            echo "Publishing @capacitor-plus/$pkg@$VERSION"
+            cd $pkg
+            npm publish --tag $NPM_TAG --provenance --access public
+            cd ..
+          done
+
+      - name: Create GitHub release
+        id: create_release
+        uses: softprops/action-gh-release@v2
+        with:
+          body: |
+            ## Capacitor+ v${{ steps.extract.outputs.version }}
+
+            ${{ steps.changelog.outputs.result }}
+
+            ---
+
+            ### Installation
+
+            ```bash
+            npm install @capacitor-plus/core@${{ steps.extract.outputs.version }}
+            npm install @capacitor-plus/cli@${{ steps.extract.outputs.version }}
+            npm install @capacitor-plus/android@${{ steps.extract.outputs.version }}
+            npm install @capacitor-plus/ios@${{ steps.extract.outputs.version }}
+            ```
+
+            ### What is Capacitor+?
+
+            Capacitor+ is an automated fork of Capacitor that:
+            - Syncs daily with upstream Capacitor
+            - Runs full CI/CD on all changes
+            - Auto-publishes verified releases
+
+            ---
+
+            Full Changelog: https://github.com/${{ github.repository }}/compare/${{ steps.changelog.outputs.from_tag }}...${{ steps.changelog.outputs.to_tag }}
+          make_latest: true
+          token: '${{ secrets.PERSONAL_ACCESS_TOKEN }}'
+          prerelease: ${{ contains(github.ref, '-') }}
