@@ -1,0 +1,265 @@
+name: Sync Branches from Upstream
+
+on:
+  schedule:
+    # Run daily at 5 AM UTC (before the PR sync at 6 AM)
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Which branch to sync'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - both
+          - main
+          - plus
+
+env:
+  UPSTREAM_REPO: ionic-team/capacitor
+
+jobs:
+  sync-main-branch:
+    if: github.event_name == 'schedule' || github.event.inputs.branch == 'both' || github.event.inputs.branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          ref: main
+
+      - name: Configure Git
+        run: |
+          git config user.name "Capacitor+ Bot"
+          git config user.email "bot@capgo.app"
+
+      - name: Add upstream and fetch
+        run: |
+          git remote add upstream https://github.com/${{ env.UPSTREAM_REPO }}.git || true
+          git fetch upstream main
+
+      - name: Check for new commits
+        id: check-commits
+        run: |
+          UPSTREAM_COMMITS=$(git rev-list main..upstream/main --count)
+          echo "upstream_commits=$UPSTREAM_COMMITS" >> $GITHUB_OUTPUT
+
+          if [ "$UPSTREAM_COMMITS" -gt 0 ]; then
+            echo "Found $UPSTREAM_COMMITS new commits from upstream"
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+          else
+            echo "No new commits from upstream"
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Try fast-forward merge
+        if: steps.check-commits.outputs.has_updates == 'true'
+        id: fast-forward
+        run: |
+          # Try to fast-forward merge
+          if git merge upstream/main --ff-only; then
+            echo "Fast-forward merge successful!"
+            echo "can_fast_forward=true" >> $GITHUB_OUTPUT
+          else
+            echo "Fast-forward not possible, will try regular merge"
+            echo "can_fast_forward=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push if fast-forward succeeded
+        if: steps.fast-forward.outputs.can_fast_forward == 'true'
+        run: |
+          git push origin main
+          echo "Successfully pushed upstream changes to main branch"
+
+      - name: Try regular merge
+        if: steps.check-commits.outputs.has_updates == 'true' && steps.fast-forward.outputs.can_fast_forward == 'false'
+        id: regular-merge
+        run: |
+          # Reset to original state
+          git reset --hard origin/main
+
+          # Try regular merge
+          if git merge upstream/main --no-edit -m "chore: sync main with upstream"; then
+            echo "Regular merge successful!"
+            git push origin main
+            echo "merge_success=true" >> $GITHUB_OUTPUT
+          else
+            echo "Merge conflict detected"
+            git merge --abort
+            echo "merge_success=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create PR for conflicts
+        if: steps.regular-merge.outputs.merge_success == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          # Create a branch for the PR
+          SYNC_BRANCH="sync/main-upstream-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b "$SYNC_BRANCH" origin/main
+
+          # Try merge again to show conflicts
+          git merge upstream/main --no-commit || true
+
+          # Check for existing PR
+          EXISTING_PR=$(gh pr list --base main --search "sync main with upstream" --state open --json number -q '.[0].number')
+          if [ -n "$EXISTING_PR" ]; then
+            echo "PR already exists: #$EXISTING_PR"
+            exit 0
+          fi
+
+          # Abort and create a clean branch
+          git merge --abort
+          git checkout -b "$SYNC_BRANCH" origin/main
+
+          # Cherry-pick or merge with conflicts marked
+          git merge upstream/main -X theirs --no-edit -m "chore: sync main with upstream (conflicts resolved with upstream)" || {
+            # If even that fails, just take upstream
+            git reset --hard upstream/main
+          }
+
+          git push origin "$SYNC_BRANCH"
+
+          gh pr create \
+            --base main \
+            --head "$SYNC_BRANCH" \
+            --title "chore: sync main with upstream (conflicts)" \
+            --body "## Merge Conflict Resolution Required
+
+          The automatic sync of main branch with upstream encountered merge conflicts.
+
+          **Action needed:** Review the changes and resolve any remaining conflicts.
+
+          ---
+          *This PR was created automatically by the Capacitor+ sync workflow*" \
+            --label "upstream-sync,needs-attention,merge-conflict"
+
+  sync-plus-branch:
+    if: github.event_name == 'schedule' || github.event.inputs.branch == 'both' || github.event.inputs.branch == 'plus'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          ref: plus
+
+      - name: Configure Git
+        run: |
+          git config user.name "Capacitor+ Bot"
+          git config user.email "bot@capgo.app"
+
+      - name: Add upstream and fetch
+        run: |
+          git remote add upstream https://github.com/${{ env.UPSTREAM_REPO }}.git || true
+          git fetch upstream main
+
+      - name: Check for new commits
+        id: check-commits
+        run: |
+          # Get the merge base between plus and upstream/main
+          MERGE_BASE=$(git merge-base plus upstream/main)
+
+          # Count commits on upstream since merge base
+          UPSTREAM_COMMITS=$(git rev-list $MERGE_BASE..upstream/main --count)
+          echo "upstream_commits=$UPSTREAM_COMMITS" >> $GITHUB_OUTPUT
+
+          if [ "$UPSTREAM_COMMITS" -gt 0 ]; then
+            echo "Found $UPSTREAM_COMMITS new commits from upstream"
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+          else
+            echo "No new commits from upstream"
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Try merge
+        if: steps.check-commits.outputs.has_updates == 'true'
+        id: merge
+        run: |
+          # Try to merge upstream/main into plus
+          if git merge upstream/main --no-edit -m "chore: sync plus with upstream main"; then
+            echo "Merge successful!"
+            echo "merge_success=true" >> $GITHUB_OUTPUT
+          else
+            echo "Merge conflict detected"
+            git merge --abort
+            echo "merge_success=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Push if merge succeeded
+        if: steps.merge.outputs.merge_success == 'true'
+        run: |
+          git push origin plus
+          echo "Successfully pushed upstream changes to plus branch"
+
+      - name: Create PR for conflicts
+        if: steps.merge.outputs.merge_success == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          # Check for existing PR
+          EXISTING_PR=$(gh pr list --base plus --search "sync plus with upstream" --state open --json number -q '.[0].number')
+          if [ -n "$EXISTING_PR" ]; then
+            echo "PR already exists: #$EXISTING_PR"
+            exit 0
+          fi
+
+          # Create a branch for the PR
+          SYNC_BRANCH="sync/plus-upstream-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b "$SYNC_BRANCH" plus
+
+          # Merge with conflicts resolved using upstream version
+          git merge upstream/main -X theirs --no-edit -m "chore: sync plus with upstream main (auto-resolved)" || {
+            # If even that fails, create a proper merge commit
+            git reset --hard plus
+            git merge upstream/main --no-commit || true
+
+            # Add all files (with conflict markers if any)
+            git add -A
+
+            # Create commit
+            git commit -m "chore: sync plus with upstream main (needs conflict resolution)" || {
+              echo "No changes to commit"
+              exit 0
+            }
+          }
+
+          git push origin "$SYNC_BRANCH"
+
+          gh pr create \
+            --base plus \
+            --head "$SYNC_BRANCH" \
+            --title "chore: sync plus with upstream main (conflicts)" \
+            --body "## Merge Conflict Resolution Required
+
+          The automatic sync of plus branch with upstream main encountered merge conflicts.
+
+          **Action needed:** Review the changes and resolve any remaining conflicts.
+
+          ### Note
+          This PR attempts to auto-resolve conflicts by preferring upstream changes.
+          Please verify that our Capacitor+ customizations (package names, workflows, etc.) are preserved.
+
+          ---
+          *This PR was created automatically by the Capacitor+ sync workflow*" \
+            --label "upstream-sync,needs-attention,merge-conflict"
+
+      - name: Trigger Claude review for auto-merged changes
+        if: steps.merge.outputs.merge_success == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          echo "Changes pushed directly to plus branch"
+          echo "Consider running publish workflow if needed"
