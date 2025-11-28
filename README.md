@@ -26,12 +26,27 @@
 
 ### Philosophy
 
-The goal of Capacitor+ is to provide:
+Capacitor+ exists to solve a fundamental problem: **great PRs sitting unmerged in the official Capacitor repository**.
 
-1. **Continuous Integration** - Every change from upstream Capacitor is automatically pulled, tested, and verified
-2. **Rapid Releases** - When upstream changes pass CI, they're automatically published to npm under the `@capacitor-plus` scope
-3. **Reliability** - Only changes that pass the full test suite are merged and released
-4. **Transparency** - All automation is open source and visible in this repository
+The Ionic team maintains Capacitor with their own priorities and release schedule. This means community contributions - bug fixes, improvements, and features - can wait months or even years to be merged. Some never make it at all.
+
+**Capacitor+ takes a different approach:**
+
+1. **Merge PRs from Forks** - We actively merge valuable PRs that are stuck in the upstream queue. If you have a fix that's been waiting, we can include it here.
+2. **Continuous Sync** - Every change from upstream Capacitor is automatically pulled, tested, and verified
+3. **Rapid Releases** - When changes pass CI, they're automatically published to npm under the `@capacitor-plus` scope
+4. **Community-First** - Your contributions matter. We prioritize merging community improvements.
+5. **Transparency** - All automation is open source and visible in this repository
+
+### Want Your PR Merged?
+
+Have a PR stuck in the Capacitor repo? Here's how to get it into Capacitor+:
+
+1. **Open an issue** in this repo linking to your upstream PR
+2. **Or submit the PR directly** to the `plus` branch
+3. We'll review it, run CI, and merge it if it passes
+
+This way, you and others can benefit from your work immediately, without waiting for the upstream release cycle.
 
 ### How It Works
 
@@ -74,11 +89,12 @@ npm install @capacitor-plus/ios      # for iOS
 
 ### Why Use Capacitor+?
 
+- **Get Stuck PRs Now**: Community fixes and features that are waiting in upstream? We merge them.
 - **Stay Current**: Get upstream fixes as soon as they pass CI
 - **Security First**: Every change is reviewed by Claude Code for vulnerabilities, breaking changes, and stability risks
 - **Verified Releases**: Only changes that pass both CI tests AND AI security review are published
 - **Drop-in Replacement**: Same API as Capacitor, just a different package scope
-- **Community Driven**: Maintained by Capgo for the Capacitor community
+- **Your Voice Matters**: Submit your own PRs or request specific upstream PRs to be merged
 
 ### Security Review
 
