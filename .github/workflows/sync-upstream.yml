@@ -99,43 +99,64 @@ jobs:
             echo "Author: @$PR_AUTHOR"
             echo "=========================================="
 
-            # Check if we already have a PR for this upstream PR
-            EXISTING_PR=$(gh pr list \
-              --state open \
-              --search "upstream PR #$PR_NUMBER" \
-              --json number \
-              --limit 1)
-
-            if [ "$(echo "$EXISTING_PR" | jq 'length')" -gt 0 ]; then
-              echo "PR for upstream #$PR_NUMBER already exists, skipping..."
-              continue
-            fi
-
-            # Also check closed PRs to avoid re-creating rejected ones
-            CLOSED_PR=$(gh pr list \
-              --state closed \
-              --search "upstream PR #$PR_NUMBER" \
-              --json number \
-              --limit 1)
-
-            if [ "$(echo "$CLOSED_PR" | jq 'length')" -gt 0 ]; then
-              echo "PR for upstream #$PR_NUMBER was previously closed, skipping..."
-              continue
-            fi
-
-            # Fetch the PR branch from upstream
+            # Fetch the PR branch from upstream first to check for updates
             echo "Fetching PR #$PR_NUMBER from upstream..."
             git fetch https://github.com/${{ env.UPSTREAM_REPO }}.git pull/$PR_NUMBER/head:upstream-pr-$PR_NUMBER || {
               echo "Failed to fetch PR #$PR_NUMBER, skipping..."
               continue
             }
 
-            # Create a new branch for this PR
             SYNC_BRANCH="sync/upstream-pr-$PR_NUMBER"
+            UPSTREAM_HEAD=$(git rev-parse upstream-pr-$PR_NUMBER)
 
-            # Delete the branch if it exists
+            # Check if we already have a PR for this upstream PR
+            EXISTING_PR=$(gh pr list \
+              --state open \
+              --search "upstream PR #$PR_NUMBER" \
+              --json number,headRefName \
+              --limit 1)
+
+            if [ "$(echo "$EXISTING_PR" | jq 'length')" -gt 0 ]; then
+              EXISTING_PR_NUM=$(echo "$EXISTING_PR" | jq -r '.[0].number')
+              echo "PR #$EXISTING_PR_NUM for upstream #$PR_NUMBER already exists"
+
+              # Check if upstream has new commits by comparing with our sync branch
+              git fetch origin "$SYNC_BRANCH" 2>/dev/null || true
+
+              if git rev-parse "origin/$SYNC_BRANCH" >/dev/null 2>&1; then
+                # Get the upstream commit that was merged into our branch
+                # We need to check if the upstream PR has new commits
+                OUR_BRANCH_HEAD=$(git rev-parse "origin/$SYNC_BRANCH")
+
+                # Check if upstream commit is already in our branch
+                if git merge-base --is-ancestor "$UPSTREAM_HEAD" "origin/$SYNC_BRANCH" 2>/dev/null; then
+                  echo "Our sync branch is up to date with upstream PR, skipping..."
+                  git branch -D upstream-pr-$PR_NUMBER 2>/dev/null || true
+                  continue
+                else
+                  echo "Upstream PR has new commits! Updating our sync branch..."
+                  # Continue to re-sync the branch
+                fi
+              else
+                echo "Sync branch doesn't exist on remote, will recreate..."
+              fi
+            else
+              # Also check closed PRs to avoid re-creating rejected ones
+              CLOSED_PR=$(gh pr list \
+                --state closed \
+                --search "upstream PR #$PR_NUMBER" \
+                --json number \
+                --limit 1)
+
+              if [ "$(echo "$CLOSED_PR" | jq 'length')" -gt 0 ]; then
+                echo "PR for upstream #$PR_NUMBER was previously closed, skipping..."
+                git branch -D upstream-pr-$PR_NUMBER 2>/dev/null || true
+                continue
+              fi
+            fi
+
+            # Delete the local branch if it exists
             git branch -D "$SYNC_BRANCH" 2>/dev/null || true
-            git push origin --delete "$SYNC_BRANCH" 2>/dev/null || true
 
             # Create sync branch from plus
             git checkout plus
