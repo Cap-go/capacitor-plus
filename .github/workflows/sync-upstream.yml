@@ -6,8 +6,17 @@ on:
     - cron: '0 6 * * *'
   workflow_dispatch:
     inputs:
+      sync_mode:
+        description: 'What to sync'
+        required: true
+        default: 'all_open_prs'
+        type: choice
+        options:
+          - all_open_prs
+          - main_branch
+          - specific_pr
       pr_number:
-        description: 'Specific PR number to sync (optional)'
+        description: 'Specific PR number (only for specific_pr mode)'
         required: false
         type: string
 
@@ -16,7 +25,183 @@ env:
   UPSTREAM_BRANCH: main
 
 jobs:
-  sync-upstream:
+  # Job 1: Fetch all open PRs from upstream and create corresponding PRs
+  sync-open-prs:
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sync_mode == 'all_open_prs')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "Capacitor+ Bot"
+          git config user.email "bot@capgo.app"
+
+      - name: Fetch and sync all open PRs from upstream
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          echo "Fetching open PRs from upstream repository..."
+
+          # Get all open PRs from upstream (only from forks/external contributors)
+          OPEN_PRS=$(gh pr list \
+            --repo ${{ env.UPSTREAM_REPO }} \
+            --state open \
+            --json number,title,headRefName,headRepositoryOwner,author,url,isDraft \
+            --limit 100)
+
+          echo "Found PRs:"
+          echo "$OPEN_PRS" | jq -r '.[] | "PR #\(.number): \(.title) by @\(.author.login)"'
+
+          # Filter to non-draft PRs only (include ALL PRs - both from forks and ionic-team)
+          ALL_PRS=$(echo "$OPEN_PRS" | jq '[.[] | select(.isDraft == false)]')
+
+          echo ""
+          echo "All open PRs (non-draft):"
+          echo "$ALL_PRS" | jq -r '.[] | "PR #\(.number): \(.title) by @\(.author.login)"'
+
+          PR_COUNT=$(echo "$ALL_PRS" | jq 'length')
+          echo ""
+          echo "Total PRs to sync: $PR_COUNT"
+
+          if [ "$PR_COUNT" -eq 0 ]; then
+            echo "No PRs to sync"
+            exit 0
+          fi
+
+          # Process each PR
+          echo "$ALL_PRS" | jq -c '.[]' | while read -r pr; do
+            PR_NUMBER=$(echo "$pr" | jq -r '.number')
+            PR_TITLE=$(echo "$pr" | jq -r '.title')
+            PR_AUTHOR=$(echo "$pr" | jq -r '.author.login')
+            PR_URL=$(echo "$pr" | jq -r '.url')
+
+            echo ""
+            echo "=========================================="
+            echo "Processing PR #$PR_NUMBER: $PR_TITLE"
+            echo "Author: @$PR_AUTHOR"
+            echo "=========================================="
+
+            # Check if we already have a PR for this upstream PR
+            EXISTING_PR=$(gh pr list \
+              --state open \
+              --search "upstream PR #$PR_NUMBER" \
+              --json number \
+              --limit 1)
+
+            if [ "$(echo "$EXISTING_PR" | jq 'length')" -gt 0 ]; then
+              echo "PR for upstream #$PR_NUMBER already exists, skipping..."
+              continue
+            fi
+
+            # Also check closed PRs to avoid re-creating rejected ones
+            CLOSED_PR=$(gh pr list \
+              --state closed \
+              --search "upstream PR #$PR_NUMBER" \
+              --json number \
+              --limit 1)
+
+            if [ "$(echo "$CLOSED_PR" | jq 'length')" -gt 0 ]; then
+              echo "PR for upstream #$PR_NUMBER was previously closed, skipping..."
+              continue
+            fi
+
+            # Fetch the PR branch from upstream
+            echo "Fetching PR #$PR_NUMBER from upstream..."
+            git fetch https://github.com/${{ env.UPSTREAM_REPO }}.git pull/$PR_NUMBER/head:upstream-pr-$PR_NUMBER || {
+              echo "Failed to fetch PR #$PR_NUMBER, skipping..."
+              continue
+            }
+
+            # Create a new branch for this PR
+            SYNC_BRANCH="sync/upstream-pr-$PR_NUMBER"
+
+            # Delete the branch if it exists
+            git branch -D "$SYNC_BRANCH" 2>/dev/null || true
+            git push origin --delete "$SYNC_BRANCH" 2>/dev/null || true
+
+            # Create sync branch from plus
+            git checkout plus
+            git checkout -b "$SYNC_BRANCH"
+
+            # Try to merge the PR
+            echo "Merging PR #$PR_NUMBER..."
+            if git merge upstream-pr-$PR_NUMBER --no-edit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR"; then
+              echo "Merge successful!"
+
+              # Push the branch
+              git push origin "$SYNC_BRANCH" --force
+
+              # Create PR body
+              PR_BODY=$(cat <<EOF
+          ## Upstream PR Sync
+
+          This PR syncs changes from an external contributor's PR on the official Capacitor repository.
+
+          ### Original PR
+          - **PR:** [#$PR_NUMBER]($PR_URL)
+          - **Title:** $PR_TITLE
+          - **Author:** @$PR_AUTHOR
+
+          ### Automation
+          - CI will run automatically
+          - Claude Code will review for security/breaking changes
+          - If approved, this PR will be auto-merged
+          - A new release will be published automatically
+
+          ---
+          *Synced from upstream by Capacitor+ Bot*
+          EOF
+          )
+
+              # Create the PR
+              gh pr create \
+                --base plus \
+                --head "$SYNC_BRANCH" \
+                --title "chore: sync upstream PR #$PR_NUMBER - $PR_TITLE" \
+                --body "$PR_BODY" \
+                --label "upstream-sync,automated" || {
+                echo "Failed to create PR, it may already exist"
+              }
+
+              echo "Created PR for upstream #$PR_NUMBER"
+            else
+              echo "Merge conflict detected for PR #$PR_NUMBER"
+              git merge --abort
+
+              # Create an issue for manual intervention
+              gh issue create \
+                --title "Merge conflict: Upstream PR #$PR_NUMBER - $PR_TITLE" \
+                --body "The sync of upstream PR #$PR_NUMBER from @$PR_AUTHOR encountered merge conflicts.
+
+          **Original PR:** $PR_URL
+
+          Please resolve the conflicts manually." \
+                --label "upstream-sync,needs-attention,merge-conflict" || {
+                echo "Issue may already exist"
+              }
+            fi
+
+            # Clean up
+            git checkout plus
+            git branch -D upstream-pr-$PR_NUMBER 2>/dev/null || true
+
+          done
+
+          echo ""
+          echo "Sync complete!"
+
+  # Job 2: Sync main branch from upstream
+  sync-main-branch:
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.sync_mode == 'main_branch'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -34,90 +219,70 @@ jobs:
           git config user.name "Capacitor+ Bot"
           git config user.email "bot@capgo.app"
 
-      - name: Add upstream remote
+      - name: Sync main branch from upstream
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
           git remote add upstream https://github.com/${{ env.UPSTREAM_REPO }}.git || true
           git fetch upstream
 
-      - name: Sync main branch from upstream
-        run: |
           git checkout plus
           git fetch upstream main
 
           # Check if there are new commits from upstream
           UPSTREAM_COMMITS=$(git rev-list plus..upstream/main --count)
 
-          if [ "$UPSTREAM_COMMITS" -gt 0 ]; then
-            echo "Found $UPSTREAM_COMMITS new commits from upstream"
-            echo "UPSTREAM_COMMITS=$UPSTREAM_COMMITS" >> $GITHUB_ENV
-            echo "HAS_UPDATES=true" >> $GITHUB_ENV
-          else
-            echo "No new commits from upstream"
-            echo "HAS_UPDATES=false" >> $GITHUB_ENV
+          if [ "$UPSTREAM_COMMITS" -eq 0 ]; then
+            echo "No new commits from upstream main branch"
+            exit 0
           fi
 
-      - name: Create sync branch and PR
-        if: env.HAS_UPDATES == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-        run: |
+          echo "Found $UPSTREAM_COMMITS new commits from upstream"
+
           # Generate branch name with date
-          SYNC_BRANCH="sync/upstream-$(date +%Y%m%d-%H%M%S)"
-          echo "SYNC_BRANCH=$SYNC_BRANCH" >> $GITHUB_ENV
+          SYNC_BRANCH="sync/upstream-main-$(date +%Y%m%d-%H%M%S)"
 
           # Create sync branch from plus
           git checkout -b "$SYNC_BRANCH" plus
 
           # Merge upstream changes
-          git merge upstream/main --no-edit -m "chore: sync with upstream ionic-team/capacitor" || {
-            echo "Merge conflicts detected"
-            echo "HAS_CONFLICTS=true" >> $GITHUB_ENV
-            git merge --abort
-            exit 0
-          }
+          if git merge upstream/main --no-edit -m "chore: sync with upstream main branch"; then
+            git push origin "$SYNC_BRANCH"
 
-          # Push the branch
-          git push origin "$SYNC_BRANCH"
+            PR_BODY=$(cat <<'EOF'
+          ## Upstream Main Branch Sync
 
-          # Create PR
-          PR_BODY=$(cat <<'EOF'
-          ## Automated Upstream Sync
+          This PR syncs the latest changes from the official Capacitor main branch.
 
-          This PR syncs changes from the official [ionic-team/capacitor](https://github.com/ionic-team/capacitor) repository.
-
-          ### Changes included:
-          - Latest commits from upstream main branch
-
-          ### Automation:
+          ### Automation
           - CI will run automatically
-          - If all checks pass, this PR will be auto-merged
-          - A new release will be published automatically
+          - Claude Code will review for security/breaking changes
+          - If approved, this PR will be auto-merged
 
           ---
-          *This PR was created automatically by the Capacitor+ sync workflow*
+          *Synced from upstream by Capacitor+ Bot*
           EOF
           )
 
-          gh pr create \
-            --base plus \
-            --head "$SYNC_BRANCH" \
-            --title "chore: sync with upstream capacitor $(date +%Y-%m-%d)" \
-            --body "$PR_BODY" \
-            --label "upstream-sync,automated"
+            gh pr create \
+              --base plus \
+              --head "$SYNC_BRANCH" \
+              --title "chore: sync with upstream main $(date +%Y-%m-%d)" \
+              --body "$PR_BODY" \
+              --label "upstream-sync,automated"
+          else
+            echo "Merge conflicts detected"
+            git merge --abort
 
-      - name: Handle merge conflicts
-        if: env.HAS_CONFLICTS == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-        run: |
-          # Create an issue for manual resolution
-          gh issue create \
-            --title "Manual intervention required: Upstream sync conflicts $(date +%Y-%m-%d)" \
-            --body "The automated upstream sync encountered merge conflicts. Please resolve them manually." \
-            --label "upstream-sync,needs-attention"
+            gh issue create \
+              --title "Merge conflict: Upstream main sync $(date +%Y-%m-%d)" \
+              --body "The automated upstream main branch sync encountered merge conflicts. Please resolve them manually." \
+              --label "upstream-sync,needs-attention,merge-conflict"
+          fi
 
+  # Job 3: Sync a specific PR by number
   sync-specific-pr:
-    if: github.event.inputs.pr_number != ''
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.sync_mode == 'specific_pr' && github.event.inputs.pr_number != ''
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -135,40 +300,83 @@ jobs:
           git config user.name "Capacitor+ Bot"
           git config user.email "bot@capgo.app"
 
-      - name: Fetch and create PR from upstream PR
+      - name: Sync specific PR
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           PR_NUMBER: ${{ github.event.inputs.pr_number }}
         run: |
+          echo "Syncing specific PR #$PR_NUMBER from upstream..."
+
+          # Get PR info
+          PR_INFO=$(gh pr view $PR_NUMBER --repo ${{ env.UPSTREAM_REPO }} --json title,author,url,state)
+          PR_TITLE=$(echo "$PR_INFO" | jq -r '.title')
+          PR_AUTHOR=$(echo "$PR_INFO" | jq -r '.author.login')
+          PR_URL=$(echo "$PR_INFO" | jq -r '.url')
+          PR_STATE=$(echo "$PR_INFO" | jq -r '.state')
+
+          echo "PR #$PR_NUMBER: $PR_TITLE"
+          echo "Author: @$PR_AUTHOR"
+          echo "State: $PR_STATE"
+
+          if [ "$PR_STATE" != "OPEN" ]; then
+            echo "Warning: PR #$PR_NUMBER is not open (state: $PR_STATE)"
+          fi
+
           # Fetch the PR
           git fetch https://github.com/${{ env.UPSTREAM_REPO }}.git pull/$PR_NUMBER/head:upstream-pr-$PR_NUMBER
 
           # Create branch for this PR
           SYNC_BRANCH="sync/upstream-pr-$PR_NUMBER"
-          git checkout -b "$SYNC_BRANCH" plus
 
-          # Cherry-pick or merge the PR commits
-          git merge upstream-pr-$PR_NUMBER --no-edit -m "chore: sync upstream PR #$PR_NUMBER" || {
+          # Delete existing branch if any
+          git branch -D "$SYNC_BRANCH" 2>/dev/null || true
+          git push origin --delete "$SYNC_BRANCH" 2>/dev/null || true
+
+          git checkout plus
+          git checkout -b "$SYNC_BRANCH"
+
+          # Merge the PR commits
+          if git merge upstream-pr-$PR_NUMBER --no-edit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR"; then
+            git push origin "$SYNC_BRANCH" --force
+
+            PR_BODY=$(cat <<EOF
+          ## Upstream PR Sync
+
+          This PR syncs changes from an external contributor's PR on the official Capacitor repository.
+
+          ### Original PR
+          - **PR:** [#$PR_NUMBER]($PR_URL)
+          - **Title:** $PR_TITLE
+          - **Author:** @$PR_AUTHOR
+
+          ### Automation
+          - CI will run automatically
+          - Claude Code will review for security/breaking changes
+          - If approved, this PR will be auto-merged
+
+          ---
+          *Synced from upstream by Capacitor+ Bot*
+          EOF
+          )
+
+            gh pr create \
+              --base plus \
+              --head "$SYNC_BRANCH" \
+              --title "chore: sync upstream PR #$PR_NUMBER - $PR_TITLE" \
+              --body "$PR_BODY" \
+              --label "upstream-sync,automated"
+
+            echo "Successfully created PR for upstream #$PR_NUMBER"
+          else
             echo "Merge conflicts detected for PR #$PR_NUMBER"
             git merge --abort
 
             gh issue create \
-              --title "Manual intervention required: Upstream PR #$PR_NUMBER sync conflicts" \
-              --body "The sync of upstream PR #$PR_NUMBER encountered merge conflicts. Please resolve them manually." \
-              --label "upstream-sync,needs-attention"
-            exit 0
-          }
+              --title "Merge conflict: Upstream PR #$PR_NUMBER - $PR_TITLE" \
+              --body "The sync of upstream PR #$PR_NUMBER from @$PR_AUTHOR encountered merge conflicts.
 
-          # Push and create PR
-          git push origin "$SYNC_BRANCH"
+          **Original PR:** $PR_URL
 
-          # Get upstream PR info
-          UPSTREAM_PR_TITLE=$(gh pr view $PR_NUMBER --repo ${{ env.UPSTREAM_REPO }} --json title -q '.title')
-          UPSTREAM_PR_URL="https://github.com/${{ env.UPSTREAM_REPO }}/pull/$PR_NUMBER"
-
-          gh pr create \
-            --base plus \
-            --head "$SYNC_BRANCH" \
-            --title "chore: sync upstream PR #$PR_NUMBER - $UPSTREAM_PR_TITLE" \
-            --body "Syncing upstream PR: $UPSTREAM_PR_URL" \
-            --label "upstream-sync,automated"
+          Please resolve the conflicts manually." \
+              --label "upstream-sync,needs-attention,merge-conflict"
+          fi
