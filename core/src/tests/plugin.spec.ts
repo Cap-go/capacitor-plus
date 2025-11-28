@@ -3,8 +3,8 @@
  */
 
 import { initBridge } from '../../native-bridge.js';
-import type { CapacitorGlobal, Plugin } from '../definitions.js';
 import type { WindowCapacitor, CapacitorInstance } from '../definitions-internal.js';
+import type { CapacitorGlobal, Plugin } from '../definitions.js';
 import { initCapacitorGlobal } from '../runtime.js';
 import { ExceptionCode } from '../util.js';
 import { WebPlugin } from '../web-plugin.js';

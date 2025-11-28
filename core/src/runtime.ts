@@ -1,10 +1,10 @@
-import type { CapacitorGlobal, PluginImplementations } from './definitions.js';
 import type {
   CapacitorCustomPlatformInstance,
   CapacitorInstance,
   PluginHeader,
   WindowCapacitor,
 } from './definitions-internal.js';
+import type { CapacitorGlobal, PluginImplementations } from './definitions.js';
 import { CapacitorException, getPlatformId, ExceptionCode } from './util.js';
 
 export interface RegisteredPlugin {
