@@ -1,16 +1,16 @@
 {
-  "name": "@capacitor/core",
+  "name": "@capacitor-plus/core",
   "version": "8.0.0-beta.0",
-  "description": "Capacitor: Cross-platform apps with JavaScript and the web",
-  "homepage": "https://capacitorjs.com",
-  "author": "Ionic Team <hi@ionic.io> (https://ionic.io)",
+  "description": "Capacitor+: Enhanced Capacitor with automated upstream sync - Cross-platform apps with JavaScript and the web",
+  "homepage": "https://github.com/Cap-go/capacitor-plus",
+  "author": "Capgo Team <support@capgo.app> (https://capgo.app)",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ionic-team/capacitor.git"
+    "url": "git+https://github.com/Cap-go/capacitor-plus.git"
   },
   "bugs": {
-    "url": "https://github.com/ionic-team/capacitor/issues"
+    "url": "https://github.com/Cap-go/capacitor-plus/issues"
   },
   "files": [
     "dist/",

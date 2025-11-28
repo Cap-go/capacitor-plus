@@ -1,0 +1,466 @@
+name: Auto-merge Upstream Sync PRs
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    # Only run for upstream-sync labeled PRs after CI passes
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      github.event_name == 'pull_request'
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      should_merge: ${{ steps.claude-review.outputs.should_merge }}
+      pr_number: ${{ steps.check-label.outputs.pr_number }}
+      review_category: ${{ steps.claude-review.outputs.review_category }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Check if PR is from upstream sync
+        id: check-label
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          # Get PR number from different event types
+          if [ "${{ github.event_name }}" == "workflow_run" ]; then
+            # Find PRs associated with this workflow run
+            PR_NUMBER=$(gh pr list --state open --label "upstream-sync" --json number -q '.[0].number')
+          else
+            PR_NUMBER=${{ github.event.pull_request.number }}
+          fi
+
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No PR found"
+            echo "is_sync_pr=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+
+          # Check if PR has upstream-sync label
+          LABELS=$(gh pr view $PR_NUMBER --json labels -q '.labels[].name')
+          if echo "$LABELS" | grep -q "upstream-sync"; then
+            echo "PR has upstream-sync label"
+            echo "is_sync_pr=true" >> $GITHUB_OUTPUT
+          else
+            echo "PR does not have upstream-sync label"
+            echo "is_sync_pr=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check all CI status
+        if: steps.check-label.outputs.is_sync_pr == 'true'
+        id: ci-status
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          PR_NUMBER: ${{ steps.check-label.outputs.pr_number }}
+        run: |
+          # Get the status of all checks
+          CHECKS=$(gh pr checks $PR_NUMBER --json name,state,conclusion 2>/dev/null || echo "[]")
+
+          echo "Current checks status:"
+          echo "$CHECKS" | jq -r '.[] | "\(.name): \(.state) - \(.conclusion)"' 2>/dev/null || true
+
+          # Check if any checks are still pending
+          PENDING=$(echo "$CHECKS" | jq '[.[] | select(.state == "pending" or .state == "queued")] | length' 2>/dev/null || echo "0")
+          if [ "$PENDING" -gt 0 ]; then
+            echo "Some checks are still pending"
+            echo "all_passed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Check if any checks failed (excluding this workflow)
+          FAILED=$(echo "$CHECKS" | jq '[.[] | select((.conclusion == "failure" or .conclusion == "cancelled") and .name != "claude-review")] | length' 2>/dev/null || echo "0")
+          if [ "$FAILED" -gt 0 ]; then
+            echo "Some checks failed"
+            echo "all_passed=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "All checks passed!"
+          echo "all_passed=true" >> $GITHUB_OUTPUT
+
+      - name: Get PR diff for Claude review
+        if: steps.check-label.outputs.is_sync_pr == 'true' && steps.ci-status.outputs.all_passed == 'true'
+        id: get-diff
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          PR_NUMBER: ${{ steps.check-label.outputs.pr_number }}
+        run: |
+          # Get the PR diff
+          gh pr diff $PR_NUMBER > /tmp/pr_diff.txt
+
+          # Get PR details
+          gh pr view $PR_NUMBER --json title,body,commits > /tmp/pr_details.json
+
+          echo "PR diff saved to /tmp/pr_diff.txt"
+          echo "diff_ready=true" >> $GITHUB_OUTPUT
+
+      - name: Setup Node.js
+        if: steps.get-diff.outputs.diff_ready == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Claude Code
+        if: steps.get-diff.outputs.diff_ready == 'true'
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Claude Code Comprehensive Review
+        if: steps.get-diff.outputs.diff_ready == 'true'
+        id: claude-review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PR_NUMBER: ${{ steps.check-label.outputs.pr_number }}
+        run: |
+          # Create comprehensive review prompt
+          cat > /tmp/review_prompt.txt << 'PROMPT_EOF'
+          You are a security-focused code reviewer for Capacitor+, a cross-platform mobile app framework.
+          Your job is to thoroughly analyze this upstream sync PR for ANY issues that could harm users.
+
+          ## CRITICAL: Check for these categories of issues
+
+          ### 1. SECURITY VULNERABILITIES
+          - Command injection (shell commands with user input)
+          - SQL injection
+          - XSS (Cross-site scripting)
+          - Path traversal attacks
+          - Insecure deserialization
+          - Hardcoded secrets, API keys, or credentials
+          - Insecure cryptographic practices
+          - Missing input validation/sanitization
+          - Insecure file operations
+          - Privilege escalation possibilities
+          - Unsafe use of eval(), Function(), or similar
+          - CORS misconfigurations
+          - Insecure network requests (HTTP instead of HTTPS)
+          - Memory safety issues (buffer overflows in native code)
+
+          ### 2. BREAKING CHANGES
+          - Removed or renamed public APIs (functions, classes, interfaces, types)
+          - Changed function signatures (parameters added/removed/reordered, return type changes)
+          - Removed or renamed exported constants/enums
+          - Changes to configuration file formats
+          - Minimum version requirement changes (Node.js, iOS, Android SDK, etc.)
+          - Behavioral changes that would break existing code
+
+          ### 3. STABILITY & CRASH RISKS
+          - Null pointer dereferences
+          - Unhandled exceptions that could crash the app
+          - Race conditions
+          - Deadlocks
+          - Memory leaks
+          - Infinite loops
+          - Resource exhaustion
+          - Missing error handling for critical operations
+          - Unsafe force unwrapping (Swift) or non-null assertions
+          - Array/index out of bounds access
+
+          ### 4. DATA INTEGRITY & PRIVACY
+          - Data loss scenarios
+          - Unintended data exposure
+          - Privacy violations (logging sensitive data, etc.)
+          - Insecure data storage
+          - Missing data validation
+
+          ### 5. MALICIOUS CODE PATTERNS
+          - Obfuscated code
+          - Suspicious network calls to unknown domains
+          - Cryptocurrency mining
+          - Data exfiltration
+          - Backdoors
+          - Unexpected permission requests
+
+          ## SAFE changes (OK to auto-merge):
+          - Bug fixes that don't change public API
+          - New features (additions only, no removals)
+          - Documentation updates
+          - Internal refactoring that doesn't affect public API
+          - Performance improvements
+          - Dev dependency updates (unless they introduce vulnerabilities)
+          - Test changes
+          - Typo fixes
+          - Code style/formatting changes
+
+          ## Your Response
+
+          After careful analysis, respond with EXACTLY ONE of these formats:
+
+          If ALL checks pass and the code is safe:
+          SAFE_TO_MERGE
+
+          If ANY issues are found, respond with the category and description:
+          SECURITY_ISSUE: <brief description>
+          BREAKING_CHANGE: <brief description>
+          CRASH_RISK: <brief description>
+          DATA_RISK: <brief description>
+          MALICIOUS_CODE: <brief description>
+
+          Be thorough but practical. Minor issues that don't pose real risks should not block the merge.
+          Focus on actual vulnerabilities, not theoretical edge cases.
+
+          Do not include any other text in your response besides the verdict line.
+
+          PR Details:
+          PROMPT_EOF
+
+          cat /tmp/pr_details.json >> /tmp/review_prompt.txt
+
+          echo -e "\n\nDiff to review:\n" >> /tmp/review_prompt.txt
+          # Limit diff size to avoid token limits
+          head -c 100000 /tmp/pr_diff.txt >> /tmp/review_prompt.txt
+
+          # Run Claude Code review
+          REVIEW_RESULT=$(claude -p "$(cat /tmp/review_prompt.txt)" --output-format text 2>&1) || {
+            echo "Claude review failed, defaulting to manual review required"
+            echo "should_merge=false" >> $GITHUB_OUTPUT
+            echo "review_result=REVIEW_FAILED: Claude Code analysis could not complete" >> $GITHUB_OUTPUT
+            echo "review_category=error" >> $GITHUB_OUTPUT
+            exit 0
+          }
+
+          echo "Claude Review Result: $REVIEW_RESULT"
+
+          # Parse the result and determine category
+          if echo "$REVIEW_RESULT" | grep -q "^SAFE_TO_MERGE"; then
+            echo "Claude approved: All security and stability checks passed"
+            echo "should_merge=true" >> $GITHUB_OUTPUT
+            echo "review_result=SAFE_TO_MERGE" >> $GITHUB_OUTPUT
+            echo "review_category=safe" >> $GITHUB_OUTPUT
+          elif echo "$REVIEW_RESULT" | grep -q "^SECURITY_ISSUE"; then
+            echo "BLOCKED: Security vulnerability detected"
+            echo "should_merge=false" >> $GITHUB_OUTPUT
+            echo "review_result=$REVIEW_RESULT" >> $GITHUB_OUTPUT
+            echo "review_category=security" >> $GITHUB_OUTPUT
+          elif echo "$REVIEW_RESULT" | grep -q "^BREAKING_CHANGE"; then
+            echo "BLOCKED: Breaking change detected"
+            echo "should_merge=false" >> $GITHUB_OUTPUT
+            echo "review_result=$REVIEW_RESULT" >> $GITHUB_OUTPUT
+            echo "review_category=breaking" >> $GITHUB_OUTPUT
+          elif echo "$REVIEW_RESULT" | grep -q "^CRASH_RISK"; then
+            echo "BLOCKED: Potential crash/stability issue detected"
+            echo "should_merge=false" >> $GITHUB_OUTPUT
+            echo "review_result=$REVIEW_RESULT" >> $GITHUB_OUTPUT
+            echo "review_category=stability" >> $GITHUB_OUTPUT
+          elif echo "$REVIEW_RESULT" | grep -q "^DATA_RISK"; then
+            echo "BLOCKED: Data integrity/privacy risk detected"
+            echo "should_merge=false" >> $GITHUB_OUTPUT
+            echo "review_result=$REVIEW_RESULT" >> $GITHUB_OUTPUT
+            echo "review_category=data" >> $GITHUB_OUTPUT
+          elif echo "$REVIEW_RESULT" | grep -q "^MALICIOUS_CODE"; then
+            echo "BLOCKED: Potentially malicious code detected"
+            echo "should_merge=false" >> $GITHUB_OUTPUT
+            echo "review_result=$REVIEW_RESULT" >> $GITHUB_OUTPUT
+            echo "review_category=malicious" >> $GITHUB_OUTPUT
+          else
+            echo "Unexpected response format, requiring manual review"
+            echo "should_merge=false" >> $GITHUB_OUTPUT
+            echo "review_result=MANUAL_REVIEW_REQUIRED: $REVIEW_RESULT" >> $GITHUB_OUTPUT
+            echo "review_category=unknown" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Comment on PR with review result
+        if: steps.claude-review.outputs.review_result != ''
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          PR_NUMBER: ${{ steps.check-label.outputs.pr_number }}
+          REVIEW_RESULT: ${{ steps.claude-review.outputs.review_result }}
+          REVIEW_CATEGORY: ${{ steps.claude-review.outputs.review_category }}
+          SHOULD_MERGE: ${{ steps.claude-review.outputs.should_merge }}
+        run: |
+          if [ "$SHOULD_MERGE" == "true" ]; then
+            COMMENT=$(cat <<'EOF'
+          ## ✅ Claude Code Review: Approved
+
+          **Security Check:** ✅ Passed
+          **Breaking Changes:** ✅ None detected
+          **Stability Check:** ✅ Passed
+          **Data Safety:** ✅ Passed
+          **Malicious Code:** ✅ None detected
+
+          This PR will be automatically merged.
+
+          ---
+          *Comprehensive security review by Claude Code*
+          EOF
+          )
+          else
+            case "$REVIEW_CATEGORY" in
+              security)
+                ICON="🔴"
+                TITLE="Security Issue Detected"
+                URGENCY="**URGENT:** This PR contains potential security vulnerabilities and must NOT be merged without careful review."
+                ;;
+              breaking)
+                ICON="🟠"
+                TITLE="Breaking Change Detected"
+                URGENCY="This PR contains breaking changes that may affect existing users."
+                ;;
+              stability)
+                ICON="🟡"
+                TITLE="Stability Risk Detected"
+                URGENCY="This PR contains code that may cause crashes or stability issues."
+                ;;
+              data)
+                ICON="🟣"
+                TITLE="Data/Privacy Risk Detected"
+                URGENCY="This PR contains changes that may affect data integrity or user privacy."
+                ;;
+              malicious)
+                ICON="⛔"
+                TITLE="Potentially Malicious Code Detected"
+                URGENCY="**CRITICAL:** This PR contains suspicious code patterns. Do NOT merge without thorough investigation."
+                ;;
+              *)
+                ICON="⚪"
+                TITLE="Manual Review Required"
+                URGENCY="This PR requires manual review before merging."
+                ;;
+            esac
+
+            COMMENT=$(cat <<EOF
+          ## $ICON Claude Code Review: $TITLE
+
+          **Finding:** $REVIEW_RESULT
+
+          $URGENCY
+
+          ### Review Checklist
+          - [ ] Reviewed the flagged changes
+          - [ ] Verified the concern is addressed or is a false positive
+          - [ ] Tested the changes locally if applicable
+
+          ---
+          *Comprehensive security review by Claude Code*
+          EOF
+          )
+          fi
+
+          gh pr comment $PR_NUMBER --body "$COMMENT"
+
+  auto-merge:
+    runs-on: ubuntu-latest
+    needs: claude-review
+    if: needs.claude-review.outputs.should_merge == 'true'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Auto-merge PR
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          PR_NUMBER: ${{ needs.claude-review.outputs.pr_number }}
+        run: |
+          echo "Claude approved. Merging PR #$PR_NUMBER..."
+
+          gh pr merge $PR_NUMBER \
+            --squash \
+            --auto \
+            --delete-branch \
+            --body "Auto-merged after CI passed and Claude Code review approved (no breaking changes)"
+
+          echo "PR #$PR_NUMBER has been merged!"
+
+      - name: Trigger release workflow
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          # Wait a moment for merge to complete
+          sleep 10
+          # Trigger the release workflow after merge
+          gh workflow run publish-capacitor-plus.yml --ref plus
+
+  notify-issues:
+    runs-on: ubuntu-latest
+    needs: claude-review
+    if: needs.claude-review.outputs.should_merge == 'false' && needs.claude-review.outputs.pr_number != ''
+    steps:
+      - name: Create issue for review
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          PR_NUMBER: ${{ needs.claude-review.outputs.pr_number }}
+          REVIEW_CATEGORY: ${{ needs.claude-review.outputs.review_category }}
+        run: |
+          # Determine labels and priority based on category
+          case "$REVIEW_CATEGORY" in
+            security)
+              LABELS="upstream-sync,needs-attention,security,priority-critical"
+              TITLE="🔴 SECURITY: Manual review required for PR #$PR_NUMBER"
+              PRIORITY="**Priority: CRITICAL**"
+              ;;
+            malicious)
+              LABELS="upstream-sync,needs-attention,security,priority-critical,suspicious"
+              TITLE="⛔ CRITICAL: Suspicious code in PR #$PR_NUMBER"
+              PRIORITY="**Priority: CRITICAL - DO NOT MERGE WITHOUT INVESTIGATION**"
+              ;;
+            breaking)
+              LABELS="upstream-sync,needs-attention,breaking-change,priority-high"
+              TITLE="🟠 Breaking change in PR #$PR_NUMBER"
+              PRIORITY="**Priority: High**"
+              ;;
+            stability)
+              LABELS="upstream-sync,needs-attention,stability,priority-high"
+              TITLE="🟡 Stability risk in PR #$PR_NUMBER"
+              PRIORITY="**Priority: High**"
+              ;;
+            data)
+              LABELS="upstream-sync,needs-attention,data-privacy,priority-high"
+              TITLE="🟣 Data/Privacy concern in PR #$PR_NUMBER"
+              PRIORITY="**Priority: High**"
+              ;;
+            *)
+              LABELS="upstream-sync,needs-attention"
+              TITLE="Manual review required for PR #$PR_NUMBER"
+              PRIORITY="**Priority: Normal**"
+              ;;
+          esac
+
+          BODY=$(cat <<EOF
+          ## Claude Code Review Alert
+
+          $PRIORITY
+
+          Claude Code's comprehensive review flagged potential issues in upstream sync PR #$PR_NUMBER.
+
+          **Category:** $REVIEW_CATEGORY
+
+          ### Action Required
+          1. Review the PR carefully: https://github.com/${{ github.repository }}/pull/$PR_NUMBER
+          2. Check Claude's detailed comment on the PR
+          3. Verify the flagged concerns
+          4. Merge manually if the concerns are addressed or false positives
+
+          ### Review Areas
+          - [ ] Security implications
+          - [ ] Breaking changes for existing users
+          - [ ] Stability and crash risks
+          - [ ] Data integrity and privacy
+          - [ ] Code authenticity
+
+          ---
+          *This issue was automatically created by the Capacitor+ security review pipeline*
+          EOF
+          )
+
+          gh issue create \
+            --repo ${{ github.repository }} \
+            --title "$TITLE" \
+            --body "$BODY" \
+            --label "$LABELS"
