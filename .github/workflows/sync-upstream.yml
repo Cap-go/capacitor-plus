@@ -40,6 +40,14 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
       - name: Configure Git
         run: |
           git config user.name "Capacitor+ Bot"
@@ -138,6 +146,17 @@ jobs:
             if git merge upstream-pr-$PR_NUMBER --no-edit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR"; then
               echo "Merge successful!"
 
+              # Run formatter to ensure lint passes
+              echo "Running formatter..."
+              npm run fmt || echo "Formatter had some issues, continuing..."
+
+              # Check if fmt made any changes and commit them
+              if ! git diff --quiet; then
+                echo "Formatter made changes, committing..."
+                git add -A
+                git commit -m "style: auto-format code after upstream sync"
+              fi
+
               # Push the branch
               git push origin "$SYNC_BRANCH" --force
 
@@ -215,6 +234,14 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
       - name: Configure Git
         run: |
           git config user.name "Capacitor+ Bot"
@@ -248,6 +275,17 @@ jobs:
 
           # Merge upstream changes
           if git merge upstream/main --no-edit -m "chore: sync with upstream main branch"; then
+            # Run formatter to ensure lint passes
+            echo "Running formatter..."
+            npm run fmt || echo "Formatter had some issues, continuing..."
+
+            # Check if fmt made any changes and commit them
+            if ! git diff --quiet; then
+              echo "Formatter made changes, committing..."
+              git add -A
+              git commit -m "style: auto-format code after upstream sync"
+            fi
+
             git push origin "$SYNC_BRANCH"
 
             PR_BODY=$(cat <<'EOF'
@@ -296,6 +334,14 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
       - name: Configure Git
         run: |
           git config user.name "Capacitor+ Bot"
@@ -338,6 +384,17 @@ jobs:
 
           # Merge the PR commits
           if git merge upstream-pr-$PR_NUMBER --no-edit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR"; then
+            # Run formatter to ensure lint passes
+            echo "Running formatter..."
+            npm run fmt || echo "Formatter had some issues, continuing..."
+
+            # Check if fmt made any changes and commit them
+            if ! git diff --quiet; then
+              echo "Formatter made changes, committing..."
+              git add -A
+              git commit -m "style: auto-format code after upstream sync"
+            fi
+
             git push origin "$SYNC_BRANCH" --force
 
             PR_BODY=$(cat <<EOF
