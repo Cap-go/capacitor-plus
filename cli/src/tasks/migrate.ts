@@ -361,7 +361,7 @@ async function installLatestLibs(dependencyManager: string, runInstall: boolean,
       await runCommand(dependencyManager, ['update']);
     }
   } else {
-    logger.info(`Please run an install command with your package manager of choice. (ex: yarn install)`);
+    logger.info(`Please run an install command with your package manager of choice. (ex: yarn add)`);
   }
 }
 
