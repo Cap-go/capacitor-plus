@@ -76,7 +76,7 @@ export async function checkCapacitorPlatform(config: Config, platform: string): 
   if (!pkg) {
     return (
       `Could not find the ${c.input(platform)} platform.\n` +
-      `You must install it in your project first, e.g. w/ ${c.input(`npm install @capacitor-plus/${platform}`)}`
+      `You must install it in your project first, e.g. w/ ${c.input(`npm install @capacitor-plus/${platform}`)} or ${c.input(`npm install @capacitor/${platform}`)}`
     );
   }
 
@@ -224,7 +224,12 @@ export async function runTask<T>(title: string, fn: () => Promise<T>): Promise<T
 }
 
 export async function getCapacitorPackage(config: Config, name: string): Promise<PackageJson | null> {
-  const packagePath = resolveNode(config.app.rootDir, `@capacitor-plus/${name}`, 'package.json');
+  // Try @capacitor-plus first, then fall back to @capacitor
+  let packagePath = resolveNode(config.app.rootDir, `@capacitor-plus/${name}`, 'package.json');
+
+  if (!packagePath) {
+    packagePath = resolveNode(config.app.rootDir, `@capacitor/${name}`, 'package.json');
+  }
 
   if (!packagePath) {
     return null;
@@ -238,8 +243,8 @@ export async function requireCapacitorPackage(config: Config, name: string): Pro
 
   if (!pkg) {
     fatal(
-      `Unable to find node_modules/@capacitor-plus/${name}.\n` +
-        `Are you sure ${c.strong(`@capacitor-plus/${name}`)} is installed?`,
+      `Unable to find node_modules/@capacitor-plus/${name} or node_modules/@capacitor/${name}.\n` +
+        `Are you sure ${c.strong(`@capacitor-plus/${name}`)} or ${c.strong(`@capacitor/${name}`)} is installed?`,
     );
   }
   return pkg;
@@ -472,20 +477,28 @@ export async function checkPlatformVersions(config: Config, platform: string): P
 
   if (semver.diff(coreVersion, platformVersion) === 'minor' || semver.diff(coreVersion, platformVersion) === 'major') {
     logger.warn(
-      `${c.strong('@capacitor-plus/core')}${c.weak(
+      `${c.strong('core')}${c.weak(
         `@${coreVersion}`,
-      )} version doesn't match ${c.strong(`@capacitor-plus/${platform}`)}${c.weak(`@${platformVersion}`)} version.\n` +
-        `Consider updating to a matching version, e.g. w/ ${c.input(`npm install @capacitor-plus/core@${platformVersion}`)}`,
+      )} version doesn't match ${c.strong(`${platform}`)}${c.weak(`@${platformVersion}`)} version.\n` +
+        `Consider updating to a matching version.`,
     );
   }
 }
 
 export function resolvePlatform(config: Config, platform: string): string | null {
   if (platform[0] !== '@') {
-    const core = resolveNode(config.app.rootDir, `@capacitor-plus/${platform}`, 'package.json');
+    // Try @capacitor-plus first
+    const capacitorPlus = resolveNode(config.app.rootDir, `@capacitor-plus/${platform}`, 'package.json');
 
-    if (core) {
-      return dirname(core);
+    if (capacitorPlus) {
+      return dirname(capacitorPlus);
+    }
+
+    // Fall back to official @capacitor
+    const capacitor = resolveNode(config.app.rootDir, `@capacitor/${platform}`, 'package.json');
+
+    if (capacitor) {
+      return dirname(capacitor);
     }
 
     const community = resolveNode(config.app.rootDir, `@capacitor-community/${platform}`, 'package.json');

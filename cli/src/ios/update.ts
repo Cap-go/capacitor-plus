@@ -158,12 +158,17 @@ async function updatePodfile(config: Config, plugins: Plugin[], deployment: bool
 }
 
 async function getRelativeCapacitoriOSPath(config: Config) {
-  const capacitoriOSPath = resolveNode(config.app.rootDir, '@capacitor-plus/ios', 'package.json');
+  // Try @capacitor-plus/ios first, then fall back to @capacitor/ios
+  let capacitoriOSPath = resolveNode(config.app.rootDir, '@capacitor-plus/ios', 'package.json');
+
+  if (!capacitoriOSPath) {
+    capacitoriOSPath = resolveNode(config.app.rootDir, '@capacitor/ios', 'package.json');
+  }
 
   if (!capacitoriOSPath) {
     fatal(
-      `Unable to find ${c.strong('node_modules/@capacitor-plus/ios')}.\n` +
-        `Are you sure ${c.strong('@capacitor-plus/ios')} is installed?`,
+      `Unable to find ${c.strong('node_modules/@capacitor-plus/ios')} or ${c.strong('node_modules/@capacitor/ios')}.\n` +
+        `Are you sure ${c.strong('@capacitor-plus/ios')} or ${c.strong('@capacitor/ios')} is installed?`,
     );
   }
 

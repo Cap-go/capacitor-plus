@@ -145,11 +145,17 @@ export async function copyPluginsJS(config: Config, cordovaPlugins: Plugin[], pl
 }
 
 export async function copyCordovaJS(config: Config, platform: string): Promise<void> {
-  const cordovaPath = resolveNode(config.app.rootDir, '@capacitor-plus/core', 'cordova.js');
+  // Try @capacitor-plus/core first, then fall back to @capacitor/core
+  let cordovaPath = resolveNode(config.app.rootDir, '@capacitor-plus/core', 'cordova.js');
+
+  if (!cordovaPath) {
+    cordovaPath = resolveNode(config.app.rootDir, '@capacitor/core', 'cordova.js');
+  }
+
   if (!cordovaPath) {
     fatal(
-      `Unable to find ${c.strong('node_modules/@capacitor-plus/core/cordova.js')}.\n` +
-        `Are you sure ${c.strong('@capacitor-plus/core')} is installed?`,
+      `Unable to find ${c.strong('node_modules/@capacitor-plus/core/cordova.js')} or ${c.strong('node_modules/@capacitor/core/cordova.js')}.\n` +
+        `Are you sure ${c.strong('@capacitor-plus/core')} or ${c.strong('@capacitor/core')} is installed?`,
     );
   }
 
