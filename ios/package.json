@@ -1,6 +1,6 @@
 {
   "name": "@capacitor-plus/ios",
-  "version": "8.0.0-beta.0",
+  "version": "8.0.0",
   "description": "Capacitor+: Enhanced Capacitor with automated upstream sync - Cross-platform apps with JavaScript and the web",
   "homepage": "https://github.com/Cap-go/capacitor-plus",
   "author": "Capgo Team <support@capgo.app> (https://capgo.app)",
@@ -25,7 +25,7 @@
     "xc:build:CapacitorCordova": "cd CapacitorCordova && xcodebuild && cd .."
   },
   "peerDependencies": {
-    "@capacitor-plus/core": "^8.0.0-beta.0"
+    "@capacitor/core": "^8.0.0"
   },
   "publishConfig": {
     "access": "public"
