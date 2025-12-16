@@ -6,8 +6,7 @@
     "version": {
       "allowBranch": ["main", "plus"],
       "conventionalCommits": true,
-      "createRelease": "github",
-      "message": "Release %s",
+      "message": "chore(release): %s",
       "tagVersionPrefix": ""
     }
   },

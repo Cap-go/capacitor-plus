@@ -56,15 +56,17 @@ jobs:
             --conventional-commits \
             --force-publish \
             --yes \
-            --no-push
+            --no-push \
+            --no-git-tag-version
 
           # Get the new version
           VERSION=$(node -p "require('./core/package.json').version")
           echo "New version: $VERSION"
 
-          # Create a unified tag for all packages
-          git tag -d "v$VERSION" 2>/dev/null || true
-          git tag "plus/v$VERSION"
+          # Commit version changes and create tag
+          git add -A
+          git commit -m "chore(release): $VERSION" || true
+          git tag "$VERSION"
 
       - name: Push to origin
         run: |

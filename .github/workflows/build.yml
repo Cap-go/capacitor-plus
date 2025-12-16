@@ -7,7 +7,7 @@ concurrency:
 on:
   push:
     tags:
-      - "plus/v*"
+      - "*"
 
 jobs:
   # Tests already passed before tag was created, so just build and deploy
@@ -34,7 +34,7 @@ jobs:
         id: extract
         run: |
           TAG=${{ github.ref_name }}
-          VERSION=$(echo $TAG | sed 's|plus/v||')
+          VERSION=$TAG
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Publishing version: $VERSION"
 
