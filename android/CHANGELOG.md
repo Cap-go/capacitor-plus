@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.0.2](https://github.com/Cap-go/capacitor-plus/compare/8.0.1...8.0.2) (2025-12-16)
+
+
+### Features
+
+* add new workflows for testing and version bumping; update README files for all packages ([a01c2a8](https://github.com/Cap-go/capacitor-plus/commit/a01c2a842c363c2aa58e5681210fa62fac8e5de5))
+
+
+
+
+
 ## [8.0.1](https://github.com/Cap-go/capacitor-plus/compare/3.3.4...8.0.1) (2025-12-16)
 
 ### Bug Fixes

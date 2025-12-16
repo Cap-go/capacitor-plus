@@ -261,7 +261,7 @@ Make a Http DELETE Request to a server using native libraries.
 #### Blob
 
 A file-like object of immutable, raw data. Blobs represent data that isn't necessarily in a JavaScript-native format. The <a href="#file">File</a> interface is based on <a href="#blob">Blob</a>, inheriting blob functionality and expanding it to support files on the user's system.
-`Blob` class is a global reference for `require('node:buffer').Blob`
+`Blob` class is a global reference for `import { <a href="#blob">Blob</a> } from 'node:buffer'`
 https://nodejs.org/api/buffer.html#class-blob
 
 | Prop       | Type                |
@@ -296,6 +296,8 @@ buffer as needed.
 #### ReadableStream
 
 This Streams API interface represents a readable stream of byte data. The Fetch API offers a concrete instance of a <a href="#readablestream">ReadableStream</a> through the body property of a Response object.
+`ReadableStream` class is a global reference for `import { <a href="#readablestream">ReadableStream</a> } from 'node:stream/web'`.
+https://nodejs.org/api/globals.html#class-readablestream
 
 | Prop         | Type                 |
 | ------------ | -------------------- |
@@ -311,6 +313,9 @@ This Streams API interface represents a readable stream of byte data. The Fetch 
 
 
 #### ReadableStreamDefaultReader
+
+<a href="#readablestreamdefaultreader">`ReadableStreamDefaultReader`</a> class is a global reference for `import { <a href="#readablestreamdefaultreader">ReadableStreamDefaultReader</a> } from 'node:stream/web'`.
+https://nodejs.org/api/globals.html#class-readablestreamdefaultreader
 
 | Method          | Signature                                                                                                       |
 | --------------- | --------------------------------------------------------------------------------------------------------------- |
@@ -345,6 +350,8 @@ This Streams API interface represents a readable stream of byte data. The Fetch 
 #### WritableStream
 
 This Streams API interface provides a standard abstraction for writing streaming data to a destination, known as a sink. This object comes with built-in backpressure and queuing.
+`WritableStream` class is a global reference for `import { <a href="#writablestream">WritableStream</a> } from 'node:stream/web'`.
+https://nodejs.org/api/globals.html#class-writablestream
 
 | Prop         | Type                 |
 | ------------ | -------------------- |
@@ -359,6 +366,8 @@ This Streams API interface provides a standard abstraction for writing streamin
 #### WritableStreamDefaultWriter
 
 This Streams API interface is the object returned by <a href="#writablestream">WritableStream.getWriter</a>() and once created locks the &lt; writer to the <a href="#writablestream">WritableStream</a> ensuring that no other streams can write to the underlying sink.
+`WritableStreamDefaultWriter` class is a global reference for `import { <a href="#writablestreamdefaultwriter">WritableStreamDefaultWriter</a> } from 'node:stream/web'`.
+https://nodejs.org/api/globals.html#class-writablestreamdefaultwriter
 
 | Prop              | Type                                  |
 | ----------------- | ------------------------------------- |
@@ -444,8 +453,6 @@ An event which takes place in the DOM.
 #### EventTarget
 
 <a href="#eventtarget">EventTarget</a> is a DOM interface implemented by objects that can receive events and may have listeners for them.
-EventTarget is a DOM interface implemented by objects that can
-receive events and may have listeners for them.
 
 | Method                  | Signature                                                                                                                                                                                                              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -515,6 +522,8 @@ Provides a way to easily construct a set of key/value pairs representing form fi
 #### File
 
 Provides information about files and allows JavaScript in a web page to access their content.
+`File` class is a global reference for `import { <a href="#file">File</a> } from 'node:buffer'`
+https://nodejs.org/api/buffer.html#class-file
 
 | Prop               | Type                |
 | ------------------ | ------------------- |
@@ -523,9 +532,6 @@ Provides information about files and allows JavaScript in a web page to access t
 
 
 #### URLSearchParams
-
-<a href="#urlsearchparams">`URLSearchParams`</a> class is a global reference for `require('url').URLSearchParams`
-https://nodejs.org/api/url.html#class-urlsearchparams
 
 | Method       | Signature                                                                                                                               | Description                                                                                                                |
 | ------------ | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -620,6 +626,11 @@ This Fetch API interface allows you to perform various actions on HTTP request a
 #### EventListenerOrEventListenerObject
 
 <code><a href="#eventlistener">EventListener</a> | <a href="#eventlistenerobject">EventListenerObject</a></code>
+
+
+#### AbortSignal
+
+<code>unknown</code>
 
 
 #### BufferSource

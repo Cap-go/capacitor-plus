@@ -4,12 +4,15 @@
       "hoist": true
     },
     "version": {
-      "allowBranch": ["main", "plus"],
+      "allowBranch": [
+        "main",
+        "plus"
+      ],
       "conventionalCommits": true,
       "message": "chore(release): %s",
       "tagVersionPrefix": ""
     }
   },
-  "version": "8.0.1",
+  "version": "8.0.2",
   "$schema": "node_modules/lerna/schemas/lerna-schema.json"
 }
