@@ -1,21 +1,12 @@
-name: CI
+name: Build source code and test it
 
 on:
   push:
     branches:
-      - main
-      - plus
+      - renovate/**
   pull_request:
-    types:
-      - 'synchronize'
-      - 'opened'
-    branches:
-      - '**'
+    branches: [main, plus]
   workflow_call:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   setup:

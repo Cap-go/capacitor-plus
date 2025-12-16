@@ -1,45 +1,63 @@
-# Capacitor CLI
+# @capacitor-plus/cli
 
-The Capacitor command-line interface (CLI) is a tool for creating and managing Capacitor applications. While it can be installed globally, it's recommended to install it locally in your project and execute through `npm` scripts.
+The command-line interface for Capacitor+.
+
+## What is Capacitor+?
+
+**Capacitor+** is an automated fork of [Capacitor](https://github.com/ionic-team/capacitor) maintained by [Capgo](https://capgo.app). It provides the same functionality as `@capacitor/cli` with these benefits:
+
+- **Faster Updates**: Get upstream fixes as soon as they pass CI, not months later
+- **Community PRs Merged**: Valuable PRs stuck in the upstream queue are merged here
+- **Security Reviewed**: Every change is analyzed by Claude Code for vulnerabilities
+- **Drop-in Replacement**: Same commands, just a different package scope
 
 ## Installation
 
 ### Project Installation (Recommended)
 
-Install the CLI locally in your project:
-
 ```bash
-npm install @capacitor/cli --save-dev
+npm install @capacitor-plus/cli --save-dev
 ```
 
 ### Global Installation
 
-While not recommended for project use, you can install the CLI globally:
-
 ```bash
-npm install -g @capacitor/cli
+npm install -g @capacitor-plus/cli
 ```
 
-## Using Capacitor CLI
+## Usage
 
-The CLI can be used through the `capacitor` or `cap` command. When installed locally, use it through your project's `npm` scripts or `npx`.
+The CLI can be used through the `capacitor` or `cap` command. When installed locally, use it through `npx`:
 
-Common commands:
-
-- `cap init`: Initialize a new Capacitor project
-- `cap add`: Add a native platform (ios, android)
-- `cap sync`: Sync your web code to your native projects
+```bash
+npx cap init          # Initialize a new Capacitor project
+npx cap add android   # Add Android platform
+npx cap add ios       # Add iOS platform
+npx cap sync          # Sync web code to native projects
+npx cap build         # Build native projects
+npx cap run           # Run on a device or emulator
+```
 
 For detailed information, consult the [Getting Started guide](https://capacitorjs.com/docs/getting-started).
 
+## Why Use This Instead of @capacitor/cli?
+
+The official Capacitor release cycle can leave bug fixes and improvements waiting for months. Capacitor+ automatically syncs with upstream daily, runs full CI, and publishes verified releases immediately.
+
+**Have a PR stuck in the Capacitor repo?** Open an issue linking to it, and we'll merge it here so you can use your fix today.
+
+## Compatibility
+
+This package maintains API compatibility with `@capacitor/cli`. All commands work identically to the official CLI.
+
 ## Local Development
 
-If you're contributing to the Capacitor CLI or testing local changes:
+If you're contributing to Capacitor+ CLI or testing local changes:
 
 1. Clone and setup:
 
    ```bash
-   git clone https://github.com/ionic-team/capacitor.git
+   git clone https://github.com/Cap-go/capacitor-plus.git
    cd cli
    npm install
    ```
@@ -61,24 +79,12 @@ If you're contributing to the Capacitor CLI or testing local changes:
    - Use `capacitor` or `cap` commands to test your changes
    - Run `npm test` to execute the test suite
 
-## Debugging
+## Links
 
-### Using VS Code Launch Configurations
+- [Main Repository](https://github.com/Cap-go/capacitor-plus)
+- [Capacitor Documentation](https://capacitorjs.com/docs)
+- [Capgo](https://capgo.app)
 
-The CLI includes VS Code launch configurations for debugging. To debug a CLI command:
+## License
 
-1. Open the project in VS Code
-2. Right now we don't have debugging working in the ts files, so select one of the .js files inside of /dist/\*\*.js
-3. Place a breakpoint
-4. Press F5 or go to Run > Start Debugging
-5. Select a launch config and run filling out the path you want to run the cli in, and the command that you want run.
-
-You can add more configurations by copying and modifying the existing ones in `.vscode/launch.json`.
-
-## Contributing
-
-Contributions are welcome! Please read our [Contributing Guide](https://github.com/ionic-team/capacitor/blob/main/CONTRIBUTING.md) for details.
-
-### License
-
-- [MIT](https://github.com/ionic-team/capacitor/blob/HEAD/LICENSE)
+MIT - See [LICENSE](../LICENSE)

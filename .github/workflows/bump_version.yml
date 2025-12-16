@@ -12,7 +12,7 @@ jobs:
   # Run all tests first before creating any tags
   test:
     if: ${{ !startsWith(github.event.head_commit.message, 'chore(release):') && !startsWith(github.event.head_commit.message, 'Release') }}
-    uses: ./.github/workflows/ci.yml
+    uses: ./.github/workflows/test.yml
 
   # Only bump version and create tag if all tests pass
   bump-version:
