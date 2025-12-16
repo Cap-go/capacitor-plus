@@ -2,7 +2,7 @@
   "name": "@capacitor-plus/cli",
   "version": "8.0.2",
   "description": "Capacitor+: Enhanced Capacitor with automated upstream sync - Cross-platform apps with JavaScript and the web",
-  "homepage": "https://github.com/Cap-go/capacitor-plus",
+  "homepage": "https://capgo.app/docs/plugins/capacitor-plus/",
   "author": "Capgo Team <support@capgo.app> (https://capgo.app)",
   "license": "MIT",
   "repository": {
