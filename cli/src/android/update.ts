@@ -135,11 +135,11 @@ export async function installGradlePlugins(
   capacitorPlugins: Plugin[],
   cordovaPlugins: Plugin[],
 ): Promise<void> {
-  const capacitorAndroidPackagePath = resolveNode(config.app.rootDir, '@capacitor/android', 'package.json');
+  const capacitorAndroidPackagePath = resolveNode(config.app.rootDir, '@capacitor-plus/android', 'package.json');
   if (!capacitorAndroidPackagePath) {
     fatal(
-      `Unable to find ${c.strong('node_modules/@capacitor/android')}.\n` +
-        `Are you sure ${c.strong('@capacitor/android')} is installed?`,
+      `Unable to find ${c.strong('node_modules/@capacitor-plus/android')}.\n` +
+        `Are you sure ${c.strong('@capacitor-plus/android')} is installed?`,
     );
   }
 

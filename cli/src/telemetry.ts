@@ -62,12 +62,12 @@ export function telemetryAction(config: Config, action: CommanderAction): Comman
       ...config.app.package.dependencies,
     });
 
-    // Only collect packages in the capacitor org:
-    // https://www.npmjs.com/org/capacitor
-    const capacitorPackages = packages.filter(([k]) => k.startsWith('@capacitor/'));
+    // Only collect packages in the capacitor-plus org:
+    // https://www.npmjs.com/org/capacitor-plus
+    const capacitorPackages = packages.filter(([k]) => k.startsWith('@capacitor-plus/'));
 
     const versions = capacitorPackages.map(([k, v]) => [
-      `${k.replace(/^@capacitor\//, '').replace(/-/g, '_')}_version`,
+      `${k.replace(/^@capacitor-plus\//, '').replace(/-/g, '_')}_version`,
       v,
     ]);
 

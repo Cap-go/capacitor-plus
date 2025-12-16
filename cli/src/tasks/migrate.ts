@@ -16,33 +16,33 @@ import { extractTemplate } from '../util/template';
 
 // eslint-disable-next-line prefer-const
 let allDependencies: { [key: string]: any } = {};
-const libs = ['@capacitor/core', '@capacitor/cli', '@capacitor/ios', '@capacitor/android'];
+const libs = ['@capacitor-plus/core', '@capacitor-plus/cli', '@capacitor-plus/ios', '@capacitor-plus/android'];
 const plugins = [
-  '@capacitor/action-sheet',
-  '@capacitor/app',
-  '@capacitor/app-launcher',
-  '@capacitor/browser',
-  '@capacitor/camera',
-  '@capacitor/clipboard',
-  '@capacitor/device',
-  '@capacitor/dialog',
-  '@capacitor/filesystem',
-  '@capacitor/geolocation',
-  '@capacitor/google-maps',
-  '@capacitor/haptics',
-  '@capacitor/keyboard',
-  '@capacitor/local-notifications',
-  '@capacitor/motion',
-  '@capacitor/network',
-  '@capacitor/preferences',
-  '@capacitor/push-notifications',
-  '@capacitor/screen-orientation',
-  '@capacitor/screen-reader',
-  '@capacitor/share',
-  '@capacitor/splash-screen',
-  '@capacitor/status-bar',
-  '@capacitor/text-zoom',
-  '@capacitor/toast',
+  '@capacitor-plus/action-sheet',
+  '@capacitor-plus/app',
+  '@capacitor-plus/app-launcher',
+  '@capacitor-plus/browser',
+  '@capacitor-plus/camera',
+  '@capacitor-plus/clipboard',
+  '@capacitor-plus/device',
+  '@capacitor-plus/dialog',
+  '@capacitor-plus/filesystem',
+  '@capacitor-plus/geolocation',
+  '@capacitor-plus/google-maps',
+  '@capacitor-plus/haptics',
+  '@capacitor-plus/keyboard',
+  '@capacitor-plus/local-notifications',
+  '@capacitor-plus/motion',
+  '@capacitor-plus/network',
+  '@capacitor-plus/preferences',
+  '@capacitor-plus/push-notifications',
+  '@capacitor-plus/screen-orientation',
+  '@capacitor-plus/screen-reader',
+  '@capacitor-plus/share',
+  '@capacitor-plus/splash-screen',
+  '@capacitor-plus/status-bar',
+  '@capacitor-plus/text-zoom',
+  '@capacitor-plus/toast',
 ];
 const coreVersion = '^8.0.0';
 const pluginVersion = '^8.0.0';
@@ -147,7 +147,7 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
       }
 
       // Update iOS Projects
-      if (allDependencies['@capacitor/ios'] && existsSync(config.ios.platformDirAbs)) {
+      if (allDependencies['@capacitor-plus/ios'] && existsSync(config.ios.platformDirAbs)) {
         const currentiOSVersion = getMajoriOSVersion(config);
         if (parseInt(currentiOSVersion) < parseInt(iOSVersion)) {
           // ios template changes
@@ -186,7 +186,7 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
         logger.warn('Skipped Running cap sync.');
       }
 
-      if (allDependencies['@capacitor/android'] && existsSync(config.android.platformDirAbs)) {
+      if (allDependencies['@capacitor-plus/android'] && existsSync(config.android.platformDirAbs)) {
         // AndroidManifest.xml add "density"
         await runTask(`Migrating AndroidManifest.xml by adding density to Activity configChanges.`, () => {
           return updateAndroidManifest(join(config.android.srcMainDirAbs, 'AndroidManifest.xml'));
@@ -354,7 +354,7 @@ async function installLatestLibs(dependencyManager: string, runInstall: boolean,
   });
 
   if (runInstall) {
-    rimraf.sync(join(config.app.rootDir, 'node_modules/@capacitor/!(cli)'));
+    rimraf.sync(join(config.app.rootDir, 'node_modules/@capacitor-plus/!(cli)'));
     await runCommand(dependencyManager, ['install']);
     if (dependencyManager == 'yarn') {
       await runCommand(dependencyManager, ['upgrade']);
@@ -368,16 +368,16 @@ async function installLatestLibs(dependencyManager: string, runInstall: boolean,
 
 async function writeBreakingChanges() {
   const breaking = [
-    '@capacitor/action-sheet',
-    '@capacitor/barcode-scanner',
-    '@capacitor/browser',
-    '@capacitor/camera',
-    '@capacitor/geolocation',
-    '@capacitor/google-maps',
-    '@capacitor/push-notifications',
-    '@capacitor/screen-orientation',
-    '@capacitor/splash-screen',
-    '@capacitor/status-bar',
+    '@capacitor-plus/action-sheet',
+    '@capacitor-plus/barcode-scanner',
+    '@capacitor-plus/browser',
+    '@capacitor-plus/camera',
+    '@capacitor-plus/geolocation',
+    '@capacitor-plus/google-maps',
+    '@capacitor-plus/push-notifications',
+    '@capacitor-plus/screen-orientation',
+    '@capacitor-plus/splash-screen',
+    '@capacitor-plus/status-bar',
   ];
   const broken = [];
   for (const lib of breaking) {

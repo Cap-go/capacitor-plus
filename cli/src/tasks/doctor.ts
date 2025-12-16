@@ -25,18 +25,18 @@ export async function doctorCommand(config: Config, selectedPlatformName: string
 
 export async function doctorCore(config: Config): Promise<void> {
   const [cliVersion, coreVersion, androidVersion, iosVersion] = await Promise.all([
-    getCommandOutput('npm', ['info', '@capacitor/cli', 'version']),
-    getCommandOutput('npm', ['info', '@capacitor/core', 'version']),
-    getCommandOutput('npm', ['info', '@capacitor/android', 'version']),
-    getCommandOutput('npm', ['info', '@capacitor/ios', 'version']),
+    getCommandOutput('npm', ['info', '@capacitor-plus/cli', 'version']),
+    getCommandOutput('npm', ['info', '@capacitor-plus/core', 'version']),
+    getCommandOutput('npm', ['info', '@capacitor-plus/android', 'version']),
+    getCommandOutput('npm', ['info', '@capacitor-plus/ios', 'version']),
   ]);
 
   output.write(
     `${c.strong('Latest Dependencies:')}\n\n` +
-      `  @capacitor/cli: ${c.weak(cliVersion ?? 'unknown')}\n` +
-      `  @capacitor/core: ${c.weak(coreVersion ?? 'unknown')}\n` +
-      `  @capacitor/android: ${c.weak(androidVersion ?? 'unknown')}\n` +
-      `  @capacitor/ios: ${c.weak(iosVersion ?? 'unknown')}\n\n` +
+      `  @capacitor-plus/cli: ${c.weak(cliVersion ?? 'unknown')}\n` +
+      `  @capacitor-plus/core: ${c.weak(coreVersion ?? 'unknown')}\n` +
+      `  @capacitor-plus/android: ${c.weak(androidVersion ?? 'unknown')}\n` +
+      `  @capacitor-plus/ios: ${c.weak(iosVersion ?? 'unknown')}\n\n` +
       `${c.strong('Installed Dependencies:')}\n\n`,
   );
 
@@ -46,7 +46,12 @@ export async function doctorCore(config: Config): Promise<void> {
 }
 
 async function printInstalledPackages(config: Config) {
-  const packageNames = ['@capacitor/cli', '@capacitor/core', '@capacitor/android', '@capacitor/ios'];
+  const packageNames = [
+    '@capacitor-plus/cli',
+    '@capacitor-plus/core',
+    '@capacitor-plus/android',
+    '@capacitor-plus/ios',
+  ];
   await Promise.all(
     packageNames.map(async (packageName) => {
       const packagePath = resolveNode(config.app.rootDir, packageName, 'package.json');
