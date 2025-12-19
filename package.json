@@ -19,7 +19,7 @@
     "sync-peer-dependencies": "node scripts/sync-peer-dependencies.mjs",
     "lint": "npm run eslint && npm run prettier -- --check && npm run swiftlint -- lint",
     "fmt": "npm run eslint -- --fix && npm run prettier -- --write && npm run swiftlint -- --fix --format",
-    "prettier": "prettier \"**/*.{css,html,java,js,mjs,ts}\" --plugin=prettier-plugin-java",
+    "prettier": "prettylint \"**/*.{css,html,java,js,mjs,ts}\" --plugin=prettier-plugin-java",
     "eslint": "eslint . --ext ts",
     "swiftlint": "node-swiftlint",
     "version": "npm run sync-peer-dependencies"
@@ -42,6 +42,7 @@
     "rimraf": "^6.1.0",
     "semver": "^7.3.7",
     "swiftlint": "^2.0.0",
-    "tar": "^6.1.11"
+    "tar": "^6.1.11",
+    "prettylint": "^2.0.0"
   }
 }
