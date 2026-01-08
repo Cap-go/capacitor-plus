@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.0.5](https://github.com/Cap-go/capacitor-plus/compare/8.0.4...8.0.5) (2026-01-08)
+
+
+### Bug Fixes
+
+* **cli:** use latest native-run ([#8296](https://github.com/Cap-go/capacitor-plus/issues/8296)) ([121d830](https://github.com/Cap-go/capacitor-plus/commit/121d83013f39e25009121533a2c3ad86e428d6b2))
+
+
+
+
+
 ## [8.0.4](https://github.com/Cap-go/capacitor-plus/compare/8.0.3...8.0.4) (2025-12-16)
 
 
