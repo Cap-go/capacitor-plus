@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.0.6](https://github.com/Cap-go/capacitor-plus/compare/8.0.5...8.0.6) (2026-01-09)
+
+
+### Bug Fixes
+
+* **cli:** Support wireless iOS devices in `cap run` ([#8301](https://github.com/Cap-go/capacitor-plus/issues/8301)) ([dcb368c](https://github.com/Cap-go/capacitor-plus/commit/dcb368c33555487f1b6f46a6d8e30736bdd78955))
+
+
+
+
+
 ## [8.0.5](https://github.com/Cap-go/capacitor-plus/compare/8.0.4...8.0.5) (2026-01-08)
 
 
