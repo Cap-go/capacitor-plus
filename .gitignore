@@ -28,3 +28,4 @@ capacitor-build.log
 # Carthage and Carthage-built binaries
 Carthage
 *.xcframework.zip
+package-lock.json
