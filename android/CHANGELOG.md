@@ -3,202 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [8.0.7](https://github.com/Cap-go/capacitor-plus/compare/8.0.6...8.0.7) (2026-01-12)
-
-**Note:** Version bump only for package @capacitor-plus/android
-
-
-
-
-
-## [8.0.6](https://github.com/Cap-go/capacitor-plus/compare/8.0.5...8.0.6) (2026-01-09)
-
-**Note:** Version bump only for package @capacitor-plus/android
-
-
-
-
-
-## [8.0.5](https://github.com/Cap-go/capacitor-plus/compare/8.0.4...8.0.5) (2026-01-08)
-
-**Note:** Version bump only for package @capacitor-plus/android
-
-
-
-
-
-## [8.0.4](https://github.com/Cap-go/capacitor-plus/compare/8.0.3...8.0.4) (2025-12-16)
-
-**Note:** Version bump only for package @capacitor-plus/android
-
-
-
-
-
-## [8.0.3](https://github.com/Cap-go/capacitor-plus/compare/8.0.2...8.0.3) (2025-12-16)
-
+## [8.0.2](https://github.com/ionic-team/capacitor/compare/8.0.1...8.0.2) (2026-01-27)
 
 ### Bug Fixes
 
-* update homepage URL in package.json files for all platforms ([61ccdc4](https://github.com/Cap-go/capacitor-plus/commit/61ccdc4128a1ce2a7178eb0a195b188876ec0a9d))
+- **android:** AGP 9.0 no longer supports `proguard-android.txt` ([#8315](https://github.com/ionic-team/capacitor/issues/8315)) ([dcc76c3](https://github.com/ionic-team/capacitor/commit/dcc76c37508a9b71fb36d95707748c2dd115cf52))
+- **SystemBars:** get correct style on handleOnConfigurationChanged ([#8295](https://github.com/ionic-team/capacitor/issues/8295)) ([2a66b44](https://github.com/ionic-team/capacitor/commit/2a66b44915895f971e4a26a8612798aa2f95ea11))
+- **SystemBars:** Set window background color according to theme ([#8306](https://github.com/ionic-team/capacitor/issues/8306)) ([6037e38](https://github.com/ionic-team/capacitor/commit/6037e3836ec24c9ddf26e74e5fbec20ab506adfd))
+- **SystemBars:** Skipping margin manipulation when on a fixed WebView ([#8309](https://github.com/ionic-team/capacitor/issues/8309)) ([53c33b6](https://github.com/ionic-team/capacitor/commit/53c33b614218bf635322fbdf9a38038a7964e3d4))
 
-
-
-
-
-## [8.0.2](https://github.com/Cap-go/capacitor-plus/compare/8.0.1...8.0.2) (2025-12-16)
-
-
-### Features
-
-* add new workflows for testing and version bumping; update README files for all packages ([a01c2a8](https://github.com/Cap-go/capacitor-plus/commit/a01c2a842c363c2aa58e5681210fa62fac8e5de5))
-
-
-
-
-
-## [8.0.1](https://github.com/Cap-go/capacitor-plus/compare/3.3.4...8.0.1) (2025-12-16)
+## [8.0.1](https://github.com/ionic-team/capacitor/compare/8.0.0...8.0.1) (2026-01-13)
 
 ### Bug Fixes
 
-- 204 http response ([#6266](https://github.com/Cap-go/capacitor-plus/issues/6266)) ([771f6ce](https://github.com/Cap-go/capacitor-plus/commit/771f6ce1f35159848db218a42dc4f56b5106f750))
-- add http method to prototype.open ([#6740](https://github.com/Cap-go/capacitor-plus/issues/6740)) ([1fd2d87](https://github.com/Cap-go/capacitor-plus/commit/1fd2d8762ff2341a8fe20eec9e774c6a29576e88))
-- allow single parameter on setRequestBody ([#6728](https://github.com/Cap-go/capacitor-plus/issues/6728)) ([5343bdb](https://github.com/Cap-go/capacitor-plus/commit/5343bdb60d26849cd8f9c8ff28ba7d9ddbd05b26))
-- **android:** add EdgeToEdge compatibility ([#7871](https://github.com/Cap-go/capacitor-plus/issues/7871)) ([64a8bc4](https://github.com/Cap-go/capacitor-plus/commit/64a8bc40de2522c75a94a40cba6c8ccd82481cb8))
-- **android:** added ServerPath object and building options for setting initial load from portals ([#6008](https://github.com/Cap-go/capacitor-plus/issues/6008)) ([205b6e6](https://github.com/Cap-go/capacitor-plus/commit/205b6e61806158244846608b1e6c0c7b26ee4ab7))
-- **android:** allow single input file selection from samsumg gallery ([#6778](https://github.com/Cap-go/capacitor-plus/issues/6778)) ([3d57ecd](https://github.com/Cap-go/capacitor-plus/commit/3d57ecdf7631d1581047bd5d9f86ea657ecad845))
-- **android:** Allow WebView to load blob urls ([#7551](https://github.com/Cap-go/capacitor-plus/issues/7551)) ([0dca917](https://github.com/Cap-go/capacitor-plus/commit/0dca917da54b01c6cf4fcd063f8191a8457d7c93))
-- **android:** Allow WebView to load data urls ([#6418](https://github.com/Cap-go/capacitor-plus/issues/6418)) ([daf2ec6](https://github.com/Cap-go/capacitor-plus/commit/daf2ec64df0c567c6a42560488e5d2515eff8a33))
-- **android:** avoid crash if server url ends in / ([#7426](https://github.com/Cap-go/capacitor-plus/issues/7426)) ([f8264cc](https://github.com/Cap-go/capacitor-plus/commit/f8264ccae1f2fec553521bc62d767c4909ea6d79))
-- **android:** avoid R8 optimizations remove plugin classes ([#6783](https://github.com/Cap-go/capacitor-plus/issues/6783)) ([cc85df5](https://github.com/Cap-go/capacitor-plus/commit/cc85df5f3a6999883623054573bafc30665e41e7))
-- **android:** better cleaning of allowedOrigin url ([#7607](https://github.com/Cap-go/capacitor-plus/issues/7607)) ([d123260](https://github.com/Cap-go/capacitor-plus/commit/d123260c70f26b0e786515ced9c95447f9ee81a0))
-- **android:** consider display cutout area for insets ([#8042](https://github.com/Cap-go/capacitor-plus/issues/8042)) ([b478211](https://github.com/Cap-go/capacitor-plus/commit/b4782116856c35e3fb567393f10a36ce4632b44c))
-- **android:** don't proxy requests if no jsInjector ([#7199](https://github.com/Cap-go/capacitor-plus/issues/7199)) ([7dc5585](https://github.com/Cap-go/capacitor-plus/commit/7dc5585996c17eedd154b5d9118eb880fef616fe))
-- **android:** Don't run Cordova plugins on ui thread ([#6108](https://github.com/Cap-go/capacitor-plus/issues/6108)) ([592ee86](https://github.com/Cap-go/capacitor-plus/commit/592ee862a58f5cb0737620a0246fe8ae295d27cf))
-- **android:** get application/x-www-form-urlencoded as string ([#6165](https://github.com/Cap-go/capacitor-plus/issues/6165)) ([0735e89](https://github.com/Cap-go/capacitor-plus/commit/0735e89d48e77a1ddca97a48e3851f4a0a3ea2c1))
-- **android:** handle deprecation warnings ([#7190](https://github.com/Cap-go/capacitor-plus/issues/7190)) ([06636d7](https://github.com/Cap-go/capacitor-plus/commit/06636d73a1b12c8f932642ee7caf91432690fea5))
-- **android:** handle empty permission list ([#6375](https://github.com/Cap-go/capacitor-plus/issues/6375)) ([b11a9df](https://github.com/Cap-go/capacitor-plus/commit/b11a9df070f18a25364a9109e295556fc75ea7f9))
-- **android:** handle http errors on the proxy ([#7280](https://github.com/Cap-go/capacitor-plus/issues/7280)) ([cca3c80](https://github.com/Cap-go/capacitor-plus/commit/cca3c80298b768a5eaf1da4d95f659e303ed7042))
-- **android:** handle null http headers and params ([#6370](https://github.com/Cap-go/capacitor-plus/issues/6370)) ([e486672](https://github.com/Cap-go/capacitor-plus/commit/e486672731818d5c64c50956562aa4766f169d41))
-- **android:** handle webview version for developer builds ([#6907](https://github.com/Cap-go/capacitor-plus/issues/6907)) ([88498e6](https://github.com/Cap-go/capacitor-plus/commit/88498e6228492a9ae917d3a7b37c242881f9fe52))
-- **android:** incorrect http url params encoding ([#6586](https://github.com/Cap-go/capacitor-plus/issues/6586)) ([e9ddb0c](https://github.com/Cap-go/capacitor-plus/commit/e9ddb0cfdb1ed320b650e1d01a04d37e644f6dd3))
-- **android:** javascript injection not working on urls with query ([#7545](https://github.com/Cap-go/capacitor-plus/issues/7545)) ([57ce5c6](https://github.com/Cap-go/capacitor-plus/commit/57ce5c65560c34d106e8b88cffe26ad22947bba6))
-- **android:** launching intents without host ([#6489](https://github.com/Cap-go/capacitor-plus/issues/6489)) ([95f7474](https://github.com/Cap-go/capacitor-plus/commit/95f747401ac5a666de4338a18666060e9c1ff39e))
-- **android:** let WebView handle errors ([#7286](https://github.com/Cap-go/capacitor-plus/issues/7286)) ([286b694](https://github.com/Cap-go/capacitor-plus/commit/286b69460f1227a75a9865f91fb51c455fd4370e))
-- **android:** make JSInjector replace first <head> only ([#6895](https://github.com/Cap-go/capacitor-plus/issues/6895)) ([93c8a8d](https://github.com/Cap-go/capacitor-plus/commit/93c8a8ddbc547a6a9501e02a73719268228ebdca))
-- **android:** make local urls use unpatched fetch ([#6953](https://github.com/Cap-go/capacitor-plus/issues/6953)) ([e50e56c](https://github.com/Cap-go/capacitor-plus/commit/e50e56c5231f230497d1bd420e02e2e065c38f86))
-- **android:** make removeAllListeners return a promise ([#5527](https://github.com/Cap-go/capacitor-plus/issues/5527)) ([6f4d858](https://github.com/Cap-go/capacitor-plus/commit/6f4d858ea879d97109c0c7da2d664d04806adc2a))
-- **android:** Move bridge localUrl initialization to initWebView ([#6685](https://github.com/Cap-go/capacitor-plus/issues/6685)) ([7f5f0ca](https://github.com/Cap-go/capacitor-plus/commit/7f5f0ca4220d40d6a19c778c18f9534ef3b65899))
-- **android:** move initialFocus on webview into config ([#5579](https://github.com/Cap-go/capacitor-plus/issues/5579)) ([8b4e861](https://github.com/Cap-go/capacitor-plus/commit/8b4e861514b0fbe08e9296f49c280234f54742e1))
-- **android:** open external links in browser ([#5913](https://github.com/Cap-go/capacitor-plus/issues/5913)) ([7553ede](https://github.com/Cap-go/capacitor-plus/commit/7553ede93170971e21ab3dec1798443d084ead2a))
-- **android:** prevent app from loading if server.url is invalid ([d4a0dea](https://github.com/Cap-go/capacitor-plus/commit/d4a0deaa37eda4476f0be030e266c2c1260fc6e8))
-- **android:** prevent crash on script injection if the script is too long ([#7308](https://github.com/Cap-go/capacitor-plus/issues/7308)) ([c9895e8](https://github.com/Cap-go/capacitor-plus/commit/c9895e89aeb69613906fc8a2270f7bf3f4913fda))
-- **android:** prevent input file crash if accept has . ([#5363](https://github.com/Cap-go/capacitor-plus/issues/5363)) ([bdacb30](https://github.com/Cap-go/capacitor-plus/commit/bdacb300bb6391dc4b84bb2bab075df993a15cba))
-- **android:** proper app url check for launching intents ([#6450](https://github.com/Cap-go/capacitor-plus/issues/6450)) ([302ba35](https://github.com/Cap-go/capacitor-plus/commit/302ba353acbd6d67e96e2b28870bc9c5bb4e9af0))
-- **android:** Publish proguard-rules.pro on npm ([#5761](https://github.com/Cap-go/capacitor-plus/issues/5761)) ([df77103](https://github.com/Cap-go/capacitor-plus/commit/df77103ca411fa452239099769289eeeea2404d2))
-- **android:** Remove calculated bottom inset if keyboard is visible ([#8280](https://github.com/Cap-go/capacitor-plus/issues/8280)) ([196b642](https://github.com/Cap-go/capacitor-plus/commit/196b642236d293a5012e3c307fcd942766e56cce))
-- **android:** remove kotlin-bom dependency ([#8237](https://github.com/Cap-go/capacitor-plus/issues/8237)) ([a894749](https://github.com/Cap-go/capacitor-plus/commit/a89474920569d404e3b19e22e782e656d5b59bdd))
-- **android:** Remove path from allowedOriginRules ([#7293](https://github.com/Cap-go/capacitor-plus/issues/7293)) ([9eb565c](https://github.com/Cap-go/capacitor-plus/commit/9eb565cddd30888125d1503d1c0a5aa5aa5e48cb))
-- **android:** remove stored references to bridge that holds it in memory ([#6448](https://github.com/Cap-go/capacitor-plus/issues/6448)) ([4737d2b](https://github.com/Cap-go/capacitor-plus/commit/4737d2b46b480c7c0246ac6414494cbbdac7811b))
-- **android:** rename bridge layout to avoid collision ([#7919](https://github.com/Cap-go/capacitor-plus/issues/7919)) ([a629f16](https://github.com/Cap-go/capacitor-plus/commit/a629f167b345cda1c44f37131235d14353eff504))
-- **android:** replace deprecated Gradle property name syntax ([b68ac9e](https://github.com/Cap-go/capacitor-plus/commit/b68ac9e2dfc3ed292b7879bd7aeaab3d05ac84d5))
-- **android:** revert cookie manager initialization to plugin load ([53a2d47](https://github.com/Cap-go/capacitor-plus/commit/53a2d4792e026a89723a672a01fc34990add71f0))
-- **android:** sanitize portable file name ([#7894](https://github.com/Cap-go/capacitor-plus/issues/7894)) ([5f09297](https://github.com/Cap-go/capacitor-plus/commit/5f092970e33da1ec896efc4e2a5ae3fb77fca658))
-- **android:** send FormData on older devices ([#7519](https://github.com/Cap-go/capacitor-plus/issues/7519)) ([de8b50d](https://github.com/Cap-go/capacitor-plus/commit/de8b50dc1d87510c5f19d04f30b6be12b51d8482))
-- **android:** set all cookies on proxied requests ([#5781](https://github.com/Cap-go/capacitor-plus/issues/5781)) ([5ef6a38](https://github.com/Cap-go/capacitor-plus/commit/5ef6a3889121dd39a9159ff80250df18854bc557))
-- **android:** set WebViewClient on the WebView ([#5919](https://github.com/Cap-go/capacitor-plus/issues/5919)) ([020ed8e](https://github.com/Cap-go/capacitor-plus/commit/020ed8eaeb7864399d4b93f54ab7601c607d8e0d))
-- **android:** Silence deprecation warning on handlePermissionResult ([#6092](https://github.com/Cap-go/capacitor-plus/issues/6092)) ([888b13e](https://github.com/Cap-go/capacitor-plus/commit/888b13e89c48dab949b38135a3ec443ac4fd852e))
-- **android:** solve and/or silence lint errors ([#6358](https://github.com/Cap-go/capacitor-plus/issues/6358)) ([c627415](https://github.com/Cap-go/capacitor-plus/commit/c627415743bec92dcb65ab8b8840003d8c0a5286))
-- **android:** unify kotlin dependency version ([#6501](https://github.com/Cap-go/capacitor-plus/issues/6501)) ([0a40477](https://github.com/Cap-go/capacitor-plus/commit/0a4047768cbde9bc17d92955e64ab11d2e3b3335))
-- **android:** Use Logger class instead of Log in CapacitorCookieManager ([#6923](https://github.com/Cap-go/capacitor-plus/issues/6923)) ([8aaa356](https://github.com/Cap-go/capacitor-plus/commit/8aaa356ab1f14b56df821e8ac0bb7e43bfa094fa))
-- **android:** UTF-8 encode form data value ([#7525](https://github.com/Cap-go/capacitor-plus/issues/7525)) ([a73ed31](https://github.com/Cap-go/capacitor-plus/commit/a73ed318cdb819863425f6b1b7ec23ea53454931))
-- **cookies:** check isEnabled before setting cookieHandler ([bb04f24](https://github.com/Cap-go/capacitor-plus/commit/bb04f24f0b4a99e46ed5ca047d3d3df81804d516))
-- **cookies:** hide httpOnly cookies from client ([0cc927e](https://github.com/Cap-go/capacitor-plus/commit/0cc927ef5f0f7076a6d486d666d78483f1d71c54))
-- **cookies:** init cookie manager after server url is set ([0ee772f](https://github.com/Cap-go/capacitor-plus/commit/0ee772ff6456ad0948a0dd025dfcf2658a5563a0))
-- **cookies:** make document.cookie setter synchronous ([2272abf](https://github.com/Cap-go/capacitor-plus/commit/2272abf3d3d9dc82d9ca0d03b17e2b78f11f61fc))
-- **cookies:** remove session cookies when initializing the cookie manager ([037863b](https://github.com/Cap-go/capacitor-plus/commit/037863bea6f3a00978125dc2f8ecba1e896c0740))
-- **cookies:** sanitize url before retrieving/setting cookies ([ca40634](https://github.com/Cap-go/capacitor-plus/commit/ca4063471f215d3f7525e51592d9c72138a52855))
-- **cookies:** Use Set-Cookie headers to persist cookies ([57f8b39](https://github.com/Cap-go/capacitor-plus/commit/57f8b39d7f4c5ee0e5e5cb316913e9450a81d22b))
-- **core:** Exception object was not set on Cap ([#5917](https://github.com/Cap-go/capacitor-plus/issues/5917)) ([9ca27a4](https://github.com/Cap-go/capacitor-plus/commit/9ca27a4f8441b368f8bf9d97dda57b1a55ac0e4e))
-- **core:** make 'content-type' header count for XMLHttpRequest patch ([#7161](https://github.com/Cap-go/capacitor-plus/issues/7161)) ([26d7f68](https://github.com/Cap-go/capacitor-plus/commit/26d7f688284914c6ef795564ba424119efc32a1c))
-- handle fetch headers that are Headers objects ([#6320](https://github.com/Cap-go/capacitor-plus/issues/6320)) ([cb00e49](https://github.com/Cap-go/capacitor-plus/commit/cb00e4952acca8e877555f30b2190f6685d25934))
-- http content headers not sent when using axios ([#8039](https://github.com/Cap-go/capacitor-plus/issues/8039)) ([67cac40](https://github.com/Cap-go/capacitor-plus/commit/67cac40660b3e8cc78d1d228b7c6915450948ef1))
-- **http:** add support for Request objects in fetch ([24b3cc1](https://github.com/Cap-go/capacitor-plus/commit/24b3cc113e3d8aae5d85dbf2d25bec0c35136477))
-- **http:** Add URLSearchParams support ([#7374](https://github.com/Cap-go/capacitor-plus/issues/7374)) ([9367ecc](https://github.com/Cap-go/capacitor-plus/commit/9367ecc56a0c78249dccdf95dca5006422144289))
-- **http:** better handling of active requests and shutting down gracefully ([5d294c9](https://github.com/Cap-go/capacitor-plus/commit/5d294c9b84f09bab649a7112c86959a41a9a4f5e))
-- **http:** boundary not added for Request objects ([#7897](https://github.com/Cap-go/capacitor-plus/issues/7897)) ([bdaa6f3](https://github.com/Cap-go/capacitor-plus/commit/bdaa6f3c38c33f3a021ac61f2de89101a5b66cff))
-- **http:** change proxy url generation ([#7354](https://github.com/Cap-go/capacitor-plus/issues/7354)) ([318c316](https://github.com/Cap-go/capacitor-plus/commit/318c316847c5b059fb88b46d4acd31e1ced477e5))
-- **http:** disconnect active connections if call or bridge is destroyed ([a1ed6cc](https://github.com/Cap-go/capacitor-plus/commit/a1ed6cc6f07465d683b95e3796d944f863a7b857))
-- **http:** don't override readyState for non POST requests ([#7488](https://github.com/Cap-go/capacitor-plus/issues/7488)) ([30c13a8](https://github.com/Cap-go/capacitor-plus/commit/30c13a865e7710e6dc5f0ee014e951d52d030795))
-- **http:** don't throw errors when content-type is null on response ([#6627](https://github.com/Cap-go/capacitor-plus/issues/6627)) ([538821f](https://github.com/Cap-go/capacitor-plus/commit/538821f267aa3b79548fed6aaea8880ff949ffdd))
-- **http:** fire events in correct order when using xhr ([5ed3617](https://github.com/Cap-go/capacitor-plus/commit/5ed361787596bb5949f6ae5e366495f296352bf3))
-- **http:** fix exception thrown on 204 responses ([1f6e8be](https://github.com/Cap-go/capacitor-plus/commit/1f6e8be9d8813c4397e2c54ac4c06beb55f97b5f))
-- **http:** fix local http requests on native platforms ([c4e040a](https://github.com/Cap-go/capacitor-plus/commit/c4e040a6f8c6b54bac6ae320e5f0f008604fe50f))
-- **http:** handle proxy urls with port ([#7273](https://github.com/Cap-go/capacitor-plus/issues/7273)) ([514409a](https://github.com/Cap-go/capacitor-plus/commit/514409aeb93ad65be105bbe2da8d2cd86ff159b0))
-- **http:** handle UInt8Array on body ([#7546](https://github.com/Cap-go/capacitor-plus/issues/7546)) ([cfb9ce1](https://github.com/Cap-go/capacitor-plus/commit/cfb9ce175615f69fe86b61af6d51ec2044d147cd))
-- **http:** inherit object properties on window.XMLHttpRequest ([91c11d0](https://github.com/Cap-go/capacitor-plus/commit/91c11d06f773c45a10f6f2d52f672ae6f189b162))
-- **http:** keep original URL properties on proxy ([#7329](https://github.com/Cap-go/capacitor-plus/issues/7329)) ([cbb6407](https://github.com/Cap-go/capacitor-plus/commit/cbb6407225b42a0d9db4f335a9766f119501021d))
-- **http:** Make proxy work with Request objects ([#7348](https://github.com/Cap-go/capacitor-plus/issues/7348)) ([7e68725](https://github.com/Cap-go/capacitor-plus/commit/7e6872573df03ab5cdc10a1a27db3e9fe81a141d))
-- **http:** parse readablestream data on fetch request objects ([#6919](https://github.com/Cap-go/capacitor-plus/issues/6919)) ([80ec3b7](https://github.com/Cap-go/capacitor-plus/commit/80ec3b73db18b7b6841bf90ed50a67389946ab87))
-- **http:** pass original url as query param on the proxy url ([#7527](https://github.com/Cap-go/capacitor-plus/issues/7527)) ([1da06e6](https://github.com/Cap-go/capacitor-plus/commit/1da06e66cb9cfbf5a5cc48ba6c23cdbe18bc8fc0))
-- **http:** prevent POST request from being proxied ([#7395](https://github.com/Cap-go/capacitor-plus/issues/7395)) ([7b8c352](https://github.com/Cap-go/capacitor-plus/commit/7b8c3523decd5610dcf09e926640bf35b382d61d))
-- **http:** Properly URL-encode key and values during `x-www-form-urlencoded` POSTs ([#8037](https://github.com/Cap-go/capacitor-plus/issues/8037)) ([87b4641](https://github.com/Cap-go/capacitor-plus/commit/87b4641d1fa32b78e6fc2e87ee7b2c49b625b213))
-- **http:** properly write form-urlencoded data on android request body ([#7001](https://github.com/Cap-go/capacitor-plus/issues/7001)) ([a986ee5](https://github.com/Cap-go/capacitor-plus/commit/a986ee541f54a1d3ac637b514fe547b224b36903))
-- **http:** return numbers and booleans as-is when application/json is the content type ([03dd3f9](https://github.com/Cap-go/capacitor-plus/commit/03dd3f96c7ee75b6fff2b7c40d0c9a58fb04fce5))
-- **http:** return valid response for relative url xhr requests ([bde6569](https://github.com/Cap-go/capacitor-plus/commit/bde65696218f97a8328041f137457f46e5eb766a))
-- **http:** route get requests through custom handler ([#6818](https://github.com/Cap-go/capacitor-plus/issues/6818)) ([b853d06](https://github.com/Cap-go/capacitor-plus/commit/b853d065055b5a819949551be58b62d40b52e37c))
-- **http:** set port for proxy url ([#7341](https://github.com/Cap-go/capacitor-plus/issues/7341)) ([a3059dc](https://github.com/Cap-go/capacitor-plus/commit/a3059dca4a7746d9fb7102a7d41f4da80e2f48b4))
-- **ios/android:** better http error handling ([#6208](https://github.com/Cap-go/capacitor-plus/issues/6208)) ([7d4d70a](https://github.com/Cap-go/capacitor-plus/commit/7d4d70a0500b7996c710c0762907f44bdf27c92b))
-- **ios/android:** copy url from nativeResponse to response ([#6482](https://github.com/Cap-go/capacitor-plus/issues/6482)) ([828fb71](https://github.com/Cap-go/capacitor-plus/commit/828fb71ebb52c0655d5879ad0edaac7368ab2b96))
-- **ios:** Correctly Attach Headers to Request ([#6303](https://github.com/Cap-go/capacitor-plus/issues/6303)) ([a3f875c](https://github.com/Cap-go/capacitor-plus/commit/a3f875cf42e111fde07d6e87643264b19ed77573))
-- **ios:** crash when http headers contain numbers ([#6251](https://github.com/Cap-go/capacitor-plus/issues/6251)) ([028c556](https://github.com/Cap-go/capacitor-plus/commit/028c556a50b41ee99fe8f4f1aa2f42d3fd57f92d))
-- make Plugin.resolve act consistently ([#8225](https://github.com/Cap-go/capacitor-plus/issues/8225)) ([06aeb9e](https://github.com/Cap-go/capacitor-plus/commit/06aeb9e85d162d6be9d96820edcb2008cd74da84))
-- remove accept-charset ([#6386](https://github.com/Cap-go/capacitor-plus/issues/6386)) ([bbf6f7e](https://github.com/Cap-go/capacitor-plus/commit/bbf6f7e1af0c49c0bc917942b6715c613be3f557))
-- Remove all plugin listeners in bridge reset ([#7962](https://github.com/Cap-go/capacitor-plus/issues/7962)) ([06aeea9](https://github.com/Cap-go/capacitor-plus/commit/06aeea973aa56ac2fb791f893ebd899253ee65f9))
-- secure cookies often are not set by the cookie plugin ([#7261](https://github.com/Cap-go/capacitor-plus/issues/7261)) ([cda1886](https://github.com/Cap-go/capacitor-plus/commit/cda18861aea3ced7835f959cba612cea98761c58))
-- vue 3 log warning causes error on iOS ([#6993](https://github.com/Cap-go/capacitor-plus/issues/6993)) ([87271e2](https://github.com/Cap-go/capacitor-plus/commit/87271e2671013ad35d13b22f2e96d4fe8f4eeaf0))
-
-### Features
-
-- Add function to inject external JS into WebView before document load ([#7864](https://github.com/Cap-go/capacitor-plus/issues/7864)) ([ec0954c](https://github.com/Cap-go/capacitor-plus/commit/ec0954c197543e913939f3ab9c4bcb172bfa3530))
-- Add global initialFocus configuration ([#7775](https://github.com/Cap-go/capacitor-plus/issues/7775)) ([61d0165](https://github.com/Cap-go/capacitor-plus/commit/61d01653685d8e3594d2d8a6bd870fa9643ba95c))
-- Add option for custom error page ([#5723](https://github.com/Cap-go/capacitor-plus/issues/5723)) ([e8bdef3](https://github.com/Cap-go/capacitor-plus/commit/e8bdef3b4634e4ad45fa8fc34c7c0ab8dfa383f3))
-- **android:** don't allow server.androidScheme to be set to schemes handled by WebView ([01285ba](https://github.com/Cap-go/capacitor-plus/commit/01285ba253d602b08a41240ad2ccf370730d51a3))
-- **android/cli:** Allow to use the old addJavascriptInterface bridge ([#6043](https://github.com/Cap-go/capacitor-plus/issues/6043)) ([a6e7c54](https://github.com/Cap-go/capacitor-plus/commit/a6e7c5422687b703492a5fcc49369eacc376143d))
-- **android:** add ability to create config from a custom file path ([#6264](https://github.com/Cap-go/capacitor-plus/issues/6264)) ([42b4f0f](https://github.com/Cap-go/capacitor-plus/commit/42b4f0f416c8038ae368860007910bb09c8ec84e))
-- **android:** add adjustMarginsForEdgeToEdge configuration option ([#7885](https://github.com/Cap-go/capacitor-plus/issues/7885)) ([1ea86d1](https://github.com/Cap-go/capacitor-plus/commit/1ea86d166afd315e72847c5e734a8c175fb90e04))
-- **android:** Add android.minWebviewVersion configuration option ([#5768](https://github.com/Cap-go/capacitor-plus/issues/5768)) ([ad83827](https://github.com/Cap-go/capacitor-plus/commit/ad838279e9cd190ce6f1a020a0ac9e3916786324))
-- **android:** add check for excluded domains before ssl request ([7906d36](https://github.com/Cap-go/capacitor-plus/commit/7906d3616e8bfb2e2c1c81ee123424c06fc4e5ab))
-- **android:** Add getLong helper on PluginCall ([#5235](https://github.com/Cap-go/capacitor-plus/issues/5235)) ([26261fb](https://github.com/Cap-go/capacitor-plus/commit/26261fb49211330c4db72c259359565da7d7bc4b))
-- **android:** Add Optional Data Param for Error Object ([#5719](https://github.com/Cap-go/capacitor-plus/issues/5719)) ([174172b](https://github.com/Cap-go/capacitor-plus/commit/174172b6c64dc9117c48ed0e20c25e0b6c2fb625))
-- **android:** Add overridable routing for WebViewLocalServer ([#5553](https://github.com/Cap-go/capacitor-plus/issues/5553)) ([3bb288e](https://github.com/Cap-go/capacitor-plus/commit/3bb288e848c5c0e49c1e58c0782e0b1ffd7b1f31))
-- **android:** Add SSL Pinning logic ([#6314](https://github.com/Cap-go/capacitor-plus/issues/6314)) ([07f113e](https://github.com/Cap-go/capacitor-plus/commit/07f113e6933e15c45d772f69f7128cbb3706f7b9))
-- **android:** allow developers to provide logic for onRenderProcessGone in WebViewListener ([#6966](https://github.com/Cap-go/capacitor-plus/issues/6966)) ([79e17bb](https://github.com/Cap-go/capacitor-plus/commit/79e17bb5e6ccd813bddc626703152d3983f6d93b))
-- **android:** Bump default minSdkVersion to 24 ([#8083](https://github.com/Cap-go/capacitor-plus/issues/8083)) ([c022ddf](https://github.com/Cap-go/capacitor-plus/commit/c022ddf21452379bb183ff7c846f73bd07a15dbf))
-- **android:** enable loading of assets outside of the content web asset directory ([#6301](https://github.com/Cap-go/capacitor-plus/issues/6301)) ([364497d](https://github.com/Cap-go/capacitor-plus/commit/364497d4aca93fc716a0673ef9103479aed791ec))
-- **android:** Fix for [#6258](https://github.com/Cap-go/capacitor-plus/issues/6258), Add support for modern Huawei devices ([#6402](https://github.com/Cap-go/capacitor-plus/issues/6402)) ([17f2f4a](https://github.com/Cap-go/capacitor-plus/commit/17f2f4ac744a038c1dae3cbd74a670d5ede92ef3))
-- **android:** Improving SystemBars inset handling ([#8268](https://github.com/Cap-go/capacitor-plus/issues/8268)) ([81ae30a](https://github.com/Cap-go/capacitor-plus/commit/81ae30a503797e417dd125b06262dabc4696c88a))
-- **android:** Load alternative layout when no WebView ([#7141](https://github.com/Cap-go/capacitor-plus/issues/7141)) ([87c399a](https://github.com/Cap-go/capacitor-plus/commit/87c399ab6b41f217b4d8a58bfb916a5d78641fd0))
-- **android:** Plugin Instance Support ([#6073](https://github.com/Cap-go/capacitor-plus/issues/6073)) ([3d5b7c2](https://github.com/Cap-go/capacitor-plus/commit/3d5b7c2d372cf764c625f46d1e8761e05b8959da))
-- **android:** Removing enableJetifier ([#6333](https://github.com/Cap-go/capacitor-plus/issues/6333)) ([fc0b403](https://github.com/Cap-go/capacitor-plus/commit/fc0b403265f63eab35cdb2f262fb1e047db4b6bd))
-- **android:** set default targetSDK to 31 ([#5442](https://github.com/Cap-go/capacitor-plus/issues/5442)) ([4442459](https://github.com/Cap-go/capacitor-plus/commit/4442459b24cdbac25cb1e4de11583d22c21452b3))
-- **android:** set default targetSDK to 32 ([#5611](https://github.com/Cap-go/capacitor-plus/issues/5611)) ([416b966](https://github.com/Cap-go/capacitor-plus/commit/416b9662fbf6233d23216c0c0441862603c3a723))
-- **android:** update gradle to 8.0.2 and gradle plugin to 8.0.0 ([#6497](https://github.com/Cap-go/capacitor-plus/issues/6497)) ([01b5b39](https://github.com/Cap-go/capacitor-plus/commit/01b5b399324ae5d0896989478a6910fb946542d7))
-- **android:** update support for Portals for Capacitor to include Live Updates ([#5660](https://github.com/Cap-go/capacitor-plus/issues/5660)) ([62f0a5e](https://github.com/Cap-go/capacitor-plus/commit/62f0a5eaa40776aad79dbf8f8c0900037d3cc97e))
-- **android:** Upgrade gradle to 7.4 ([#5445](https://github.com/Cap-go/capacitor-plus/issues/5445)) ([28eaf18](https://github.com/Cap-go/capacitor-plus/commit/28eaf1851fa7a912917dbb40c68fb4dd583d08ad))
-- **android:** Use addWebMessageListener where available ([#5427](https://github.com/Cap-go/capacitor-plus/issues/5427)) ([c2dfe80](https://github.com/Cap-go/capacitor-plus/commit/c2dfe808446717412b35e82713d123b7a052f264))
-- **android:** Use java 11 ([#5552](https://github.com/Cap-go/capacitor-plus/issues/5552)) ([e47959f](https://github.com/Cap-go/capacitor-plus/commit/e47959fcbd6a89b97b1275a5814fdb4e7ce30672))
-- Capacitor Cookies & Capacitor Http core plugins ([d4047cf](https://github.com/Cap-go/capacitor-plus/commit/d4047cfa947676777f400389a8d65defae140b45))
-- **cookies:** add get cookies plugin method ([ba1e770](https://github.com/Cap-go/capacitor-plus/commit/ba1e7702a3338714aee24388c0afea39706c9341))
-- expose `appStartPath` on cap config server configuration ([#8019](https://github.com/Cap-go/capacitor-plus/issues/8019)) ([a274fef](https://github.com/Cap-go/capacitor-plus/commit/a274fef069176a8e528a22f4734d1e29a539709c))
-- **http:** Apply overrideUserAgent to requests ([#7906](https://github.com/Cap-go/capacitor-plus/issues/7906)) ([52482c9](https://github.com/Cap-go/capacitor-plus/commit/52482c9d3c575b737054b41f9d1730c70cc5f471))
-- **http:** support for FormData requests ([#6708](https://github.com/Cap-go/capacitor-plus/issues/6708)) ([849c564](https://github.com/Cap-go/capacitor-plus/commit/849c56458205bea3b078b1ee19807d7fd84c47b1))
-- Implement automated upstream sync and review process for Capacitor+ ([54a5dfb](https://github.com/Cap-go/capacitor-plus/commit/54a5dfbd1f81ca4144e13b3051bf592d3aaf1f4a))
-- **iOS, Android:** add AppUUID Lib for plugins ([#5690](https://github.com/Cap-go/capacitor-plus/issues/5690)) ([05e76cf](https://github.com/Cap-go/capacitor-plus/commit/05e76cf526a44e07fa75f9482fa2223a13918638))
-- retain multiple calls per event until consumed ([#6419](https://github.com/Cap-go/capacitor-plus/issues/6419)) ([5aba2cb](https://github.com/Cap-go/capacitor-plus/commit/5aba2cbe29bdbab2a7af861c65d8323acf9c54a6))
-- support for Amazon Fire WebView ([#6603](https://github.com/Cap-go/capacitor-plus/issues/6603)) ([3cb4eb8](https://github.com/Cap-go/capacitor-plus/commit/3cb4eb89632bce8dc872418fdb130bfd4de40b68))
-- System Bars Plugin ([#8180](https://github.com/Cap-go/capacitor-plus/issues/8180)) ([a32216a](https://github.com/Cap-go/capacitor-plus/commit/a32216ac0607172a3a9c7ae5cdbfc598769294a6))
-- **webview:** add setServerAssetPath method ([881235b](https://github.com/Cap-go/capacitor-plus/commit/881235b14de23ef988746bfb89a5a0fc3c8d8466))
+- **android:** Remove calculated bottom inset if keyboard is visible ([#8280](https://github.com/ionic-team/capacitor/issues/8280)) ([196b642](https://github.com/ionic-team/capacitor/commit/196b642236d293a5012e3c307fcd942766e56cce))
 
 # [8.0.0](https://github.com/ionic-team/capacitor/compare/8.0.0-beta.0...8.0.0) (2025-12-08)
 
