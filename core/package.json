@@ -1,9 +1,17 @@
 {
+<<<<<<< HEAD
   "name": "@capacitor-plus/core",
   "version": "8.0.7",
   "description": "Capacitor+: Enhanced Capacitor with automated upstream sync - Cross-platform apps with JavaScript and the web",
   "homepage": "https://capgo.app/docs/plugins/capacitor-plus/",
   "author": "Capgo Team <support@capgo.app> (https://capgo.app)",
+=======
+  "name": "@capacitor/core",
+  "version": "8.0.2",
+  "description": "Capacitor: Cross-platform apps with JavaScript and the web",
+  "homepage": "https://capacitorjs.com",
+  "author": "Ionic Team <hi@ionic.io> (https://ionic.io)",
+>>>>>>> upstream/main
   "license": "MIT",
   "repository": {
     "type": "git",
