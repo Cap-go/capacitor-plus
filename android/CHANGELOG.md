@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+<<<<<<< HEAD
 ## [8.0.7](https://github.com/Cap-go/capacitor-plus/compare/8.0.6...8.0.7) (2026-01-12)
 
 **Note:** Version bump only for package @capacitor-plus/android
@@ -199,6 +200,22 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - support for Amazon Fire WebView ([#6603](https://github.com/Cap-go/capacitor-plus/issues/6603)) ([3cb4eb8](https://github.com/Cap-go/capacitor-plus/commit/3cb4eb89632bce8dc872418fdb130bfd4de40b68))
 - System Bars Plugin ([#8180](https://github.com/Cap-go/capacitor-plus/issues/8180)) ([a32216a](https://github.com/Cap-go/capacitor-plus/commit/a32216ac0607172a3a9c7ae5cdbfc598769294a6))
 - **webview:** add setServerAssetPath method ([881235b](https://github.com/Cap-go/capacitor-plus/commit/881235b14de23ef988746bfb89a5a0fc3c8d8466))
+=======
+## [8.0.2](https://github.com/ionic-team/capacitor/compare/8.0.1...8.0.2) (2026-01-27)
+
+### Bug Fixes
+
+- **android:** AGP 9.0 no longer supports `proguard-android.txt` ([#8315](https://github.com/ionic-team/capacitor/issues/8315)) ([dcc76c3](https://github.com/ionic-team/capacitor/commit/dcc76c37508a9b71fb36d95707748c2dd115cf52))
+- **SystemBars:** get correct style on handleOnConfigurationChanged ([#8295](https://github.com/ionic-team/capacitor/issues/8295)) ([2a66b44](https://github.com/ionic-team/capacitor/commit/2a66b44915895f971e4a26a8612798aa2f95ea11))
+- **SystemBars:** Set window background color according to theme ([#8306](https://github.com/ionic-team/capacitor/issues/8306)) ([6037e38](https://github.com/ionic-team/capacitor/commit/6037e3836ec24c9ddf26e74e5fbec20ab506adfd))
+- **SystemBars:** Skipping margin manipulation when on a fixed WebView ([#8309](https://github.com/ionic-team/capacitor/issues/8309)) ([53c33b6](https://github.com/ionic-team/capacitor/commit/53c33b614218bf635322fbdf9a38038a7964e3d4))
+
+## [8.0.1](https://github.com/ionic-team/capacitor/compare/8.0.0...8.0.1) (2026-01-13)
+
+### Bug Fixes
+
+- **android:** Remove calculated bottom inset if keyboard is visible ([#8280](https://github.com/ionic-team/capacitor/issues/8280)) ([196b642](https://github.com/ionic-team/capacitor/commit/196b642236d293a5012e3c307fcd942766e56cce))
+>>>>>>> upstream/main
 
 # [8.0.0](https://github.com/ionic-team/capacitor/compare/8.0.0-beta.0...8.0.0) (2025-12-08)
 
