@@ -13,6 +13,10 @@
       "tagVersionPrefix": ""
     }
   },
+<<<<<<< HEAD
   "version": "8.0.7",
+=======
+  "version": "8.1.0",
+>>>>>>> upstream/main
   "$schema": "node_modules/lerna/schemas/lerna-schema.json"
 }
