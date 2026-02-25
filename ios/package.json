@@ -1,9 +1,17 @@
 {
+<<<<<<< HEAD
   "name": "@capacitor-plus/ios",
   "version": "8.0.7",
   "description": "Capacitor+: Enhanced Capacitor with automated upstream sync - Cross-platform apps with JavaScript and the web",
   "homepage": "https://capgo.app/docs/plugins/capacitor-plus/",
   "author": "Capgo Team <support@capgo.app> (https://capgo.app)",
+=======
+  "name": "@capacitor/ios",
+  "version": "8.1.0",
+  "description": "Capacitor: Cross-platform apps with JavaScript and the web",
+  "homepage": "https://capacitorjs.com",
+  "author": "Ionic Team <hi@ionic.io> (https://ionic.io)",
+>>>>>>> upstream/main
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -21,12 +29,16 @@
   ],
   "scripts": {
     "verify": "npm run xc:build:Capacitor && npm run xc:build:CapacitorCordova",
-    "xc:build:Capacitor": "cd Capacitor && xcodebuild clean test -workspace Capacitor.xcworkspace -scheme Capacitor -destination 'platform=iOS Simulator,name=iPhone 16,OS=26.0.1' && cd ..",
+    "xc:build:Capacitor": "cd Capacitor && xcodebuild clean test -workspace Capacitor.xcworkspace -scheme Capacitor -destination 'platform=iOS Simulator,name=iPhone 17,OS=26.0.1' && cd ..",
     "xc:build:CapacitorCordova": "cd CapacitorCordova && xcodebuild && cd .."
   },
   "peerDependencies": {
+<<<<<<< HEAD
     "@capacitor-plus/core": "^8.0.0",
     "@capacitor/core": "^8.0.0"
+=======
+    "@capacitor/core": "^8.1.0"
+>>>>>>> upstream/main
   },
   "publishConfig": {
     "access": "public"
