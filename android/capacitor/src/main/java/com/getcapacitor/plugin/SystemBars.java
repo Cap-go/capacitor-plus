@@ -1,9 +1,12 @@
 package com.getcapacitor.plugin;
 
+import android.content.Context;
+import android.content.pm.PackageInfo;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.os.Build;
+import android.util.TypedValue;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.Window;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
@@ -12,6 +15,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
+import androidx.webkit.WebViewCompat;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
@@ -31,6 +35,11 @@ public class SystemBars extends Plugin {
     static final String INSETS_HANDLING_CSS = "css";
     static final String INSETS_HANDLING_DISABLE = "disable";
 
+    // https://issues.chromium.org/issues/40699457
+    private static final int WEBVIEW_VERSION_WITH_SAFE_AREA_FIX = 140;
+    // https://issues.chromium.org/issues/457682720
+    private static final int WEBVIEW_VERSION_WITH_SAFE_AREA_KEYBOARD_FIX = 144;
+
     static final String viewportMetaJSFunction = """
         function capacitorSystemBarsCheckMetaViewport() {
             const meta = document.querySelectorAll("meta[name=viewport]");
@@ -46,6 +55,8 @@ public class SystemBars extends Plugin {
 
     private boolean insetHandlingEnabled = true;
     private boolean hasViewportCover = false;
+
+    private String currentStyle = STYLE_DEFAULT;
 
     @Override
     public void load() {
@@ -73,7 +84,8 @@ public class SystemBars extends Plugin {
     @Override
     protected void handleOnConfigurationChanged(Configuration newConfig) {
         super.handleOnConfigurationChanged(newConfig);
-        setStyle(STYLE_DEFAULT, "");
+
+        setStyle(currentStyle, "");
     }
 
     private void initSystemBars() {
@@ -86,7 +98,7 @@ public class SystemBars extends Plugin {
         }
 
         initWindowInsetsListener();
-        initSafeAreaInsets();
+        initSafeAreaCSSVariables();
 
         getBridge().executeOnMainThread(() -> {
             setStyle(style, "");
@@ -143,10 +155,13 @@ public class SystemBars extends Plugin {
 
     private Insets calcSafeAreaInsets(WindowInsetsCompat insets) {
         Insets safeArea = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+        if (insets.isVisible(WindowInsetsCompat.Type.ime())) {
+            return Insets.of(safeArea.left, safeArea.top, safeArea.right, 0);
+        }
         return Insets.of(safeArea.left, safeArea.top, safeArea.right, safeArea.bottom);
     }
 
-    private void initSafeAreaInsets() {
+    private void initSafeAreaCSSVariables() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM && insetHandlingEnabled) {
             View v = (View) this.getBridge().getWebView().getParent();
             WindowInsetsCompat insets = ViewCompat.getRootWindowInsets(v);
@@ -158,37 +173,57 @@ public class SystemBars extends Plugin {
     }
 
     private void initWindowInsetsListener() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM && insetHandlingEnabled) {
-            ViewCompat.setOnApplyWindowInsetsListener((View) getBridge().getWebView().getParent(), (v, insets) -> {
-                if (hasViewportCover) {
+        ViewCompat.setOnApplyWindowInsetsListener((View) getBridge().getWebView().getParent(), (v, insets) -> {
+            boolean shouldPassthroughInsets = getWebViewMajorVersion() >= WEBVIEW_VERSION_WITH_SAFE_AREA_FIX && hasViewportCover;
+
+            Insets systemBarsInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+            Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
+            boolean keyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime());
+
+            if (shouldPassthroughInsets) {
+                // We need to correct for a possible shown IME
+                v.setPadding(0, 0, 0, keyboardVisible ? imeInsets.bottom : 0);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM && hasViewportCover && insetHandlingEnabled) {
                     Insets safeAreaInsets = calcSafeAreaInsets(insets);
-                    boolean keyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime());
-
-                    if (keyboardVisible) {
-                        safeAreaInsets = Insets.of(safeAreaInsets.left, safeAreaInsets.top, safeAreaInsets.right, 0);
-
-                        Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
-                        setViewMargins(v, Insets.of(0, 0, 0, imeInsets.bottom));
-                    } else {
-                        setViewMargins(v, Insets.NONE);
-                    }
-
                     injectSafeAreaCSS(safeAreaInsets.top, safeAreaInsets.right, safeAreaInsets.bottom, safeAreaInsets.left);
-                    return WindowInsetsCompat.CONSUMED;
                 }
 
-                return insets;
-            });
-        }
-    }
+                return new WindowInsetsCompat.Builder(insets)
+                    .setInsets(
+                        WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(),
+                        Insets.of(
+                            systemBarsInsets.left,
+                            systemBarsInsets.top,
+                            systemBarsInsets.right,
+                            getBottomInset(systemBarsInsets, keyboardVisible)
+                        )
+                    )
+                    .build();
+            }
 
-    private void setViewMargins(View v, Insets insets) {
-        ViewGroup.MarginLayoutParams mlp = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
-        mlp.leftMargin = insets.left;
-        mlp.bottomMargin = insets.bottom;
-        mlp.rightMargin = insets.right;
-        mlp.topMargin = insets.top;
-        v.setLayoutParams(mlp);
+            // We need to correct for a possible shown IME
+            v.setPadding(
+                systemBarsInsets.left,
+                systemBarsInsets.top,
+                systemBarsInsets.right,
+                keyboardVisible ? imeInsets.bottom : systemBarsInsets.bottom
+            );
+
+            // Returning `WindowInsetsCompat.CONSUMED` breaks recalculation of safe area insets
+            // So we have to explicitly set insets to `0`
+            // See: https://issues.chromium.org/issues/461332423
+            WindowInsetsCompat newInsets = new WindowInsetsCompat.Builder(insets)
+                .setInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(), Insets.of(0, 0, 0, 0))
+                .build();
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM && hasViewportCover && insetHandlingEnabled) {
+                Insets safeAreaInsets = calcSafeAreaInsets(newInsets);
+                injectSafeAreaCSS(safeAreaInsets.top, safeAreaInsets.right, safeAreaInsets.bottom, safeAreaInsets.left);
+            }
+
+            return newInsets;
+        });
     }
 
     private void injectSafeAreaCSS(int top, int right, int bottom, int left) {
@@ -224,6 +259,8 @@ public class SystemBars extends Plugin {
     }
 
     private void setStyle(String style, String bar) {
+        currentStyle = style;
+
         if (style.equals(STYLE_DEFAULT)) {
             style = getStyleForTheme();
         }
@@ -237,6 +274,8 @@ public class SystemBars extends Plugin {
         if (bar.isEmpty() || bar.equals(BAR_GESTURE_BAR)) {
             windowInsetsControllerCompat.setAppearanceLightNavigationBars(!style.equals(STYLE_DARK));
         }
+
+        getActivity().getWindow().getDecorView().setBackgroundColor(getThemeColor(getContext(), android.R.attr.windowBackground));
     }
 
     private void setHidden(boolean hide, String bar) {
@@ -267,5 +306,37 @@ public class SystemBars extends Plugin {
             return STYLE_LIGHT;
         }
         return STYLE_DARK;
+    }
+
+    public int getThemeColor(Context context, int attrRes) {
+        TypedValue typedValue = new TypedValue();
+
+        Resources.Theme theme = context.getTheme();
+        theme.resolveAttribute(attrRes, typedValue, true);
+        return typedValue.data;
+    }
+
+    private Integer getWebViewMajorVersion() {
+        PackageInfo info = WebViewCompat.getCurrentWebViewPackage(getContext());
+        if (info != null && info.versionName != null) {
+            String[] versionSegments = info.versionName.split("\\.");
+            return Integer.valueOf(versionSegments[0]);
+        }
+
+        return 0;
+    }
+
+    private int getBottomInset(Insets systemBarsInsets, boolean keyboardVisible) {
+        if (getWebViewMajorVersion() < WEBVIEW_VERSION_WITH_SAFE_AREA_KEYBOARD_FIX) {
+            // This is a workaround for webview versions that have a bug
+            // that causes the bottom inset to be incorrect if the IME is visible
+            // See: https://issues.chromium.org/issues/457682720
+
+            if (keyboardVisible) {
+                return 0;
+            }
+        }
+
+        return systemBarsInsets.bottom;
     }
 }
