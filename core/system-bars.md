@@ -39,7 +39,7 @@ To control this behavior, use the `insetsHandling` configuration setting.
 ## Example
 
 ```typescript
-import { SystemBars, SystemBarsStyle } from '@capacitor/core';
+import { SystemBars, SystemBarsStyle, SystemBarType } from '@capacitor/core';
 
 const setSystemBarStyleDark = async () => {
   await SystemBars.setStyle({ style: SystemBarsStyle.Dark });
@@ -73,7 +73,7 @@ const setStatusBarAnimation = async () => {
 ## Configuration
 | Prop          | Type                 | Description                                                               | Default            |
 | ------------- | -------------------- | ------------------------------------------------------------------------- | ------------------ |
-| **`insetsHandling`** | <code>string</code> | Specifies how to handle problematic insets on Android.  This option is only supported on Android.<br>`css` = Injects CSS variables (`--safe-area-inset-*`) containing correct safe area inset values into the webview.<br>`disable` = Disable all inset handling. | <code>css</code> |
+| **`insetsHandling`** | <code>string</code> | Specifies how to handle problematic insets on Android.  This option is only supported on Android.<br>`css` = Injects CSS variables (`--safe-area-inset-*`) containing correct safe area inset values into the webview.<br>`disable` = Disable CSS variables injection. | <code>css</code> |
 | **`style`** | <code>string</code> | The style of the text and icons of the system bars. | <code>DEFAULT</code> |
 | **`hidden`** | <code>boolean</code> | Hide the system bars on start. | <code>false</code> |
 | **`animation`** | <code>string</code> | The type of status bar animation used when showing or hiding.  This option is only supported on iOS. | <code>FADE</code> |
@@ -152,7 +152,7 @@ Set the current style of the system bars.
 ### show(...)
 
 ```typescript
-show(options: SystemBarsVisibilityOptions) => Promise<void>
+show(options?: SystemBarsVisibilityOptions) => Promise<void>
 ```
 
 Show the system bars.
@@ -169,7 +169,7 @@ Show the system bars.
 ### hide(...)
 
 ```typescript
-hide(options: SystemBarsVisibilityOptions) => Promise<void>
+hide(options?: SystemBarsVisibilityOptions) => Promise<void>
 ```
 
 Hide the system bars.
