@@ -12,11 +12,11 @@ describe('buildUrlParams', () => {
     };
 
     const result = buildUrlParams(params, true);
-    
+
     // The bug: array values will have a trailing \u0026
     // Expected: "tags=javascript\u0026tags=typescript\u0026tags=react\u0026single=value"
     // Actual: "tags=javascript\u0026tags=typescript\u0026tags=react\u0026\u0026single=value"
-    
+
     expect(result).not.toContain('\u0026\u0026');
     expect(result).toBe('tags=javascript\u0026tags=typescript\u0026tags=react\u0026single=value');
   });
@@ -27,7 +27,7 @@ describe('buildUrlParams', () => {
     };
 
     const result = buildUrlParams(params, true);
-    
+
     expect(result).toBe('key=value');
     expect(result?.[0]).not.toBe('\u0026');
   });
