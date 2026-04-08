@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.0.8](https://github.com/Cap-go/capacitor-plus/compare/8.0.7...8.0.8) (2026-04-08)
+
+
+### Bug Fixes
+
+* **android:** use proguard-android-optimize for AGP 9 compatibility ([52ceef3](https://github.com/Cap-go/capacitor-plus/commit/52ceef3769544c6cb0cbc83963dcc4552983578b))
+
+
+
+
+
 ## [8.0.7](https://github.com/Cap-go/capacitor-plus/compare/8.0.6...8.0.7) (2026-01-12)
 
 **Note:** Version bump only for package @capacitor-plus/android

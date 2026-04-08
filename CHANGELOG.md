@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.0.8](https://github.com/Cap-go/capacitor-plus/compare/8.0.7...8.0.8) (2026-04-08)
+
+
+### Bug Fixes
+
+* **android:** use proguard-android-optimize for AGP 9 compatibility ([52ceef3](https://github.com/Cap-go/capacitor-plus/commit/52ceef3769544c6cb0cbc83963dcc4552983578b))
+* checkout version ([3e09c3d](https://github.com/Cap-go/capacitor-plus/commit/3e09c3d9e54a69bb593306a87260c1e3345113ca))
+* **ci:** align swiftpm version guard with template ([dbe0bb9](https://github.com/Cap-go/capacitor-plus/commit/dbe0bb91c1cc24f4bed4b7867c84501f93b34871))
+* **ci:** harden upstream sync conflict handling ([5dee10f](https://github.com/Cap-go/capacitor-plus/commit/5dee10fbc378dc8ce7a09c71da92e55c30e1c970))
+
+
+
+
+
 ## [8.0.7](https://github.com/Cap-go/capacitor-plus/compare/8.0.6...8.0.7) (2026-01-12)
 
 **Note:** Version bump only for package capacitor
