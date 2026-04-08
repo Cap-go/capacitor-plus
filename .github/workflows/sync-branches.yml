@@ -97,50 +97,103 @@ jobs:
             echo "merge_success=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Setup Bun for conflict resolution
+        if: steps.regular-merge.outputs.merge_success == 'false'
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Claude Code for conflict resolution
+        if: steps.regular-merge.outputs.merge_success == 'false'
+        run: bun add -g @anthropic-ai/claude-code
+
       - name: Create PR for conflicts
         if: steps.regular-merge.outputs.merge_success == 'false'
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          # Create a branch for the PR
-          SYNC_BRANCH="sync/main-upstream-$(date +%Y%m%d-%H%M%S)"
-          git checkout -b "$SYNC_BRANCH" origin/main
+          source .github/scripts/sync-gh-helpers.sh
+          ensure_sync_labels "${GITHUB_REPOSITORY}"
 
-          # Try merge again to show conflicts
-          git merge upstream/main --no-commit || true
-
-          # Check for existing PR
+          # Check for existing PR before creating a new branch
           EXISTING_PR=$(gh pr list --base main --search "sync main with upstream" --state open --json number -q '.[0].number')
           if [ -n "$EXISTING_PR" ]; then
             echo "PR already exists: #$EXISTING_PR"
             exit 0
           fi
 
-          # Abort and create a clean branch
-          git merge --abort
+          SYNC_BRANCH="sync/main-upstream-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$SYNC_BRANCH" origin/main
+          git merge upstream/main --no-commit || true
 
-          # Cherry-pick or merge with conflicts marked
-          git merge upstream/main -X theirs --no-edit -m "chore: sync main with upstream (conflicts resolved with upstream)" || {
-            # If even that fails, just take upstream
-            git reset --hard upstream/main
-          }
+          RESOLUTION_MODE="claude-resolved"
+          if bash .github/scripts/resolve-conflicts-with-claude.sh main upstream/main "main branch upstream sync"; then
+            git add -A
+            git commit -m "chore: sync main with upstream (claude-resolved conflicts)"
+          else
+            echo "Claude could not finish the merge cleanly, falling back to git strategies"
+            RESOLUTION_MODE="manual-review"
+            git merge --abort || true
+            git checkout -B "$SYNC_BRANCH" origin/main
 
-          git push origin "$SYNC_BRANCH"
+            if git merge upstream/main -X theirs --no-edit -m "chore: sync main with upstream (upstream-preferred fallback)"; then
+              RESOLUTION_MODE="upstream-preferred"
+            else
+              git merge --abort || true
+              git checkout -B "$SYNC_BRANCH" origin/main
+              git merge upstream/main --no-commit || true
+              git add -A
+              git commit -m "chore: sync main with upstream (needs manual conflict resolution)" || {
+                echo "No changes to commit after fallback"
+                exit 0
+              }
+            fi
+          fi
 
-          gh pr create \
-            --base main \
-            --head "$SYNC_BRANCH" \
-            --title "chore: sync main with upstream (conflicts)" \
-            --body "## Merge Conflict Resolution Required
+          git push origin "$SYNC_BRANCH" --force
 
-          The automatic sync of main branch with upstream encountered merge conflicts.
+          if [ "$RESOLUTION_MODE" = "claude-resolved" ]; then
+            PR_TITLE="chore: sync main with upstream (claude-resolved conflicts)"
+            PR_BODY=$(cat <<'EOF'
+          ## Upstream Main Sync
 
-          **Action needed:** Review the changes and resolve any remaining conflicts.
+          The automatic sync of the `main` branch encountered merge conflicts and resolved them with Claude Code.
+
+          ### What happened
+          - Upstream changes could not be merged cleanly with Git alone
+          - Claude Code resolved the conflicted files in the merge worktree
+          - This PR is ready for the normal CI and review pipeline
 
           ---
-          *This PR was created automatically by the Capacitor+ sync workflow*" \
-            --label "upstream-sync,needs-attention,merge-conflict"
+          *This PR was created automatically by the Capacitor+ sync workflow*
+          EOF
+          )
+          else
+            PR_TITLE="chore: sync main with upstream (conflicts)"
+            PR_BODY=$(cat <<'EOF'
+          ## Merge Conflict Resolution Required
+
+          The automatic sync of the `main` branch with upstream encountered merge conflicts.
+
+          ### What happened
+          - Claude Code attempted to resolve the merge conflicts
+          - The workflow created this PR so CI and manual review can finish the merge safely
+
+          **Action needed:** Review the branch and resolve any remaining concerns before merging.
+
+          ---
+          *This PR was created automatically by the Capacitor+ sync workflow*
+          EOF
+          )
+          fi
+
+          PR_NUMBER=$(create_pr_and_capture_number "${GITHUB_REPOSITORY}" main "$SYNC_BRANCH" "$PR_TITLE" "$PR_BODY")
+
+          if [ "$RESOLUTION_MODE" = "claude-resolved" ]; then
+            add_labels_to_pr "${GITHUB_REPOSITORY}" "$PR_NUMBER" upstream-sync automated || true
+          else
+            add_labels_to_pr "${GITHUB_REPOSITORY}" "$PR_NUMBER" upstream-sync needs-attention merge-conflict || true
+            gh pr comment "$PR_NUMBER" --body "Claude Code could not resolve this sync completely. Please review the branch carefully before merging." >/dev/null 2>&1 || true
+          fi
 
   sync-plus-branch:
     if: github.event_name == 'schedule' || github.event.inputs.branch == 'both' || github.event.inputs.branch == 'plus'
@@ -200,6 +253,14 @@ jobs:
             echo "merge_success=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Setup Bun for conflict resolution
+        if: steps.merge.outputs.merge_success == 'false'
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install Claude Code for conflict resolution
+        if: steps.merge.outputs.merge_success == 'false'
+        run: bun add -g @anthropic-ai/claude-code
+
       - name: Push if merge succeeded
         if: steps.merge.outputs.merge_success == 'true'
         run: |
@@ -210,7 +271,11 @@ jobs:
         if: steps.merge.outputs.merge_success == 'false'
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
+          source .github/scripts/sync-gh-helpers.sh
+          ensure_sync_labels "${GITHUB_REPOSITORY}"
+
           # Check for existing PR
           EXISTING_PR=$(gh pr list --base plus --search "sync plus with upstream" --state open --json number -q '.[0].number')
           if [ -n "$EXISTING_PR" ]; then
@@ -222,41 +287,77 @@ jobs:
           SYNC_BRANCH="sync/plus-upstream-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$SYNC_BRANCH" plus
 
-          # Merge with conflicts resolved using upstream version
-          git merge upstream/main -X theirs --no-edit -m "chore: sync plus with upstream main (auto-resolved)" || {
-            # If even that fails, create a proper merge commit
-            git reset --hard plus
-            git merge upstream/main --no-commit || true
+          git merge upstream/main --no-commit || true
 
-            # Add all files (with conflict markers if any)
+          RESOLUTION_MODE="claude-resolved"
+          if bash .github/scripts/resolve-conflicts-with-claude.sh plus upstream/main "plus branch upstream sync"; then
             git add -A
+            git commit -m "chore: sync plus with upstream main (claude-resolved conflicts)"
+          else
+            echo "Claude could not finish the merge cleanly, falling back to git strategies"
+            RESOLUTION_MODE="manual-review"
+            git merge --abort || true
+            git checkout -B "$SYNC_BRANCH" plus
 
-            # Create commit
-            git commit -m "chore: sync plus with upstream main (needs conflict resolution)" || {
-              echo "No changes to commit"
-              exit 0
-            }
-          }
+            if git merge upstream/main -X theirs --no-edit -m "chore: sync plus with upstream main (upstream-preferred fallback)"; then
+              RESOLUTION_MODE="upstream-preferred"
+            else
+              git merge --abort || true
+              git checkout -B "$SYNC_BRANCH" plus
+              git merge upstream/main --no-commit || true
+              git add -A
+              git commit -m "chore: sync plus with upstream main (needs manual conflict resolution)" || {
+                echo "No changes to commit"
+                exit 0
+              }
+            fi
+          fi
 
-          git push origin "$SYNC_BRANCH"
+          git push origin "$SYNC_BRANCH" --force
 
-          gh pr create \
-            --base plus \
-            --head "$SYNC_BRANCH" \
-            --title "chore: sync plus with upstream main (conflicts)" \
-            --body "## Merge Conflict Resolution Required
+          if [ "$RESOLUTION_MODE" = "claude-resolved" ]; then
+            PR_TITLE="chore: sync plus with upstream main (claude-resolved conflicts)"
+            PR_BODY=$(cat <<'EOF'
+          ## Upstream Plus Sync
 
-          The automatic sync of plus branch with upstream main encountered merge conflicts.
+          The automatic sync of the `plus` branch encountered merge conflicts and resolved them with Claude Code.
 
-          **Action needed:** Review the changes and resolve any remaining conflicts.
-
-          ### Note
-          This PR attempts to auto-resolve conflicts by preferring upstream changes.
-          Please verify that our Capacitor+ customizations (package names, workflows, etc.) are preserved.
+          ### What happened
+          - Upstream changes could not be merged cleanly with Git alone
+          - Claude Code resolved the conflicted files in the merge worktree
+          - This PR is ready for the normal CI and review pipeline
 
           ---
-          *This PR was created automatically by the Capacitor+ sync workflow*" \
-            --label "upstream-sync,needs-attention,merge-conflict"
+          *This PR was created automatically by the Capacitor+ sync workflow*
+          EOF
+          )
+          else
+            PR_TITLE="chore: sync plus with upstream main (conflicts)"
+            PR_BODY=$(cat <<'EOF'
+          ## Merge Conflict Resolution Required
+
+          The automatic sync of the `plus` branch with upstream main encountered merge conflicts.
+
+          ### What happened
+          - Claude Code attempted to resolve the merge conflicts
+          - The workflow created this PR so CI and manual review can finish the merge safely
+
+          **Action needed:** Review the branch and resolve any remaining concerns before merging.
+
+          ---
+          *This PR was created automatically by the Capacitor+ sync workflow*
+          EOF
+          )
+          fi
+
+          PR_NUMBER=$(create_pr_and_capture_number "${GITHUB_REPOSITORY}" plus "$SYNC_BRANCH" "$PR_TITLE" "$PR_BODY")
+
+          if [ "$RESOLUTION_MODE" = "claude-resolved" ]; then
+            add_labels_to_pr "${GITHUB_REPOSITORY}" "$PR_NUMBER" upstream-sync automated || true
+          else
+            add_labels_to_pr "${GITHUB_REPOSITORY}" "$PR_NUMBER" upstream-sync needs-attention merge-conflict || true
+            gh pr comment "$PR_NUMBER" --body "Claude Code could not resolve this sync completely. Please review the branch carefully before merging." >/dev/null 2>&1 || true
+          fi
 
       - name: Trigger Claude review for auto-merged changes
         if: steps.merge.outputs.merge_success == 'true'
