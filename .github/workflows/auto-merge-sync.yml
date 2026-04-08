@@ -33,6 +33,13 @@ jobs:
           fetch-depth: 0
           filter: blob:none
 
+      - name: Ensure sync labels exist
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        run: |
+          source .github/scripts/sync-gh-helpers.sh
+          ensure_sync_labels "${GITHUB_REPOSITORY}"
+
       - name: Check if PR is from upstream sync
         id: check-label
         env:
@@ -112,15 +119,13 @@ jobs:
           echo "PR diff saved to /tmp/pr_diff.txt"
           echo "diff_ready=true" >> $GITHUB_OUTPUT
 
-      - name: Setup Node.js
+      - name: Setup Bun
         if: steps.get-diff.outputs.diff_ready == 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+        uses: oven-sh/setup-bun@v2
 
       - name: Install Claude Code
         if: steps.get-diff.outputs.diff_ready == 'true'
-        run: npm install -g @anthropic-ai/claude-code
+        run: bun add -g @anthropic-ai/claude-code
 
       - name: Claude Code Comprehensive Review
         if: steps.get-diff.outputs.diff_ready == 'true'
@@ -402,6 +407,9 @@ jobs:
           PR_NUMBER: ${{ needs.claude-review.outputs.pr_number }}
           REVIEW_CATEGORY: ${{ needs.claude-review.outputs.review_category }}
         run: |
+          source .github/scripts/sync-gh-helpers.sh
+          ensure_sync_labels "${GITHUB_REPOSITORY}"
+
           # Determine labels and priority based on category
           case "$REVIEW_CATEGORY" in
             security)
@@ -463,8 +471,14 @@ jobs:
           EOF
           )
 
-          gh issue create \
-            --repo ${{ github.repository }} \
-            --title "$TITLE" \
-            --body "$BODY" \
-            --label "$LABELS"
+          add_labels_to_pr "${GITHUB_REPOSITORY}" "$PR_NUMBER" ${LABELS//,/ } || true
+
+          if [ "$(repo_has_issues "${GITHUB_REPOSITORY}")" = "true" ]; then
+            gh issue create \
+              --repo ${{ github.repository }} \
+              --title "$TITLE" \
+              --body "$BODY" \
+              --label "$LABELS" >/dev/null
+          else
+            gh pr comment "$PR_NUMBER" --body "$BODY" >/dev/null
+          fi

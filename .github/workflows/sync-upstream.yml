@@ -46,13 +46,14 @@ jobs:
           filter: blob:none
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: npm install
+        run: bun install --frozen-lockfile
+
+      - name: Install Claude Code
+        run: bun add -g @anthropic-ai/claude-code
 
       - name: Configure Git
         run: |
@@ -62,7 +63,11 @@ jobs:
       - name: Fetch and sync all open PRs from upstream
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
+          source .github/scripts/sync-gh-helpers.sh
+          ensure_sync_labels "${GITHUB_REPOSITORY}"
+
           echo "Fetching open PRs from upstream repository..."
 
           # Get all open PRs from upstream (only from forks/external contributors)
@@ -182,7 +187,7 @@ jobs:
 
               # Run formatter to ensure lint passes
               echo "Running formatter..."
-              npm run fmt || echo "Formatter had some issues, continuing..."
+              bun run fmt || echo "Formatter had some issues, continuing..."
 
               # Check if fmt made any changes and commit them
               if ! git diff --quiet; then
@@ -217,31 +222,98 @@ jobs:
           )
 
               # Create the PR
-              gh pr create \
-                --base plus \
-                --head "$SYNC_BRANCH" \
-                --title "chore: sync upstream PR #$PR_NUMBER - $PR_TITLE" \
-                --body "$PR_BODY" \
-                --label "upstream-sync,automated" || {
+              PR_CREATED=$(create_pr_and_capture_number "${GITHUB_REPOSITORY}" plus "$SYNC_BRANCH" "chore: sync upstream PR #$PR_NUMBER - $PR_TITLE" "$PR_BODY") || {
                 echo "Failed to create PR, it may already exist"
+                PR_CREATED=""
               }
+
+              if [ -n "$PR_CREATED" ]; then
+                add_labels_to_pr "${GITHUB_REPOSITORY}" "$PR_CREATED" upstream-sync automated || true
+              fi
 
               echo "Created PR for upstream #$PR_NUMBER"
             else
               echo "Merge conflict detected for PR #$PR_NUMBER"
-              git merge --abort
+              git merge --abort || true
+              git checkout -B "$SYNC_BRANCH" plus
+              git merge upstream-pr-$PR_NUMBER --no-commit || true
 
-              # Create an issue for manual intervention
-              gh issue create \
-                --title "Merge conflict: Upstream PR #$PR_NUMBER - $PR_TITLE" \
-                --body "The sync of upstream PR #$PR_NUMBER from @$PR_AUTHOR encountered merge conflicts.
+              RESOLUTION_MODE="claude-resolved"
+              if bash .github/scripts/resolve-conflicts-with-claude.sh plus "upstream-pr-$PR_NUMBER" "upstream PR #$PR_NUMBER"; then
+                git add -A
+                git commit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR (claude-resolved conflicts)"
+              else
+                echo "Claude could not finish the merge cleanly, falling back to git strategies"
+                RESOLUTION_MODE="manual-review"
+                git merge --abort || true
+                git checkout -B "$SYNC_BRANCH" plus
+
+                if git merge upstream-pr-$PR_NUMBER -X theirs --no-edit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR (upstream-preferred fallback)"; then
+                  RESOLUTION_MODE="upstream-preferred"
+                else
+                  git merge --abort || true
+                  git checkout -B "$SYNC_BRANCH" plus
+                  git merge upstream-pr-$PR_NUMBER --no-commit || true
+                  git add -A
+                  git commit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR (needs manual conflict resolution)" || {
+                    echo "Unable to create a fallback conflict commit for PR #$PR_NUMBER"
+                    continue
+                  }
+                fi
+              fi
+
+              git push origin "$SYNC_BRANCH" --force
+
+              if [ "$RESOLUTION_MODE" = "claude-resolved" ]; then
+                PR_BODY=$(cat <<EOF
+          ## Upstream PR Sync
+
+          This PR syncs changes from an external contributor's PR on the official Capacitor repository.
+
+          ### Original PR
+          - **PR:** [#$PR_NUMBER]($PR_URL)
+          - **Title:** $PR_TITLE
+          - **Author:** @$PR_AUTHOR
+
+          ### Conflict Resolution
+          - Git reported merge conflicts while syncing this upstream PR
+          - Claude Code resolved the conflicted files in the sync branch
+
+          ---
+          *Synced from upstream by Capacitor+ Bot*
+          EOF
+          )
+              else
+                PR_BODY=$(cat <<EOF
+          ## Merge Conflict Resolution Required
+
+          The sync of upstream PR #$PR_NUMBER from @$PR_AUTHOR encountered merge conflicts.
 
           **Original PR:** $PR_URL
 
-          Please resolve the conflicts manually." \
-                --label "upstream-sync,needs-attention,merge-conflict" || {
-                echo "Issue may already exist"
+          ### What happened
+          - Claude Code attempted to resolve the merge conflicts
+          - This PR was created so CI and manual review can finish the sync safely
+
+          ---
+          *Synced from upstream by Capacitor+ Bot*
+          EOF
+          )
+              fi
+
+              PR_CREATED=$(create_pr_and_capture_number "${GITHUB_REPOSITORY}" plus "$SYNC_BRANCH" "chore: sync upstream PR #$PR_NUMBER - $PR_TITLE" "$PR_BODY") || {
+                echo "Failed to create conflict PR for upstream #$PR_NUMBER"
+                PR_CREATED=""
               }
+
+              if [ -n "$PR_CREATED" ]; then
+                if [ "$RESOLUTION_MODE" = "claude-resolved" ]; then
+                  add_labels_to_pr "${GITHUB_REPOSITORY}" "$PR_CREATED" upstream-sync automated || true
+                else
+                  add_labels_to_pr "${GITHUB_REPOSITORY}" "$PR_CREATED" upstream-sync needs-attention merge-conflict || true
+                  gh pr comment "$PR_CREATED" --body "Claude Code could not resolve this upstream sync completely. Please review the branch carefully before merging." >/dev/null 2>&1 || true
+                fi
+              fi
             fi
 
             # Clean up
@@ -269,13 +341,14 @@ jobs:
           filter: blob:none
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: npm install
+        run: bun install --frozen-lockfile
+
+      - name: Install Claude Code
+        run: bun add -g @anthropic-ai/claude-code
 
       - name: Configure Git
         run: |
@@ -285,7 +358,11 @@ jobs:
       - name: Sync main branch from upstream
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
+          source .github/scripts/sync-gh-helpers.sh
+          ensure_sync_labels "${GITHUB_REPOSITORY}"
+
           git remote add upstream https://github.com/${{ env.UPSTREAM_REPO }}.git || true
           git fetch upstream
 
@@ -312,7 +389,7 @@ jobs:
           if git merge upstream/main --no-edit -m "chore: sync with upstream main branch"; then
             # Run formatter to ensure lint passes
             echo "Running formatter..."
-            npm run fmt || echo "Formatter had some issues, continuing..."
+            bun run fmt || echo "Formatter had some issues, continuing..."
 
             # Check if fmt made any changes and commit them
             if ! git diff --quiet; then
@@ -338,20 +415,74 @@ jobs:
           EOF
           )
 
-            gh pr create \
-              --base plus \
-              --head "$SYNC_BRANCH" \
-              --title "chore: sync with upstream main $(date +%Y-%m-%d)" \
-              --body "$PR_BODY" \
-              --label "upstream-sync,automated"
+            PR_CREATED=$(create_pr_and_capture_number "${GITHUB_REPOSITORY}" plus "$SYNC_BRANCH" "chore: sync with upstream main $(date +%Y-%m-%d)" "$PR_BODY")
+            add_labels_to_pr "${GITHUB_REPOSITORY}" "$PR_CREATED" upstream-sync automated || true
           else
             echo "Merge conflicts detected"
-            git merge --abort
+            git merge --abort || true
+            git checkout -B "$SYNC_BRANCH" plus
+            git merge upstream/main --no-commit || true
 
-            gh issue create \
-              --title "Merge conflict: Upstream main sync $(date +%Y-%m-%d)" \
-              --body "The automated upstream main branch sync encountered merge conflicts. Please resolve them manually." \
-              --label "upstream-sync,needs-attention,merge-conflict"
+            RESOLUTION_MODE="claude-resolved"
+            if bash .github/scripts/resolve-conflicts-with-claude.sh plus upstream/main "upstream main branch sync"; then
+              git add -A
+              git commit -m "chore: sync with upstream main branch (claude-resolved conflicts)"
+            else
+              echo "Claude could not finish the merge cleanly, falling back to git strategies"
+              RESOLUTION_MODE="manual-review"
+              git merge --abort || true
+              git checkout -B "$SYNC_BRANCH" plus
+
+              if git merge upstream/main -X theirs --no-edit -m "chore: sync with upstream main branch (upstream-preferred fallback)"; then
+                RESOLUTION_MODE="upstream-preferred"
+              else
+                git merge --abort || true
+                git checkout -B "$SYNC_BRANCH" plus
+                git merge upstream/main --no-commit || true
+                git add -A
+                git commit -m "chore: sync with upstream main branch (needs manual conflict resolution)" || exit 0
+              fi
+            fi
+
+            git push origin "$SYNC_BRANCH" --force
+
+            if [ "$RESOLUTION_MODE" = "claude-resolved" ]; then
+              PR_BODY=$(cat <<'EOF'
+          ## Upstream Main Branch Sync
+
+          This PR syncs the latest changes from the official Capacitor main branch.
+
+          ### Conflict Resolution
+          - Git reported merge conflicts while syncing upstream `main`
+          - Claude Code resolved the conflicted files in the sync branch
+
+          ---
+          *Synced from upstream by Capacitor+ Bot*
+          EOF
+          )
+            else
+              PR_BODY=$(cat <<'EOF'
+          ## Merge Conflict Resolution Required
+
+          The automated upstream main branch sync encountered merge conflicts.
+
+          ### What happened
+          - Claude Code attempted to resolve the merge conflicts
+          - This PR was created so CI and manual review can finish the sync safely
+
+          ---
+          *Synced from upstream by Capacitor+ Bot*
+          EOF
+          )
+            fi
+
+            PR_CREATED=$(create_pr_and_capture_number "${GITHUB_REPOSITORY}" plus "$SYNC_BRANCH" "chore: sync with upstream main $(date +%Y-%m-%d)" "$PR_BODY")
+            if [ "$RESOLUTION_MODE" = "claude-resolved" ]; then
+              add_labels_to_pr "${GITHUB_REPOSITORY}" "$PR_CREATED" upstream-sync automated || true
+            else
+              add_labels_to_pr "${GITHUB_REPOSITORY}" "$PR_CREATED" upstream-sync needs-attention merge-conflict || true
+              gh pr comment "$PR_CREATED" --body "Claude Code could not resolve this upstream sync completely. Please review the branch carefully before merging." >/dev/null 2>&1 || true
+            fi
           fi
 
   # Job 3: Sync a specific PR by number
@@ -370,13 +501,14 @@ jobs:
           filter: blob:none
           token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Install dependencies
-        run: npm install
+        run: bun install --frozen-lockfile
+
+      - name: Install Claude Code
+        run: bun add -g @anthropic-ai/claude-code
 
       - name: Configure Git
         run: |
@@ -387,7 +519,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
           PR_NUMBER: ${{ github.event.inputs.pr_number }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
+          source .github/scripts/sync-gh-helpers.sh
+          ensure_sync_labels "${GITHUB_REPOSITORY}"
+
           echo "Syncing specific PR #$PR_NUMBER from upstream..."
 
           # Get PR info
@@ -422,7 +558,7 @@ jobs:
           if git merge upstream-pr-$PR_NUMBER --no-edit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR"; then
             # Run formatter to ensure lint passes
             echo "Running formatter..."
-            npm run fmt || echo "Formatter had some issues, continuing..."
+            bun run fmt || echo "Formatter had some issues, continuing..."
 
             # Check if fmt made any changes and commit them
             if ! git diff --quiet; then
@@ -453,24 +589,81 @@ jobs:
           EOF
           )
 
-            gh pr create \
-              --base plus \
-              --head "$SYNC_BRANCH" \
-              --title "chore: sync upstream PR #$PR_NUMBER - $PR_TITLE" \
-              --body "$PR_BODY" \
-              --label "upstream-sync,automated"
+            PR_CREATED=$(create_pr_and_capture_number "${GITHUB_REPOSITORY}" plus "$SYNC_BRANCH" "chore: sync upstream PR #$PR_NUMBER - $PR_TITLE" "$PR_BODY")
+            add_labels_to_pr "${GITHUB_REPOSITORY}" "$PR_CREATED" upstream-sync automated || true
 
             echo "Successfully created PR for upstream #$PR_NUMBER"
           else
             echo "Merge conflicts detected for PR #$PR_NUMBER"
-            git merge --abort
+            git merge --abort || true
+            git checkout -B "$SYNC_BRANCH" plus
+            git merge upstream-pr-$PR_NUMBER --no-commit || true
 
-            gh issue create \
-              --title "Merge conflict: Upstream PR #$PR_NUMBER - $PR_TITLE" \
-              --body "The sync of upstream PR #$PR_NUMBER from @$PR_AUTHOR encountered merge conflicts.
+            RESOLUTION_MODE="claude-resolved"
+            if bash .github/scripts/resolve-conflicts-with-claude.sh plus "upstream-pr-$PR_NUMBER" "specific upstream PR #$PR_NUMBER"; then
+              git add -A
+              git commit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR (claude-resolved conflicts)"
+            else
+              echo "Claude could not finish the merge cleanly, falling back to git strategies"
+              RESOLUTION_MODE="manual-review"
+              git merge --abort || true
+              git checkout -B "$SYNC_BRANCH" plus
+
+              if git merge upstream-pr-$PR_NUMBER -X theirs --no-edit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR (upstream-preferred fallback)"; then
+                RESOLUTION_MODE="upstream-preferred"
+              else
+                git merge --abort || true
+                git checkout -B "$SYNC_BRANCH" plus
+                git merge upstream-pr-$PR_NUMBER --no-commit || true
+                git add -A
+                git commit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR (needs manual conflict resolution)" || exit 0
+              fi
+            fi
+
+            git push origin "$SYNC_BRANCH" --force
+
+            if [ "$RESOLUTION_MODE" = "claude-resolved" ]; then
+              PR_BODY=$(cat <<EOF
+          ## Upstream PR Sync
+
+          This PR syncs changes from an external contributor's PR on the official Capacitor repository.
+
+          ### Original PR
+          - **PR:** [#$PR_NUMBER]($PR_URL)
+          - **Title:** $PR_TITLE
+          - **Author:** @$PR_AUTHOR
+
+          ### Conflict Resolution
+          - Git reported merge conflicts while syncing this upstream PR
+          - Claude Code resolved the conflicted files in the sync branch
+
+          ---
+          *Synced from upstream by Capacitor+ Bot*
+          EOF
+          )
+            else
+              PR_BODY=$(cat <<EOF
+          ## Merge Conflict Resolution Required
+
+          The sync of upstream PR #$PR_NUMBER from @$PR_AUTHOR encountered merge conflicts.
 
           **Original PR:** $PR_URL
 
-          Please resolve the conflicts manually." \
-              --label "upstream-sync,needs-attention,merge-conflict"
+          ### What happened
+          - Claude Code attempted to resolve the merge conflicts
+          - This PR was created so CI and manual review can finish the sync safely
+
+          ---
+          *Synced from upstream by Capacitor+ Bot*
+          EOF
+          )
+            fi
+
+            PR_CREATED=$(create_pr_and_capture_number "${GITHUB_REPOSITORY}" plus "$SYNC_BRANCH" "chore: sync upstream PR #$PR_NUMBER - $PR_TITLE" "$PR_BODY")
+            if [ "$RESOLUTION_MODE" = "claude-resolved" ]; then
+              add_labels_to_pr "${GITHUB_REPOSITORY}" "$PR_CREATED" upstream-sync automated || true
+            else
+              add_labels_to_pr "${GITHUB_REPOSITORY}" "$PR_CREATED" upstream-sync needs-attention merge-conflict || true
+              gh pr comment "$PR_CREATED" --body "Claude Code could not resolve this upstream sync completely. Please review the branch carefully before merging." >/dev/null 2>&1 || true
+            fi
           fi
