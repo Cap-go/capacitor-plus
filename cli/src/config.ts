@@ -427,7 +427,7 @@ async function determineCocoapodPath(): Promise<string> {
 
 async function determinePackageManager(
   rootDir: string,
-  platformDir: any,
+  platformDir: string,
   nativeProjectDirAbs: string,
 ): Promise<PackageManager> {
   if (existsSync(resolve(nativeProjectDirAbs, 'CapApp-SPM'))) {

@@ -3,7 +3,6 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-<<<<<<< HEAD
 ## [8.0.8](https://github.com/Cap-go/capacitor-plus/compare/8.0.7...8.0.8) (2026-04-08)
 
 
@@ -454,7 +453,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - update sync branches when upstream PRs have new commits ([5f80078](https://github.com/Cap-go/capacitor-plus/commit/5f80078db201099c6bf75b9e40a6efd1c3d8ac46))
 - Upgrade to Typescript 5.x ([#6433](https://github.com/Cap-go/capacitor-plus/issues/6433)) ([88d0ded](https://github.com/Cap-go/capacitor-plus/commit/88d0ded9e7356531ffc4563b9b81a0f3f069484b))
 - **webview:** add setServerAssetPath method ([881235b](https://github.com/Cap-go/capacitor-plus/commit/881235b14de23ef988746bfb89a5a0fc3c8d8466))
-=======
 ## [8.3.1](https://github.com/ionic-team/capacitor/compare/8.3.0...8.3.1) (2026-04-16)
 
 ### Bug Fixes
@@ -529,7 +527,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - **android:** Remove calculated bottom inset if keyboard is visible ([#8280](https://github.com/ionic-team/capacitor/issues/8280)) ([196b642](https://github.com/ionic-team/capacitor/commit/196b642236d293a5012e3c307fcd942766e56cce))
 - **cli:** Support wireless iOS devices in `cap run` ([#8301](https://github.com/ionic-team/capacitor/issues/8301)) ([dcb368c](https://github.com/ionic-team/capacitor/commit/dcb368c33555487f1b6f46a6d8e30736bdd78955))
 - **cli:** use latest native-run ([#8296](https://github.com/ionic-team/capacitor/issues/8296)) ([121d830](https://github.com/ionic-team/capacitor/commit/121d83013f39e25009121533a2c3ad86e428d6b2))
->>>>>>> upstream/main
 
 # [8.0.0](https://github.com/ionic-team/capacitor/compare/8.0.0-beta.0...8.0.0) (2025-12-08)
 

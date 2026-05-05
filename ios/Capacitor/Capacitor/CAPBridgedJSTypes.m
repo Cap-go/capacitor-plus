@@ -29,7 +29,7 @@
     return defaultValue;
 }
 
-- (NSArray * _Nullable)getArray:(NSString * _Nonnull)key defaultValue:(NSArray * _Nullable)defaultValue; {
+- (NSArray * _Nullable)getArray:(NSString * _Nonnull)key defaultValue:(NSArray * _Nullable)defaultValue {
     id value = [[self dictionaryRepresentation] objectForKey:key];
     if (value != nil && [value isKindOfClass:[NSArray class]]) {
         return value;

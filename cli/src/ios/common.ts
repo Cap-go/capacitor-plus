@@ -30,7 +30,10 @@ function execBundler() {
 export async function getCommonChecks(config: Config): Promise<CheckFunction[]> {
   const checks: CheckFunction[] = [];
   if ((await config.ios.packageManager) === 'bundler') {
-    checks.push(() => checkBundler(config));
+    const bundlerCheck = await checkBundler(config);
+    if (bundlerCheck) {
+      checks.push(() => Promise.resolve(bundlerCheck));
+    }
   } else if ((await config.ios.packageManager) === 'Cocoapods') {
     checks.push(() => checkCocoaPods(config));
   } else if ((await config.ios.packageManager) === 'SPM') {

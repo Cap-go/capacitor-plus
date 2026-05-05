@@ -3,7 +3,6 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-<<<<<<< HEAD
 ## [8.0.8](https://github.com/Cap-go/capacitor-plus/compare/8.0.7...8.0.8) (2026-04-08)
 
 **Note:** Version bump only for package @capacitor-plus/core
@@ -125,7 +124,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - System Bars Plugin ([#8180](https://github.com/Cap-go/capacitor-plus/issues/8180)) ([a32216a](https://github.com/Cap-go/capacitor-plus/commit/a32216ac0607172a3a9c7ae5cdbfc598769294a6))
 - Upgrade to Typescript 5.x ([#6433](https://github.com/Cap-go/capacitor-plus/issues/6433)) ([88d0ded](https://github.com/Cap-go/capacitor-plus/commit/88d0ded9e7356531ffc4563b9b81a0f3f069484b))
 - **webview:** add setServerAssetPath method ([881235b](https://github.com/Cap-go/capacitor-plus/commit/881235b14de23ef988746bfb89a5a0fc3c8d8466))
-=======
 ## [8.3.1](https://github.com/ionic-team/capacitor/compare/8.3.0...8.3.1) (2026-04-16)
 
 **Note:** Version bump only for package @capacitor/core
@@ -160,7 +158,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## [8.0.1](https://github.com/ionic-team/capacitor/compare/8.0.0...8.0.1) (2026-01-13)
 
 **Note:** Version bump only for package @capacitor/core
->>>>>>> upstream/main
 
 # [8.0.0](https://github.com/ionic-team/capacitor/compare/8.0.0-beta.0...8.0.0) (2025-12-08)
 

@@ -43,7 +43,7 @@ export async function runCommand(
   options: RunCommandOptions,
 ): Promise<void> {
   options.host = options.host ?? CapLiveReloadHelper.getIpAddress() ?? 'localhost';
-  if (!options.https && !options.port) {
+  if (!options.port) {
     options.port = '3000';
   }
   if (selectedPlatformName && !(await isValidPlatform(selectedPlatformName))) {

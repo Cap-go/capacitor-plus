@@ -15,7 +15,7 @@ comment:
     - label: "type: bug"
       message: >
         This issue has been labeled as `type: bug`. This label is added to issues
-        that that have been reproduced and are being tracked in our internal issue tracker.
+        that have been reproduced and are being tracked in our internal issue tracker.
     - label: "needs reproduction"
       message: >
         This issue needs more information before it can be addressed.
@@ -40,4 +40,3 @@ closeAndLock:
   close: true
   lock: true
   dryRun: false
-

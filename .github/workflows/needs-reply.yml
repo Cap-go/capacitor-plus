@@ -5,11 +5,11 @@ on:
     - cron: "0 0 * * *"
 
 jobs:
-  build:
+  close-old-issues:
     runs-on: ubuntu-latest
     steps:
       - name: Close old issues that need reply
-        uses: imhoffd/needs-reply@v2
+        uses: imhoffd/needs-reply@v2.0.0
         with:
           repo-token: ${{ secrets.BOT_TOKEN }}
           issue-label: 'needs reply'

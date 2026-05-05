@@ -2,6 +2,10 @@ name: Publish Native iOS Library
 
 on:
   workflow_call:
+    inputs:
+      publish_ref:
+        required: false
+        type: string
     secrets:
       COCOAPODS_TRUNK_TOKEN:
         required: true
@@ -21,7 +25,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
-          ref: 'main'
+          ref: ${{ inputs.publish_ref || github.ref }}
       - name: Install Cocoapods
         run: gem install cocoapods
       - name: Deploy to Cocoapods

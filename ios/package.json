@@ -1,17 +1,9 @@
 {
-<<<<<<< HEAD
   "name": "@capacitor-plus/ios",
-  "version": "8.0.8",
+  "version": "8.3.1",
   "description": "Capacitor+: Enhanced Capacitor with automated upstream sync - Cross-platform apps with JavaScript and the web",
   "homepage": "https://capgo.app/docs/plugins/capacitor-plus/",
   "author": "Capgo Team <support@capgo.app> (https://capgo.app)",
-=======
-  "name": "@capacitor/ios",
-  "version": "8.3.1",
-  "description": "Capacitor: Cross-platform apps with JavaScript and the web",
-  "homepage": "https://capacitorjs.com",
-  "author": "Ionic Team <hi@ionic.io> (https://ionic.io)",
->>>>>>> upstream/main
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -33,12 +25,8 @@
     "xc:build:CapacitorCordova": "cd CapacitorCordova && xcodebuild && cd .."
   },
   "peerDependencies": {
-<<<<<<< HEAD
-    "@capacitor-plus/core": "^8.0.0",
-    "@capacitor/core": "^8.0.0"
-=======
+    "@capacitor-plus/core": "^8.3.0",
     "@capacitor/core": "^8.3.0"
->>>>>>> upstream/main
   },
   "publishConfig": {
     "access": "public"
