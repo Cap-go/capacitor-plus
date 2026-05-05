@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.3.2](https://github.com/Cap-go/capacitor-plus/compare/8.0.8...8.3.2) (2026-05-05)
+
+
+### Bug Fixes
+
+* address follow-up review comments ([8bee786](https://github.com/Cap-go/capacitor-plus/commit/8bee786e2c68ca6c351e88f104b518291c1f81e3))
+* **cookies:** only send expires param on web if a date is set ([b10cd7f](https://github.com/Cap-go/capacitor-plus/commit/b10cd7ff15b010a76802374214f4e0cbd04abdab))
+* **core:** make SystemBars hide and show options optional ([#8305](https://github.com/Cap-go/capacitor-plus/issues/8305)) ([95dc7d8](https://github.com/Cap-go/capacitor-plus/commit/95dc7d8ace3aabdda7e325c4a8ef7d1432ad37e9))
+* **http:** handle URL objects on fetch ([#8386](https://github.com/Cap-go/capacitor-plus/issues/8386)) ([003099a](https://github.com/Cap-go/capacitor-plus/commit/003099aef246adfd76d890074d46b1484951824b))
+* resolve upstream sync conflicts ([75cbb30](https://github.com/Cap-go/capacitor-plus/commit/75cbb3097a7068bcb37313cbe6301628079101ca))
+* **SystemBars:** use native safe area insets on Android ([#8384](https://github.com/Cap-go/capacitor-plus/issues/8384)) ([4e99598](https://github.com/Cap-go/capacitor-plus/commit/4e99598a2a57ee97e82be1aaa09492744622fa60))
+
+
+### Reverts
+
+* revert version bump from [#8319](https://github.com/Cap-go/capacitor-plus/issues/8319) and [#8320](https://github.com/Cap-go/capacitor-plus/issues/8320) ([a48ebb6](https://github.com/Cap-go/capacitor-plus/commit/a48ebb622ea4ebe92927bf1756a4d8ac6012884b))
+
+
+
+
+
 ## [8.0.8](https://github.com/Cap-go/capacitor-plus/compare/8.0.7...8.0.8) (2026-04-08)
 
 **Note:** Version bump only for package @capacitor-plus/core

@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.3.2](https://github.com/Cap-go/capacitor-plus/compare/8.0.8...8.3.2) (2026-05-05)
+
+
+### Bug Fixes
+
+* address follow-up review comments ([8bee786](https://github.com/Cap-go/capacitor-plus/commit/8bee786e2c68ca6c351e88f104b518291c1f81e3))
+* boundary value extraction for form-data requests ([#7518](https://github.com/Cap-go/capacitor-plus/issues/7518)) ([64ab854](https://github.com/Cap-go/capacitor-plus/commit/64ab854c12330804c24275d88d3a9f7c8e52a73d))
+* **http:** handle URL objects on fetch ([#8386](https://github.com/Cap-go/capacitor-plus/issues/8386)) ([003099a](https://github.com/Cap-go/capacitor-plus/commit/003099aef246adfd76d890074d46b1484951824b))
+* **ios:** make getArray accesible on Objective-C plugins ([#8392](https://github.com/Cap-go/capacitor-plus/issues/8392)) ([afb80f2](https://github.com/Cap-go/capacitor-plus/commit/afb80f2fecb4bf85dbebe25e815de2a5564264d6))
+* **ios:** remove tmpWindow usages on presentVC/dismissVC ([#8338](https://github.com/Cap-go/capacitor-plus/issues/8338)) ([fc9647f](https://github.com/Cap-go/capacitor-plus/commit/fc9647f26f08ff64f53b32c79fb19f153e3b0a24))
+* resolve upstream sync conflicts ([75cbb30](https://github.com/Cap-go/capacitor-plus/commit/75cbb3097a7068bcb37313cbe6301628079101ca))
+
+
+### Reverts
+
+* revert version bump from [#8319](https://github.com/Cap-go/capacitor-plus/issues/8319) and [#8320](https://github.com/Cap-go/capacitor-plus/issues/8320) ([a48ebb6](https://github.com/Cap-go/capacitor-plus/commit/a48ebb622ea4ebe92927bf1756a4d8ac6012884b))
+
+
+
+
+
 ## [8.0.8](https://github.com/Cap-go/capacitor-plus/compare/8.0.7...8.0.8) (2026-04-08)
 
 **Note:** Version bump only for package @capacitor-plus/ios
