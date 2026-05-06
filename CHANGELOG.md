@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.3.3](https://github.com/Cap-go/capacitor-plus/compare/8.3.2...8.3.3) (2026-05-06)
+
+
+### Bug Fixes
+
+* **cli:** generate resource entries in Package.swift ([#8455](https://github.com/Cap-go/capacitor-plus/issues/8455)) ([790bd27](https://github.com/Cap-go/capacitor-plus/commit/790bd27123497111984227010c3162cec94a108e))
+
+
+
+
+
 ## [8.3.2](https://github.com/Cap-go/capacitor-plus/compare/8.0.8...8.3.2) (2026-05-05)
 
 
