@@ -13,7 +13,8 @@ on:
 
 jobs:
   claude-review:
-    timeout-minutes: 30
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     # Only run for upstream-sync labeled PRs after CI passes
     if: |
@@ -364,7 +365,8 @@ jobs:
           gh pr comment $PR_NUMBER --body "$COMMENT"
 
   auto-merge:
-    timeout-minutes: 30
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     needs: claude-review
     if: needs.claude-review.outputs.should_merge == 'true'
@@ -404,7 +406,8 @@ jobs:
           gh workflow run publish-capacitor-plus.yml --ref plus
 
   notify-issues:
-    timeout-minutes: 30
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     needs: claude-review
     if: needs.claude-review.outputs.should_merge == 'false' && needs.claude-review.outputs.pr_number != ''

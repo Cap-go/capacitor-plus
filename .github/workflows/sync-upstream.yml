@@ -34,7 +34,8 @@ jobs:
   sync-open-prs:
     if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.sync_mode == 'all_open_prs')
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     permissions:
       contents: write
       pull-requests: write
@@ -333,7 +334,8 @@ jobs:
   sync-main-branch:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.sync_mode == 'main_branch'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     permissions:
       contents: write
       pull-requests: write
@@ -497,7 +499,8 @@ jobs:
   sync-specific-pr:
     if: github.event_name == 'workflow_dispatch' && github.event.inputs.sync_mode == 'specific_pr' && github.event.inputs.pr_number != ''
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     permissions:
       contents: write
       pull-requests: write

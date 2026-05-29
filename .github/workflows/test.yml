@@ -10,7 +10,8 @@ on:
 
 jobs:
   guard_swiftpm_version:
-    timeout-minutes: 30
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
       - name: Setup Node.js
@@ -29,7 +30,8 @@ jobs:
           fi
   setup:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     steps:
       - name: Get Latest
         uses: actions/setup-node@v6
@@ -43,7 +45,8 @@ jobs:
           key: ${{ runner.OS }}-dependencies-cache-${{ hashFiles('**/package.json') }}
   lint:
     runs-on: macos-15
-    timeout-minutes: 60
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     steps:
       - uses: actions/setup-node@v6
         with:
@@ -59,7 +62,8 @@ jobs:
       - run: npm run lint
   test-cli:
     runs-on: macos-15
-    timeout-minutes: 60
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     needs:
       - setup
       - lint
@@ -80,7 +84,8 @@ jobs:
         working-directory: ./cli
   test-core:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     needs:
       - setup
       - lint
@@ -101,7 +106,8 @@ jobs:
         working-directory: ./core
   test-ios:
     runs-on: macos-15
-    timeout-minutes: 60
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     needs:
       - setup
       - lint
@@ -129,7 +135,8 @@ jobs:
         run: sh ./scripts/native-podspec.sh lint
   test-android:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     needs:
       - setup
       - lint

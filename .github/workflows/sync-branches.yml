@@ -23,7 +23,8 @@ jobs:
   sync-main-branch:
     if: github.event_name == 'schedule' || github.event.inputs.branch == 'both' || github.event.inputs.branch == 'main'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     permissions:
       contents: write
       pull-requests: write
@@ -202,7 +203,8 @@ jobs:
   sync-plus-branch:
     if: github.event_name == 'schedule' || github.event.inputs.branch == 'both' || github.event.inputs.branch == 'plus'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     permissions:
       contents: write
       pull-requests: write

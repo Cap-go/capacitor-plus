@@ -16,6 +16,7 @@ permissions:
 jobs:
   comment:
     runs-on: ubuntu-latest
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
     timeout-minutes: 10
     steps:
       - name: Check out
