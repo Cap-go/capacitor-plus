@@ -10,7 +10,7 @@ on:
 jobs:
   publish-ios:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - run: sudo xcode-select --switch /Applications/Xcode_26.0.app
       - run: xcrun simctl list > /dev/null

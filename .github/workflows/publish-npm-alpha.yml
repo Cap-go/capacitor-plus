@@ -9,7 +9,7 @@ permissions:
 jobs:
   deploy-npm-alpha:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
         with:
