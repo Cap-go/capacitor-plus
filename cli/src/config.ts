@@ -236,7 +236,7 @@ async function loadAndroidConfig(
 
   return {
     name,
-    minVersion: '24',
+    minVersion: '26',
     studioPath,
     platformDir,
     platformDirAbs,
@@ -286,7 +286,7 @@ async function loadIOSConfig(rootDir: string, extConfig: ExternalConfig): Promis
   };
   return {
     name,
-    minVersion: '15.0',
+    minVersion: '16.0',
     platformDir,
     platformDirAbs,
     scheme,
