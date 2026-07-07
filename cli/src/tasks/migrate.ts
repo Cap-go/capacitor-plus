@@ -1,6 +1,6 @@
 import { writeFileSync, readFileSync, existsSync } from 'fs-extra';
 import { join } from 'path';
-import { rimraf } from 'rimraf';
+import rimraf from 'rimraf';
 import { coerce, gte, lt } from 'semver';
 
 import c from '../colors';
@@ -79,9 +79,9 @@ const plugins = [
 ];
 const coreVersion = '^8.0.0';
 const pluginVersion = '^8.0.0';
-const gradleVersion = '8.14.3';
-const iOSVersion = '15';
-const kotlinVersion = '2.2.20';
+const gradleVersion = '9.5.1';
+const iOSVersion = '16';
+const kotlinVersion = '2.4.0';
 let installFailed = false;
 
 export async function migrateCommand(config: Config, noprompt: boolean, packagemanager: string): Promise<void> {
@@ -124,7 +124,7 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
 
   const { migrateconfirm } = noprompt
     ? { migrateconfirm: 'y' }
-    : await logPrompt(`Capacitor 8 sets a deployment target of iOS ${iOSVersion} and Android 16 (SDK 36). \n`, {
+    : await logPrompt(`Capacitor 8 sets a deployment target of iOS ${iOSVersion} and Android 17 (SDK 37). \n`, {
         type: 'text',
         name: 'migrateconfirm',
         message: `Are you sure you want to migrate? (Y/n)`,

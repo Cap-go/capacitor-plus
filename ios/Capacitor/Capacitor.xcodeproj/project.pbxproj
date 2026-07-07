@@ -9,8 +9,6 @@
 /* Begin PBXBuildFile section */
 		0F83E885285A332E006C43CB /* AppUUID.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F83E884285A332D006C43CB /* AppUUID.swift */; };
 		0F8F33B327DA980A003F49D6 /* PluginConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0F8F33B127DA980A003F49D6 /* PluginConfig.swift */; };
-		2F81F5C926FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = 2F81F5C726FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.h */; };
-		2F81F5CA26FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 2F81F5C826FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.m */; };
 		373A69C1255C9360000A6F44 /* NotificationHandlerProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 373A69C0255C9360000A6F44 /* NotificationHandlerProtocol.swift */; };
 		373A69F2255C95D0000A6F44 /* NotificationRouter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 373A69F1255C95D0000A6F44 /* NotificationRouter.swift */; };
 		501CBAA71FC0A723009B0D4D /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 501CBAA61FC0A723009B0D4D /* WebKit.framework */; };
@@ -52,14 +50,12 @@
 		62959B3A2524DA7800A3D7F1 /* CAPLog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62959B082524DA7700A3D7F1 /* CAPLog.swift */; };
 		62959B3B2524DA7800A3D7F1 /* CAPPluginMethod.h in Headers */ = {isa = PBXBuildFile; fileRef = 62959B092524DA7700A3D7F1 /* CAPPluginMethod.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		62959B3C2524DA7800A3D7F1 /* CAPBridgeDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62959B0A2524DA7700A3D7F1 /* CAPBridgeDelegate.swift */; };
-		62959B402524DA7800A3D7F1 /* TmpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62959B0E2524DA7700A3D7F1 /* TmpViewController.swift */; };
 		62959B412524DA7800A3D7F1 /* Capacitor.h in Headers */ = {isa = PBXBuildFile; fileRef = 62959B0F2524DA7700A3D7F1 /* Capacitor.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		62959B422524DA7800A3D7F1 /* DocLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62959B102524DA7700A3D7F1 /* DocLinks.swift */; };
 		62959B432524DA7800A3D7F1 /* Data+Capacitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62959B112524DA7700A3D7F1 /* Data+Capacitor.swift */; };
 		62959B452524DA7800A3D7F1 /* CAPPlugin.h in Headers */ = {isa = PBXBuildFile; fileRef = 62959B132524DA7700A3D7F1 /* CAPPlugin.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		62959B462524DA7800A3D7F1 /* CAPBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62959B142524DA7700A3D7F1 /* CAPBridge.swift */; };
 		62959B472524DA7800A3D7F1 /* CAPNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62959B152524DA7700A3D7F1 /* CAPNotifications.swift */; };
-		62959BA52526475A00A3D7F1 /* Cordova.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 62959BA02526474300A3D7F1 /* Cordova.framework */; };
 		6296A77E253A2E49005A202A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6296A77D253A2E49005A202A /* AppDelegate.swift */; };
 		6296A782253A2E49005A202A /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6296A781253A2E49005A202A /* ViewController.swift */; };
 		6296A785253A2E49005A202A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 6296A783253A2E49005A202A /* Main.storyboard */; };
@@ -158,8 +154,6 @@
 /* Begin PBXFileReference section */
 		0F83E884285A332D006C43CB /* AppUUID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppUUID.swift; sourceTree = "<group>"; };
 		0F8F33B127DA980A003F49D6 /* PluginConfig.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PluginConfig.swift; sourceTree = "<group>"; };
-		2F81F5C726FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CAPBridgeViewController+CDVScreenOrientationDelegate.h"; sourceTree = "<group>"; };
-		2F81F5C826FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "CAPBridgeViewController+CDVScreenOrientationDelegate.m"; sourceTree = "<group>"; };
 		373A69C0255C9360000A6F44 /* NotificationHandlerProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationHandlerProtocol.swift; sourceTree = "<group>"; };
 		373A69F1255C95D0000A6F44 /* NotificationRouter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationRouter.swift; sourceTree = "<group>"; };
 		501CBAA61FC0A723009B0D4D /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
@@ -204,7 +198,6 @@
 		62959B082524DA7700A3D7F1 /* CAPLog.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CAPLog.swift; sourceTree = "<group>"; };
 		62959B092524DA7700A3D7F1 /* CAPPluginMethod.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CAPPluginMethod.h; sourceTree = "<group>"; };
 		62959B0A2524DA7700A3D7F1 /* CAPBridgeDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CAPBridgeDelegate.swift; sourceTree = "<group>"; };
-		62959B0E2524DA7700A3D7F1 /* TmpViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TmpViewController.swift; sourceTree = "<group>"; };
 		62959B0F2524DA7700A3D7F1 /* Capacitor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Capacitor.h; sourceTree = "<group>"; };
 		62959B102524DA7700A3D7F1 /* DocLinks.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DocLinks.swift; sourceTree = "<group>"; };
 		62959B112524DA7700A3D7F1 /* Data+Capacitor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Data+Capacitor.swift"; sourceTree = "<group>"; };
@@ -270,7 +263,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				501CBAA71FC0A723009B0D4D /* WebKit.framework in Frameworks */,
-				62959BA52526475A00A3D7F1 /* Cordova.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -395,7 +387,6 @@
 				6214934625509C3F006C36F9 /* CAPInstanceConfiguration.swift */,
 				62959B082524DA7700A3D7F1 /* CAPLog.swift */,
 				62959AE72524DA7700A3D7F1 /* CAPFile.swift */,
-				62959B0E2524DA7700A3D7F1 /* TmpViewController.swift */,
 				62959B102524DA7700A3D7F1 /* DocLinks.swift */,
 				62959B152524DA7700A3D7F1 /* CAPNotifications.swift */,
 				62959B072524DA7700A3D7F1 /* CapacitorExtension.swift */,
@@ -403,8 +394,6 @@
 				62FABD1925AE5C01007B3814 /* Array+Capacitor.swift */,
 				62D43AEF2581817500673C24 /* WKWebView+Capacitor.swift */,
 				62D43B642582A13D00673C24 /* WKWebView+Capacitor.m */,
-				2F81F5C726FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.h */,
-				2F81F5C826FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.m */,
 				62959AE92524DA7700A3D7F1 /* UIColor.swift */,
 				62959AFE2524DA7700A3D7F1 /* UIStatusBarManager+CAPHandleTapAction.m */,
 				62959B122524DA7700A3D7F1 /* Info.plist */,
@@ -515,7 +504,6 @@
 				623D6909254C6FDF002D01D1 /* CAPInstanceDescriptor.h in Headers */,
 				62959B192524DA7800A3D7F1 /* CAPBridgedPlugin.h in Headers */,
 				621ECCB82542045900D3D615 /* CAPBridgedJSTypes.h in Headers */,
-				2F81F5C926FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -710,7 +698,6 @@
 				A7D9312F2B23710300FF59A2 /* JSValueDecoder.swift in Sources */,
 				62959B362524DA7800A3D7F1 /* CAPBridgeViewController.swift in Sources */,
 				621ECCB72542045900D3D615 /* CAPBridgedJSTypes.m in Sources */,
-				62959B402524DA7800A3D7F1 /* TmpViewController.swift in Sources */,
 				621ECCD6254205BD00D3D615 /* CAPBridgeProtocol.swift in Sources */,
 				62D43AF02581817500673C24 /* WKWebView+Capacitor.swift in Sources */,
 				62959B432524DA7800A3D7F1 /* Data+Capacitor.swift in Sources */,
@@ -728,7 +715,6 @@
 				62959B1D2524DA7800A3D7F1 /* UIColor.swift in Sources */,
 				62959B332524DA7800A3D7F1 /* CAPPlugin.m in Sources */,
 				62959B1C2524DA7800A3D7F1 /* CAPPluginMethod.m in Sources */,
-				2F81F5CA26FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.m in Sources */,
 				62ADC0CA25CB678000E914DE /* PluginCallResult.swift in Sources */,
 				62959B472524DA7800A3D7F1 /* CAPNotifications.swift in Sources */,
 				62D43B652582A13D00673C24 /* WKWebView+Capacitor.m in Sources */,
@@ -893,7 +879,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -951,7 +937,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
@@ -978,7 +964,7 @@
 				);
 				INFOPLIST_FILE = Capacitor/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MODULEMAP_FILE = Capacitor/Capacitor.modulemap;
 				PRODUCT_BUNDLE_IDENTIFIER = com.capacitorjs.ios.Capacitor;
@@ -1008,7 +994,7 @@
 				);
 				INFOPLIST_FILE = Capacitor/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				MODULEMAP_FILE = Capacitor/Capacitor.modulemap;
 				PRODUCT_BUNDLE_IDENTIFIER = com.capacitorjs.ios.Capacitor;
@@ -1072,7 +1058,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = TestsHostApp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -1095,7 +1081,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = TestsHostApp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.capacitorjs.ios.TestsHostApp;
@@ -1118,7 +1104,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -1145,7 +1131,7 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MTL_FAST_MATH = YES;
