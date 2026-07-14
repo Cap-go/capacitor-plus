@@ -128,19 +128,6 @@ public class WebViewLocalServer {
             return reasonPhrase;
         }
 
-        /**
-         * @deprecated This method may return incorrect headers in concurrent range requests.
-         * <p>
-         * Use {@link #buildDefaultResponseHeaders()} instead, which returns a copy of the map.
-         * </p>
-         * This method will be removed in a future major version of Capacitor.
-         * </p>
-         */
-        @Deprecated(forRemoval = true) // adjust version as appropriate
-        public Map<String, String> getResponseHeaders() {
-            return responseHeaders;
-        }
-
         public Map<String, String> buildDefaultResponseHeaders() {
             return new HashMap<>(responseHeaders);
         }
@@ -221,7 +208,7 @@ public class WebViewLocalServer {
     }
 
     private boolean isMainUrl(Uri loadingUrl) {
-        return (bridge.getServerUrl() == null && loadingUrl.getHost().equalsIgnoreCase(bridge.getHost()));
+        return bridge.getServerUrl() == null && loadingUrl.getHost().equalsIgnoreCase(bridge.getHost());
     }
 
     private boolean isAllowedUrl(Uri loadingUrl) {
@@ -722,31 +709,31 @@ public class WebViewLocalServer {
         @Override
         public int available() throws IOException {
             InputStream is = getInputStream();
-            return (is != null) ? is.available() : -1;
+            return is != null ? is.available() : -1;
         }
 
         @Override
         public int read() throws IOException {
             InputStream is = getInputStream();
-            return (is != null) ? is.read() : -1;
+            return is != null ? is.read() : -1;
         }
 
         @Override
         public int read(byte[] b) throws IOException {
             InputStream is = getInputStream();
-            return (is != null) ? is.read(b) : -1;
+            return is != null ? is.read(b) : -1;
         }
 
         @Override
         public int read(byte[] b, int off, int len) throws IOException {
             InputStream is = getInputStream();
-            return (is != null) ? is.read(b, off, len) : -1;
+            return is != null ? is.read(b, off, len) : -1;
         }
 
         @Override
         public long skip(long n) throws IOException {
             InputStream is = getInputStream();
-            return (is != null) ? is.skip(n) : 0;
+            return is != null ? is.skip(n) : 0;
         }
     }
 
