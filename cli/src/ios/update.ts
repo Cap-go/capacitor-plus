@@ -74,7 +74,7 @@ async function generateCordovaPackageFiles(cordovaPlugins: Plugin[], config: Con
   await Promise.all(
     cordovaPlugins.map((plugin: any) => {
       return generateCordovaPackageFile(plugin, config);
-    })
+    }),
   );
 }
 
