@@ -44,45 +44,18 @@ var nativeBridge = (function (exports) {
         reader.onerror = reject;
         reader.readAsBinaryString(file);
     });
-    const readArrayBufferAsBase64 = (arrayBuffer) => {
-        const bytes = new Uint8Array(arrayBuffer);
-        const chunkSize = 0x8000;
-        let binary = '';
-        for (let i = 0; i < bytes.length; i += chunkSize) {
-            binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
-        }
-        return btoa(binary);
-    };
-    const readBlobAsBase64 = (blob) => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            const result = reader.result;
-            resolve(result.indexOf(',') >= 0 ? result.split(',')[1] : result);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-    });
-    const readDataViewAsBase64 = (dataView) => readArrayBufferAsBase64(dataView.buffer.slice(dataView.byteOffset, dataView.byteOffset + dataView.byteLength));
-    const base64StringToArrayBuffer = (base64) => {
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) {
-            bytes[i] = binary.charCodeAt(i);
-        }
-        return bytes.buffer;
-    };
     const convertFormData = async (formData) => {
         const newFormData = [];
         for (const pair of formData.entries()) {
             const [key, value] = pair;
-            if (value instanceof File) {
+            if (value instanceof Blob) {
                 const base64File = await readFileAsBase64(value);
                 newFormData.push({
                     key,
                     value: base64File,
                     type: 'base64File',
                     contentType: value.type,
-                    fileName: value.name,
+                    fileName: value.name || 'blob',
                 });
             }
             else {
@@ -92,38 +65,9 @@ var nativeBridge = (function (exports) {
         return newFormData;
     };
     const convertBody = async (body, contentType) => {
-        if (body instanceof File) {
-            const fileData = await readFileAsBase64(body);
-            return {
-                data: fileData,
-                type: 'file',
-                headers: { 'Content-Type': body.type },
-            };
-        }
-        else if (body instanceof Blob) {
-            return {
-                data: await readBlobAsBase64(body),
-                type: 'binary',
-                headers: { 'Content-Type': contentType || body.type || 'application/octet-stream' },
-            };
-        }
-        else if (body instanceof ArrayBuffer) {
-            return {
-                data: readArrayBufferAsBase64(body),
-                type: 'binary',
-                headers: { 'Content-Type': contentType || 'application/octet-stream' },
-            };
-        }
-        else if (ArrayBuffer.isView(body)) {
-            return {
-                data: readDataViewAsBase64(body),
-                type: 'binary',
-                headers: { 'Content-Type': contentType || 'application/octet-stream' },
-            };
-        }
-        if ((typeof ReadableStream !== 'undefined' && body instanceof ReadableStream) || body instanceof Uint8Array) {
+        if (body instanceof ReadableStream || body instanceof Uint8Array) {
             let encodedData;
-            if (typeof ReadableStream !== 'undefined' && body instanceof ReadableStream) {
+            if (body instanceof ReadableStream) {
                 const reader = body.getReader();
                 const chunks = [];
                 while (true) {
@@ -143,9 +87,7 @@ var nativeBridge = (function (exports) {
             else {
                 encodedData = body;
             }
-            let data = (contentType === null || contentType === void 0 ? void 0 : contentType.startsWith('image')) || contentType === 'application/octet-stream'
-                ? readDataViewAsBase64(encodedData)
-                : new TextDecoder().decode(encodedData);
+            let data = new TextDecoder().decode(encodedData);
             let type;
             if (contentType === 'application/json') {
                 try {
@@ -160,7 +102,7 @@ var nativeBridge = (function (exports) {
                 type = 'formData';
             }
             else if (contentType === null || contentType === void 0 ? void 0 : contentType.startsWith('image')) {
-                type = 'binary';
+                type = 'image';
             }
             else if (contentType === 'application/octet-stream') {
                 type = 'binary';
@@ -184,6 +126,14 @@ var nativeBridge = (function (exports) {
             return {
                 data: await convertFormData(body),
                 type: 'formData',
+            };
+        }
+        else if (body instanceof Blob) {
+            const fileData = await readFileAsBase64(body);
+            return {
+                data: fileData,
+                type: 'file',
+                headers: { 'Content-Type': body.type },
             };
         }
         return { data: body, type: 'json' };
@@ -585,15 +535,15 @@ var nativeBridge = (function (exports) {
                                 data: requestData,
                                 dataType: type,
                                 headers: nativeHeaders,
-                                responseType: 'arraybuffer',
                             });
                             const contentType = nativeResponse.headers['Content-Type'] || nativeResponse.headers['content-type'];
+                            let data = (contentType === null || contentType === void 0 ? void 0 : contentType.startsWith('application/json'))
+                                ? JSON.stringify(nativeResponse.data)
+                                : nativeResponse.data;
                             // use null data for 204 No Content HTTP response
-                            const data = nativeResponse.status === 204
-                                ? null
-                                : (contentType === null || contentType === void 0 ? void 0 : contentType.startsWith('application/json'))
-                                    ? JSON.stringify(nativeResponse.data)
-                                    : base64StringToArrayBuffer(nativeResponse.data);
+                            if (nativeResponse.status === 204) {
+                                data = null;
+                            }
                             // intercept & parse response before returning
                             const response = new Response(data, {
                                 headers: nativeResponse.headers,
