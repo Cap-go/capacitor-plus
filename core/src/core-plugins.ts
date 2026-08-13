@@ -262,11 +262,11 @@ export interface HttpHeaders {
   [key: string]: string;
 }
 
-export interface HttpResponse<T = any> {
+export interface HttpResponse {
   /**
    * Additional data received with the Http response.
    */
-  data: T;
+  data: any;
   /**
    * The status code received from the Http response.
    */
