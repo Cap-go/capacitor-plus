@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.3.4](https://github.com/Cap-go/capacitor-plus/compare/8.3.3...8.3.4) (2026-05-07)
+
+
+### Bug Fixes
+
+* **cli:** link plugin dependencies in Package.swift ([#8457](https://github.com/Cap-go/capacitor-plus/issues/8457)) ([b3c769e](https://github.com/Cap-go/capacitor-plus/commit/b3c769e856c826b1174518877cf86ac7ce73bf09))
+
+
+
+
+
 ## [8.3.3](https://github.com/Cap-go/capacitor-plus/compare/8.3.2...8.3.3) (2026-05-06)
 
 

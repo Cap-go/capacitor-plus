@@ -83,3 +83,45 @@ add_labels_to_pr() {
     return 1
   }
 }
+
+create_or_update_conflict_issue() {
+  local repo="$1"
+  local title="$2"
+  local body="$3"
+  local search_text="Upstream sync requires manual conflict resolution in:title"
+
+  if [ "$(repo_has_issues "$repo")" != "true" ]; then
+    return 1
+  fi
+
+  local existing_issue
+  existing_issue=$(
+    gh issue list \
+      --repo "$repo" \
+      --state open \
+      --search "$search_text" \
+      --json number \
+      -q '.[0].number' 2>/dev/null || true
+  )
+
+  if [ -n "$existing_issue" ]; then
+    gh issue comment "$existing_issue" --repo "$repo" --body "$body" >/dev/null 2>&1 || return 1
+    echo "$existing_issue"
+    return 0
+  fi
+
+  gh issue create \
+    --repo "$repo" \
+    --title "$title" \
+    --body "$body" \
+    --label upstream-sync \
+    --label merge-conflict \
+    --label needs-attention >/dev/null 2>&1 || return 1
+
+  gh issue list \
+    --repo "$repo" \
+    --state open \
+    --search "$search_text" \
+    --json number \
+    -q '.[0].number'
+}

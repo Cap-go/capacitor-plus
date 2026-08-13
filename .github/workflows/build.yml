@@ -12,7 +12,8 @@ on:
 jobs:
   # Tests already passed before tag was created, so just build and deploy
   deploy:
-    timeout-minutes: 30
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     name: "Build and publish to npm"
     permissions:
@@ -49,12 +50,11 @@ jobs:
 
       - name: Generate AI changelog
         id: changelog
-        uses: mistricky/ccc@v0.2.3
-        with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          model: claude-sonnet-4-5-20250929
-
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: bun run changelog:ai
       - name: Publish all packages to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -85,7 +85,7 @@ jobs:
           body: |
             ## Capacitor+ v${{ steps.extract.outputs.version }}
 
-            ${{ steps.changelog.outputs.result }}
+            ${{ steps.changelog.outputs.result || '_Changelog was not generated automatically for this release._' }}
 
             ---
 
@@ -107,7 +107,7 @@ jobs:
 
             ---
 
-            Full Changelog: https://github.com/${{ github.repository }}/compare/${{ steps.changelog.outputs.from_tag }}...${{ steps.changelog.outputs.to_tag }}
+            Full Changelog: https://github.com/${{ github.repository }}/compare/${{ steps.changelog.outputs.from_tag || github.ref_name }}...${{ steps.changelog.outputs.to_tag || github.ref_name }}
           make_latest: true
           token: '${{ secrets.PERSONAL_ACCESS_TOKEN }}'
           prerelease: ${{ contains(github.ref, '-') }}
