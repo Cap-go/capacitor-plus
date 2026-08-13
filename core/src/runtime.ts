@@ -149,7 +149,7 @@ export const createCapacitor = (win: WindowCapacitor): CapacitorInstance => {
         );
       };
 
-      const p = new Promise((resolve) => call.then(() => resolve({ remove })));
+      const p = call.then(() => ({ remove }));
 
       (p as any).remove = async () => {
         console.warn(`Using addListener() without 'await' is deprecated.`);
@@ -173,11 +173,6 @@ export const createCapacitor = (win: WindowCapacitor): CapacitorInstance => {
               return pluginHeader ? addListenerNative : addListener;
             case 'removeListener':
               return removeListener;
-          // Promise-machinery short-circuit. See #8472 for failure modes.
-          case 'then':
-          case 'catch':
-          case 'finally':
-            return undefined;
             default:
               return createPluginMethodWrapper(prop);
           }
