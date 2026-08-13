@@ -32,6 +32,10 @@ jobs:
           node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
 
+      # Required by the `bun run changelog:ai` step below.
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+
       - name: Extract version from tag
         id: extract
         run: |
@@ -55,6 +59,7 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: bun run changelog:ai
+
       - name: Publish all packages to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
