@@ -196,15 +196,14 @@ public class SystemBars extends Plugin {
 
         int bottom = safeArea.bottom;
 
-        if (bottom == 0
-                && Build.VERSION.SDK_INT < Build.VERSION_CODES.R
-                && safeArea.left == 0 && safeArea.right == 0) { // skip if nav bar is on a side (landscape)
+        if (bottom == 0 && Build.VERSION.SDK_INT < Build.VERSION_CODES.R && safeArea.left == 0 && safeArea.right == 0) {
+            // skip if nav bar is on a side (landscape)
             bottom = getNavBarHeightFromResources();
         }
 
         boolean imeVisible = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-                ? insets.isVisible(WindowInsetsCompat.Type.ime())
-                : insets.getInsets(WindowInsetsCompat.Type.ime()).bottom > 0;
+            ? insets.isVisible(WindowInsetsCompat.Type.ime())
+            : insets.getInsets(WindowInsetsCompat.Type.ime()).bottom > 0;
 
         if (imeVisible) {
             return Insets.of(safeArea.left, safeArea.top, safeArea.right, 0);

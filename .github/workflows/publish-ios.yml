@@ -14,14 +14,15 @@ on:
 jobs:
   publish-ios:
     runs-on: macos-15
-    timeout-minutes: 30
+    # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
+    timeout-minutes: 10
     steps:
       - run: sudo xcode-select --switch /Applications/Xcode_26.0.app
       - run: xcrun simctl list > /dev/null
       - run: xcodebuild -downloadPlatform iOS
       - uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: 24.x
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
