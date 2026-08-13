@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.3.12](https://github.com/Cap-go/capacitor-plus/compare/8.3.11...8.3.12) (2026-08-13)
+
+
+### Bug Fixes
+
+* **android:** sync upstream SystemBars fixes [#8480](https://github.com/Cap-go/capacitor-plus/issues/8480) and [#8481](https://github.com/Cap-go/capacitor-plus/issues/8481) ([#106](https://github.com/Cap-go/capacitor-plus/issues/106)) ([a63975d](https://github.com/Cap-go/capacitor-plus/commit/a63975d5450a91a11128c7c4fd7df2cea63dd3c8))
+
+
+
+
+
 ## [8.3.11](https://github.com/Cap-go/capacitor-plus/compare/8.3.9...8.3.11) (2026-08-13)
 
 **Note:** Version bump only for package capacitor
