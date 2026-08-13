@@ -54,7 +54,6 @@ public class CapConfig {
     private String errorPath;
     private boolean zoomableWebView = false;
     private boolean resolveServiceWorkerRequests = true;
-    private String adjustMarginsForEdgeToEdge = "auto";
 
     // Embedded
     private String startPath;
@@ -287,7 +286,6 @@ public class CapConfig {
         webContentsDebuggingEnabled = JSONUtils.getBoolean(configJSON, "android.webContentsDebuggingEnabled", isDebug);
         zoomableWebView = JSONUtils.getBoolean(configJSON, "android.zoomEnabled", JSONUtils.getBoolean(configJSON, "zoomEnabled", false));
         resolveServiceWorkerRequests = JSONUtils.getBoolean(configJSON, "android.resolveServiceWorkerRequests", true);
-        adjustMarginsForEdgeToEdge = JSONUtils.getString(configJSON, "android.adjustMarginsForEdgeToEdge", "auto");
 
         String logBehavior = JSONUtils.getString(
             configJSON,
@@ -584,7 +582,6 @@ public class CapConfig {
         private int minHuaweiWebViewVersion = DEFAULT_HUAWEI_WEBVIEW_VERSION;
         private boolean zoomableWebView = false;
         private boolean resolveServiceWorkerRequests = true;
-        private String adjustMarginsForEdgeToEdge = "auto";
 
         // Embedded
         private String startPath = null;

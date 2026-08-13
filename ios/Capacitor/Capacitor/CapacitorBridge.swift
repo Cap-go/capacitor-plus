@@ -305,9 +305,9 @@ open class CapacitorBridge: NSObject, CAPBridgeProtocol {
     func registerPlugins() {
         var pluginList: [AnyClass] = [CAPHttpPlugin.self, CAPConsolePlugin.self, CAPWebViewPlugin.self, CAPCookiesPlugin.self, CAPSystemBarsPlugin.self]
 
-        if autoRegisterPlugins && config.configURL != nil {
+        if autoRegisterPlugins {
             do {
-                if let pluginJSON = Bundle.main.url(forResource: (config.configURL!.path as NSString).deletingPathExtension, withExtension: "json") {
+                if let pluginJSON = Bundle.main.url(forResource: "capacitor.config", withExtension: "json") {
                     let pluginData = try Data(contentsOf: pluginJSON)
                     let registrationList = try JSONDecoder().decode(RegistrationList.self, from: pluginData)
 
