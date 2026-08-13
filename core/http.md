@@ -116,7 +116,7 @@ Make a Http Request to a server using native libraries.
 | ------------- | --------------------------------------------------- |
 | **`options`** | <code><a href="#httpoptions">HttpOptions</a></code> |
 
-**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&lt;any&gt;&gt;</code>
 
 --------------------
 
@@ -133,7 +133,7 @@ Make a Http GET Request to a server using native libraries.
 | ------------- | --------------------------------------------------- |
 | **`options`** | <code><a href="#httpoptions">HttpOptions</a></code> |
 
-**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&lt;any&gt;&gt;</code>
 
 --------------------
 
@@ -150,7 +150,7 @@ Make a Http POST Request to a server using native libraries.
 | ------------- | --------------------------------------------------- |
 | **`options`** | <code><a href="#httpoptions">HttpOptions</a></code> |
 
-**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&lt;any&gt;&gt;</code>
 
 --------------------
 
@@ -167,7 +167,7 @@ Make a Http PUT Request to a server using native libraries.
 | ------------- | --------------------------------------------------- |
 | **`options`** | <code><a href="#httpoptions">HttpOptions</a></code> |
 
-**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&lt;any&gt;&gt;</code>
 
 --------------------
 
@@ -184,7 +184,7 @@ Make a Http PATCH Request to a server using native libraries.
 | ------------- | --------------------------------------------------- |
 | **`options`** | <code><a href="#httpoptions">HttpOptions</a></code> |
 
-**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&lt;any&gt;&gt;</code>
 
 --------------------
 
@@ -201,7 +201,7 @@ Make a Http DELETE Request to a server using native libraries.
 | ------------- | --------------------------------------------------- |
 | **`options`** | <code><a href="#httpoptions">HttpOptions</a></code> |
 
-**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&lt;any&gt;&gt;</code>
 
 --------------------
 
@@ -209,7 +209,7 @@ Make a Http DELETE Request to a server using native libraries.
 ### Interfaces
 
 
-#### HttpResponse<T = any>
+#### HttpResponse
 
 | Prop          | Type                                                | Description                                       |
 | ------------- | --------------------------------------------------- | ------------------------------------------------- |
