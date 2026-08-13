@@ -1,5 +1,6 @@
 package com.getcapacitor.plugin;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.res.Configuration;
@@ -211,6 +212,10 @@ public class SystemBars extends Plugin {
         return Insets.of(safeArea.left, safeArea.top, safeArea.right, bottom);
     }
 
+    // Only reached on API < 30 when the window reports no inset on any edge, so the
+    // choice is this approximation or a hardcoded 0. Lint rejects the internal
+    // resource because OEMs may change it; a wrong height still beats no inset.
+    @SuppressLint("InternalInsetResource")
     private int getNavBarHeightFromResources() {
         if (!navBarVisible) return 0;
         android.content.res.Resources res = getActivity().getResources();
