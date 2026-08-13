@@ -551,13 +551,13 @@ export async function checkJDKMajorVersion(): Promise<number> {
 
 export async function parseApkNameFromFlavor(flavor: string, pathToApk: string): Promise<string> {
   if (!flavor) {
-        const metadataPath = join(pathToApk, 'output-metadata.json');
-        if (await pathExists(metadataPath)) {
-            const metadataContent = await readJSON(metadataPath);
-            if (metadataContent && metadataContent.elements && metadataContent.elements.length && metadataContent.elements[0].outputFile)
-              return metadataContent.elements[0].outputFile;
-        }
+    const metadataPath = join(pathToApk, 'output-metadata.json');
+    if (await pathExists(metadataPath)) {
+      const metadataContent = await readJSON(metadataPath);
+      const outputFile = metadataContent?.elements?.[0]?.outputFile;
+      if (outputFile) return outputFile;
     }
+  }
   let convertedName = flavor.replace(/([A-Z])/g, '-$1').toLowerCase();
 
   if (convertedName.startsWith('-')) convertedName = convertedName.replace('-', '');
