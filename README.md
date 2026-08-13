@@ -52,23 +52,17 @@ This way, you and others can benefit from your work immediately, without waiting
 
 ```
 ┌─────────────────────┐     ┌──────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│  ionic-team/        │     │  CI/CD           │     │  Claude Code     │     │  npm publish    │
-│  capacitor          │────▶│  Pipeline        │────▶│  Security Review │────▶│  @capacitor-plus│
-│  (upstream)         │     │  (daily sync)    │     │  (AI analysis)   │     │  packages       │
+│  ionic-team/        │     │  CI/CD           │     │  Manual Review   │     │  npm publish    │
+│  capacitor          │────▶│  Pipeline        │────▶│  & Merge         │────▶│  @capacitor-plus│
+│  (upstream)         │     │  (daily sync)    │     │  (human check)   │     │  packages       │
 └─────────────────────┘     └──────────────────┘     └──────────────────┘     └─────────────────┘
 ```
 
 1. **Daily Sync**: A GitHub Action fetches the latest changes from `ionic-team/capacitor`
 2. **PR Creation**: Changes are proposed as pull requests to the `plus` branch
 3. **CI Validation**: Full test suite runs (lint, unit tests, iOS build, Android build)
-4. **Claude Code Review**: AI-powered comprehensive security analysis checks for:
-   - Security vulnerabilities (injection, XSS, etc.)
-   - Breaking API changes
-   - Crash risks and stability issues
-   - Data integrity and privacy concerns
-   - Malicious code patterns
-5. **Auto-Merge**: Only if CI passes AND Claude approves (no issues detected)
-6. **Auto-Publish**: A new version is published to npm under `@capacitor-plus/*`
+4. **Manual Review**: Upstream sync pull requests are reviewed before merging
+5. **Publish**: A new version is published to npm after a reviewed merge
 
 ### Packages
 
@@ -90,15 +84,15 @@ npm install @capacitor-plus/ios      # for iOS
 ### Why Use Capacitor+?
 
 - **Get Stuck PRs Now**: Community fixes and features that are waiting in upstream? We merge them.
-- **Stay Current**: Get upstream fixes as soon as they pass CI
-- **Security First**: Every change is reviewed by Claude Code for vulnerabilities, breaking changes, and stability risks
-- **Verified Releases**: Only changes that pass both CI tests AND AI security review are published
-- **Drop-in Replacement**: Same API as Capacitor, just a different package scope
-- **Your Voice Matters**: Submit your own PRs or request specific upstream PRs to be merged
+- **Stay Current**: Get upstream fixes as soon as they pass CI.
+- **Reviewable Syncs**: Conflict-prone changes are labeled for human attention instead of being merged automatically.
+- **Verified Releases**: Only reviewed changes that pass CI are published.
+- **Drop-in Replacement**: Same API as Capacitor, just a different package scope.
+- **Your Voice Matters**: Submit your own PRs or request specific upstream PRs to be merged.
 
-### Security Review
+### Review Expectations
 
-Every upstream sync is analyzed by Claude Code for:
+Every upstream sync goes through CI before manual review. Reviewers should consider:
 
 | Check | Description |
 |-------|-------------|
@@ -108,7 +102,7 @@ Every upstream sync is analyzed by Claude Code for:
 | Data Safety | Data loss scenarios, privacy violations, insecure storage |
 | Code Integrity | Obfuscated code, suspicious network calls, backdoors |
 
-If any issues are detected, the PR is flagged for manual review and will NOT be auto-merged.
+Upstream sync PRs require manual review and are not automatically merged.
 
 ---
 

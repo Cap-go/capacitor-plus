@@ -22,7 +22,8 @@
     "prettier": "prettier-pretty-check \"**/*.{css,html,java,js,mjs,ts}\" --plugin=prettier-plugin-java",
     "eslint": "eslint . --ext ts",
     "swiftlint": "node-swiftlint",
-    "version": "npm run sync-peer-dependencies"
+    "version": "npm run sync-peer-dependencies",
+    "changelog:ai": "node scripts/generate-ai-changelog.mjs"
   },
   "prettier": "@ionic/prettier-config",
   "eslintConfig": {
