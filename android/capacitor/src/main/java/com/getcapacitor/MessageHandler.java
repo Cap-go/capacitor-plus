@@ -73,13 +73,13 @@ public class MessageHandler {
                 Logger.verbose(
                     Logger.tags("Plugin"),
                     "To native (Cordova plugin): callbackId: " +
-                    callbackId +
-                    ", service: " +
-                    service +
-                    ", action: " +
-                    action +
-                    ", actionArgs: " +
-                    actionArgs
+                        callbackId +
+                        ", service: " +
+                        service +
+                        ", action: " +
+                        action +
+                        ", actionArgs: " +
+                        actionArgs
                 );
 
                 this.callCordovaPluginMethod(callbackId, service, action, actionArgs);

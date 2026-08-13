@@ -38,7 +38,7 @@ public class MessageHandlerTest {
             given(config.isLoggingEnabled()).willReturn(false);
             given(config.isUsingLegacyBridge()).willReturn(false);
             given(bridge.getConfig()).willReturn(config);
-            given(webView.post(any(Runnable.class))).willAnswer(invocation -> {
+            given(webView.post(any(Runnable.class))).willAnswer((invocation) -> {
                 Runnable runnable = invocation.getArgument(0);
                 runnable.run();
                 return true;
@@ -49,7 +49,7 @@ public class MessageHandlerTest {
             setField(MessageHandler.class, handler, "bridge", bridge);
             setField(MessageHandler.class, handler, "webView", webView);
 
-            willAnswer(invocation -> {
+            willAnswer((invocation) -> {
                 PluginCall call = invocation.getArgument(2);
                 call.resolve(new JSObject().put("tabId", "shepherd"));
                 return null;
