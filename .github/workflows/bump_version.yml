@@ -8,6 +8,12 @@ on:
       - '**.md'
       - '.github/**'
 
+# Two pushes landing close together would otherwise both compute the same next
+# patch version; the loser then dies on `git tag: already exists`.
+concurrency:
+  group: bump-version-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   # Run all tests first before creating any tags
   test:

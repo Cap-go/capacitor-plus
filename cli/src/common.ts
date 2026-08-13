@@ -549,7 +549,15 @@ export async function checkJDKMajorVersion(): Promise<number> {
   }
 }
 
-export function parseApkNameFromFlavor(flavor: string): string {
+export async function parseApkNameFromFlavor(flavor: string, pathToApk: string): Promise<string> {
+  if (!flavor) {
+    const metadataPath = join(pathToApk, 'output-metadata.json');
+    if (await pathExists(metadataPath)) {
+      const metadataContent = await readJSON(metadataPath);
+      const outputFile = metadataContent?.elements?.[0]?.outputFile;
+      if (outputFile) return outputFile;
+    }
+  }
   let convertedName = flavor.replace(/([A-Z])/g, '-$1').toLowerCase();
 
   if (convertedName.startsWith('-')) convertedName = convertedName.replace('-', '');

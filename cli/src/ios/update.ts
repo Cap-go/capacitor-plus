@@ -71,9 +71,11 @@ async function updatePluginFiles(config: Config, plugins: Plugin[], deployment: 
 }
 
 async function generateCordovaPackageFiles(cordovaPlugins: Plugin[], config: Config) {
-  cordovaPlugins.map((plugin: any) => {
-    generateCordovaPackageFile(plugin, config);
-  });
+  await Promise.all(
+    cordovaPlugins.map((plugin: any) => {
+      return generateCordovaPackageFile(plugin, config);
+    }),
+  );
 }
 
 async function generateCordovaPackageFile(p: Plugin, config: Config) {
@@ -417,8 +419,8 @@ function isFramework(framework: any) {
 async function generateCordovaPodspecs(cordovaPlugins: Plugin[], config: Config) {
   const staticPlugins = cordovaPlugins.filter((p) => needsStaticPod(p));
   const noStaticPlugins = cordovaPlugins.filter((el) => !staticPlugins.includes(el));
-  generateCordovaPodspec(noStaticPlugins, config, false);
-  generateCordovaPodspec(staticPlugins, config, true);
+  await generateCordovaPodspec(noStaticPlugins, config, false);
+  await generateCordovaPodspec(staticPlugins, config, true);
 }
 
 async function generateCordovaPodspec(cordovaPlugins: Plugin[], config: Config, isStatic: boolean) {
@@ -569,7 +571,7 @@ async function copyPluginsNativeFiles(config: Config, cordovaPlugins: Plugin[]) 
   const isSPM = (await config.ios.packageManager) === 'SPM';
   for (const p of cordovaPlugins) {
     const platformTag = getPluginPlatform(p, platform);
-    if (platformTag.$?.package) {
+    if (isSPM && platformTag.$?.package) {
       continue;
     }
     const sourceFiles = getPlatformElement(p, platform, 'source-file');

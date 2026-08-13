@@ -3,6 +3,57 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.3.10](https://github.com/Cap-go/capacitor-plus/compare/8.3.9...8.3.10) (2026-08-13)
+
+**Note:** Version bump only for package capacitor
+
+
+
+
+
+## [8.3.9](https://github.com/Cap-go/capacitor-plus/compare/8.3.8...8.3.9) (2026-08-13)
+
+**Note:** Version bump only for package capacitor
+
+
+
+
+
+## [8.3.8](https://github.com/Cap-go/capacitor-plus/compare/8.3.7...8.3.8) (2026-08-13)
+
+**Note:** Version bump only for package capacitor
+
+
+
+
+
+## [8.3.7](https://github.com/Cap-go/capacitor-plus/compare/8.3.6...8.3.7) (2026-08-13)
+
+**Note:** Version bump only for package capacitor
+
+
+
+
+
+## [8.3.6](https://github.com/Cap-go/capacitor-plus/compare/8.3.5...8.3.6) (2026-08-13)
+
+**Note:** Version bump only for package capacitor
+
+
+
+
+
+## [8.3.5](https://github.com/Cap-go/capacitor-plus/compare/8.3.4...8.3.5) (2026-08-13)
+
+
+### Bug Fixes
+
+* **android:** add null check for plugin annotation in getPermissionStates ([#92](https://github.com/Cap-go/capacitor-plus/issues/92)) ([47d3b8e](https://github.com/Cap-go/capacitor-plus/commit/47d3b8eed044ee022e3d3203582502725984e9dc)), closes [ionic-team/capacitor#8400](https://github.com/ionic-team/capacitor/issues/8400)
+
+
+
+
+
 ## [8.3.4](https://github.com/Cap-go/capacitor-plus/compare/8.3.3...8.3.4) (2026-05-07)
 
 

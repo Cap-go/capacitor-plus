@@ -41,6 +41,7 @@ export async function updateAndroid(config: Config): Promise<void> {
   if (cordovaPlugins.length > 0) {
     await copyPluginsNativeFiles(config, cordovaPlugins);
   }
+  await copyPluginsNativeFiles(config, capacitorPlugins);
   if (!(await pathExists(config.android.webDirAbs))) {
     await copyTask(config, platform);
   }
@@ -144,8 +145,8 @@ export async function installGradlePlugins(
 
   if (!capacitorAndroidPackagePath) {
     fatal(
-      `Unable to find ${c.strong('node_modules/@capacitor-plus/android')} or ${c.strong('node_modules/@capacitor/android')}.\n` +
-        `Are you sure ${c.strong('@capacitor-plus/android')} or ${c.strong('@capacitor/android')} is installed?`,
+      `Unable to find ${c.strong('node_modules/@capacitor/android')}.\n` +
+        `Are you sure ${c.strong('@capacitor/android')} is installed?`,
     );
   }
 

@@ -44,7 +44,11 @@ export default config;
 ## Example
 
 ```typescript
-import { CapacitorHttp } from '@capacitor/core';
+import { CapacitorHttp, type HttpResponse } from '@capacitor/core';
+
+interface MyResponse {
+  foo: string;
+}
 
 // Example of a GET request
 const doGet = () => {
@@ -54,7 +58,7 @@ const doGet = () => {
     params: { size: 'XL' },
   };
 
-  const response: HttpResponse = await CapacitorHttp.get(options);
+  const response: HttpResponse<MyResponse> = await CapacitorHttp.get(options);
 
   // or...
   // const response = await CapacitorHttp.request({ ...options, method: 'GET' })
@@ -69,7 +73,7 @@ const doPost = () => {
     data: { foo: 'bar' },
   };
 
-  const response: HttpResponse = await CapacitorHttp.post(options);
+  const response: HttpResponse<MyResponse> = await CapacitorHttp.post(options);
 
   // or...
   // const response = await CapacitorHttp.request({ ...options, method: 'POST' })
@@ -205,11 +209,11 @@ Make a Http DELETE Request to a server using native libraries.
 ### Interfaces
 
 
-#### HttpResponse
+#### HttpResponse<T = any>
 
 | Prop          | Type                                                | Description                                       |
 | ------------- | --------------------------------------------------- | ------------------------------------------------- |
-| **`data`**    | <code>any</code>                                    | Additional data received with the Http response.  |
+| **`data`**    | <code>T</code>                                      | Additional data received with the Http response.  |
 | **`status`**  | <code>number</code>                                 | The status code received from the Http response.  |
 | **`headers`** | <code><a href="#httpheaders">HttpHeaders</a></code> | The headers received from the Http response.      |
 | **`url`**     | <code>string</code>                                 | The response URL received from the Http response. |
@@ -233,7 +237,7 @@ Make a Http DELETE Request to a server using native libraries.
 | **`webFetchExtra`**         | <code><a href="#requestinit">RequestInit</a></code>           | Extra arguments for fetch when running on the web                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | **`responseType`**          | <code><a href="#httpresponsetype">HttpResponseType</a></code> | This is used to parse the response appropriately before returning it to the requestee. If the response content-type is "json", this value is ignored.                                                                                                                                                                                                                                                                                                                      |
 | **`shouldEncodeUrlParams`** | <code>boolean</code>                                          | Use this option if you need to keep the URL unencoded in certain cases (already encoded, azure/firebase testing, etc.). The default is _true_.                                                                                                                                                                                                                                                                                                                             |
-| **`dataType`**              | <code>'file' \| 'formData'</code>                             | This is used if we've had to convert the data from a JS type that needs special handling in the native layer                                                                                                                                                                                                                                                                                                                                                               |
+| **`dataType`**              | <code>'file' \| 'formData' \| 'binary'</code>                 | This is used if we've had to convert the data from a JS type that needs special handling in the native layer                                                                                                                                                                                                                                                                                                                                                               |
 
 
 #### HttpParams
