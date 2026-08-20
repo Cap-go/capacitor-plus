@@ -50,7 +50,12 @@ jobs:
       - name: Add upstream and fetch
         run: |
           git remote add upstream https://github.com/${{ env.UPSTREAM_REPO }}.git || true
+          # checkout uses filter:blob:none, so origin is the promisor remote; upstream must be too
+          # or merge lazy-fetches ionic-team blobs from origin and fails with "not our ref"
+          git config remote.upstream.promisor true
+          git config remote.upstream.partialclonefilter blob:none
           git fetch upstream main
+          git fetch --no-filter upstream main
 
       - name: Check for new commits
         id: check-commits
@@ -98,8 +103,12 @@ jobs:
             git push origin main
             echo "merge_success=true" >> $GITHUB_OUTPUT
           else
-            echo "Merge conflict detected"
-            git merge --abort
+            if [ -f .git/MERGE_HEAD ]; then
+              echo "Merge conflict detected"
+            else
+              echo "Merge failed before MERGE_HEAD was created (missing git objects or other error)"
+            fi
+            git merge --abort || true
             echo "merge_success=false" >> $GITHUB_OUTPUT
           fi
 
@@ -181,7 +190,12 @@ jobs:
       - name: Add upstream and fetch
         run: |
           git remote add upstream https://github.com/${{ env.UPSTREAM_REPO }}.git || true
+          # checkout uses filter:blob:none, so origin is the promisor remote; upstream must be too
+          # or merge lazy-fetches ionic-team blobs from origin and fails with "not our ref"
+          git config remote.upstream.promisor true
+          git config remote.upstream.partialclonefilter blob:none
           git fetch upstream main
+          git fetch --no-filter upstream main
 
       - name: Check for new commits
         id: check-commits
@@ -210,8 +224,12 @@ jobs:
             echo "Merge successful!"
             echo "merge_success=true" >> $GITHUB_OUTPUT
           else
-            echo "Merge conflict detected"
-            git merge --abort
+            if [ -f .git/MERGE_HEAD ]; then
+              echo "Merge conflict detected"
+            else
+              echo "Merge failed before MERGE_HEAD was created (missing git objects or other error)"
+            fi
+            git merge --abort || true
             echo "merge_success=false" >> $GITHUB_OUTPUT
           fi
 

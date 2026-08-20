@@ -10,11 +10,26 @@ jobs:
     # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
     timeout-minutes: 10
     steps:
+      - name: Check if issues are enabled
+        id: check-issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          HAS_ISSUES=$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.has_issues')
+          echo "has_issues=${HAS_ISSUES}" >> "$GITHUB_OUTPUT"
+
+      - name: Skip when issues are disabled
+        if: steps.check-issues.outputs.has_issues != 'true'
+        run: echo "Issues are disabled on ${GITHUB_REPOSITORY}; skipping needs-reply workflow."
+
       - name: Setup Node.js
+        if: steps.check-issues.outputs.has_issues == 'true'
         uses: actions/setup-node@v6
         with:
           node-version: 24.x
+
       - name: Close old issues that need reply
+        if: steps.check-issues.outputs.has_issues == 'true'
         uses: imhoffd/needs-reply@v2.0.0
         with:
           repo-token: ${{ secrets.BOT_TOKEN }}
