@@ -55,6 +55,7 @@ jobs:
           git config remote.upstream.promisor true
           git config remote.upstream.partialclonefilter blob:none
           git fetch --no-filter upstream main
+          git fetch --refetch --no-filter upstream main
 
       - name: Check for new commits
         id: check-commits
@@ -132,8 +133,8 @@ jobs:
           SYNC_BRANCH="sync/main-upstream-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$SYNC_BRANCH" origin/main
 
-          if ! git merge upstream/main -X theirs --no-edit -m "chore: sync main with upstream (upstream-preferred conflicts)"; then
-            git merge --abort || true
+          if ! merge_upstream_preferred "chore: sync main with upstream (upstream-preferred conflicts)"; then
+            git merge --abort || git reset --hard origin/main
             echo "Unable to resolve merge conflicts with the upstream-preferred strategy. Manual resolution is required."
             create_or_update_conflict_issue "${GITHUB_REPOSITORY}" \
               "⚠️ Upstream sync requires manual conflict resolution" \
@@ -197,6 +198,7 @@ jobs:
           git config remote.upstream.promisor true
           git config remote.upstream.partialclonefilter blob:none
           git fetch --no-filter upstream main
+          git fetch --refetch --no-filter upstream main
 
       - name: Check for new commits
         id: check-commits
@@ -259,10 +261,10 @@ jobs:
           fi
 
           SYNC_BRANCH="sync/plus-upstream-$(date +%Y%m%d-%H%M%S)"
-          git checkout -b "$SYNC_BRANCH" plus
+          git checkout -b "$SYNC_BRANCH" origin/plus
 
-          if ! git merge upstream/main -X theirs --no-edit -m "chore: sync plus with upstream main (upstream-preferred conflicts)"; then
-            git merge --abort || true
+          if ! merge_upstream_preferred "chore: sync plus with upstream main (upstream-preferred conflicts)"; then
+            git merge --abort || git reset --hard origin/plus
             echo "Unable to resolve merge conflicts with the upstream-preferred strategy. Manual resolution is required."
             create_or_update_conflict_issue "${GITHUB_REPOSITORY}" \
               "⚠️ Upstream sync requires manual conflict resolution" \

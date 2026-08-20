@@ -125,3 +125,41 @@ create_or_update_conflict_issue() {
     --json number \
     -q '.[0].number'
 }
+
+merge_upstream_preferred() {
+  local commit_message="$1"
+
+  if git merge upstream/main -X theirs --no-edit -m "$commit_message"; then
+    return 0
+  fi
+
+  local unmerged
+  unmerged=$(git diff --name-only --diff-filter=U)
+  if [ -z "$unmerged" ]; then
+    return 1
+  fi
+
+  local file
+  while IFS= read -r file; do
+    [ -z "$file" ] && continue
+    # -X theirs does not resolve modify/delete conflicts; prefer upstream version.
+    if git checkout --theirs -- "$file" 2>/dev/null; then
+      git add "$file"
+    elif git rm -f "$file" 2>/dev/null; then
+      :
+    else
+      return 1
+    fi
+  done <<< "$unmerged"
+
+  if [ -n "$(git diff --name-only --diff-filter=U)" ]; then
+    return 1
+  fi
+
+  if [ -f .git/MERGE_HEAD ]; then
+    git commit --no-edit || git commit -m "$commit_message"
+    return 0
+  fi
+
+  return 1
+}
