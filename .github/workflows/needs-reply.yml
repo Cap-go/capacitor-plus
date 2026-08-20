@@ -15,7 +15,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          HAS_ISSUES=$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.has_issues')
+          HAS_ISSUES=$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.has_issues' 2>/dev/null || echo "false")
           echo "has_issues=${HAS_ISSUES}" >> "$GITHUB_OUTPUT"
 
       - name: Skip when issues are disabled
