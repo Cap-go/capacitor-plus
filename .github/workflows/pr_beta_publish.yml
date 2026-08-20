@@ -160,7 +160,7 @@ jobs:
               `Package: \`${packageSelector}\``,
               `Requested by @${actor}.`,
               '',
-              `This run will publish the PR head for the selected Capacitor Plus package to the \`beta\` npm tag and refresh \`pr-${prNumber}\`.`,
+              `This run will publish the PR head for the selected Capacitor Plus package to the \`beta\` npm tag.`,
               '',
               `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
             ].join('\n');
@@ -203,6 +203,9 @@ jobs:
         with:
           node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Install npm CLI for staged publishing
+        run: npm install -g npm@^11.15.0
 
       - name: Install dependencies
         run: npm install
@@ -302,18 +305,25 @@ jobs:
           cd "$PACKAGE_DIR"
           npm run build
 
-      - name: Publish to npm beta
+      - name: Stage publish to npm beta
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           PACKAGE_DIR: ${{ steps.package.outputs.package_dir }}
         run: |
           cd "$PACKAGE_DIR"
-          npm publish --tag beta --provenance --access public --ignore-scripts
+          npm --version
+          npm stage publish --tag beta --provenance --access public --ignore-scripts
 
-      - name: Add PR dist-tag
+      - name: Request stage approval
+        continue-on-error: true
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm dist-tag add "${{ steps.version.outputs.package_name }}@${{ steps.version.outputs.version }}" "pr-${{ steps.pr.outputs.pr_number }}"
+          GH_TOKEN: ${{ secrets.NPM_STAGE_DISPATCH_TOKEN }}
+        run: |
+          gh api --method POST repos/Cap-go/automations/dispatches \
+            -f event_type=npm-stage-approve \
+            -f "client_payload[repository]=${GITHUB_REPOSITORY}" \
+            -f "client_payload[run_id]=${GITHUB_RUN_ID}" \
+            -f "client_payload[package]=${{ steps.version.outputs.package_name }}"
 
       - name: Publish success comment
         if: ${{ success() }}
@@ -332,7 +342,7 @@ jobs:
               '',
               '## Beta npm build',
               '',
-              'Status: published',
+              'Status: staged',
               '',
               `Package: \`${packageDir}\` (${packageName})`,
               `Version: \`${version}\``,
@@ -342,11 +352,7 @@ jobs:
               'Latest beta:',
               '```sh',
               `npm install ${packageName}@beta`,
-              '```',
-              '',
-              'This PR only:',
-              '```sh',
-              `npm install ${packageName}@pr-${prNumber}`,
+              `npm install ${packageName}@${version}`,
               '```',
               '',
               `Run: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,

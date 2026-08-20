@@ -32,6 +32,9 @@ jobs:
           node-version: 24.x
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Install npm CLI for staged publishing
+        run: npm install -g npm@^11.15.0
+
       # Required by the `bun run changelog:ai` step below.
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -60,7 +63,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: bun run changelog:ai
 
-      - name: Publish all packages to npm
+      - name: Stage all packages to npm
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
@@ -74,14 +77,26 @@ jobs:
           fi
 
           echo "Publishing with tag: $NPM_TAG"
+          npm --version
 
           # Publish each package
           for pkg in core cli android ios; do
             echo "Publishing @capacitor-plus/$pkg@$VERSION"
             cd $pkg
-            npm publish --tag $NPM_TAG --provenance --access public
+            npm stage publish --tag $NPM_TAG --provenance --access public --ignore-scripts
             cd ..
           done
+
+      - name: Request stage approval
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.NPM_STAGE_DISPATCH_TOKEN }}
+        run: |
+          gh api --method POST repos/Cap-go/automations/dispatches \
+            -f event_type=npm-stage-approve \
+            -f "client_payload[repository]=${GITHUB_REPOSITORY}" \
+            -f "client_payload[run_id]=${GITHUB_RUN_ID}" \
+            -f "client_payload[package]=@capacitor-plus/core"
 
       - name: Create GitHub release
         id: create_release

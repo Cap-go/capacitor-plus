@@ -71,7 +71,6 @@ jobs:
                   '',
                   'The workflow will:',
                   '- publish a prerelease package on the `beta` tag',
-                  `- add a pinned \`pr-${pr.number}\` dist-tag for the selected package`,
                   '- update this comment with the install command',
                   '',
                   'Security note: beta publish is only enabled for branches inside this repository.',
