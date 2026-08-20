@@ -54,7 +54,6 @@ jobs:
           # or merge lazy-fetches ionic-team blobs from origin and fails with "not our ref"
           git config remote.upstream.promisor true
           git config remote.upstream.partialclonefilter blob:none
-          git fetch upstream main
           git fetch --no-filter upstream main
 
       - name: Check for new commits
@@ -105,15 +104,18 @@ jobs:
           else
             if [ -f .git/MERGE_HEAD ]; then
               echo "Merge conflict detected"
+              echo "merge_conflict=true" >> $GITHUB_OUTPUT
+              git merge --abort || git reset --hard origin/main
+              echo "merge_success=false" >> $GITHUB_OUTPUT
             else
               echo "Merge failed before MERGE_HEAD was created (missing git objects or other error)"
+              git merge --abort || true
+              exit 1
             fi
-            git merge --abort || true
-            echo "merge_success=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Create PR for conflicts
-        if: steps.regular-merge.outputs.merge_success == 'false'
+        if: steps.regular-merge.outputs.merge_conflict == 'true'
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
@@ -194,7 +196,6 @@ jobs:
           # or merge lazy-fetches ionic-team blobs from origin and fails with "not our ref"
           git config remote.upstream.promisor true
           git config remote.upstream.partialclonefilter blob:none
-          git fetch upstream main
           git fetch --no-filter upstream main
 
       - name: Check for new commits
@@ -226,11 +227,14 @@ jobs:
           else
             if [ -f .git/MERGE_HEAD ]; then
               echo "Merge conflict detected"
+              echo "merge_conflict=true" >> $GITHUB_OUTPUT
+              git merge --abort || git reset --hard origin/plus
+              echo "merge_success=false" >> $GITHUB_OUTPUT
             else
               echo "Merge failed before MERGE_HEAD was created (missing git objects or other error)"
+              git merge --abort || true
+              exit 1
             fi
-            git merge --abort || true
-            echo "merge_success=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Push if merge succeeded
@@ -240,7 +244,7 @@ jobs:
           echo "Successfully pushed upstream changes to plus branch"
 
       - name: Create PR for conflicts
-        if: steps.merge.outputs.merge_success == 'false'
+        if: steps.merge.outputs.merge_conflict == 'true'
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         run: |
