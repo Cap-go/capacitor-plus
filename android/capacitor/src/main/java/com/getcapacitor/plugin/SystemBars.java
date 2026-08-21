@@ -44,17 +44,17 @@ public class SystemBars extends Plugin {
     private static final int WEBVIEW_VERSION_WITH_SAFE_AREA_KEYBOARD_FIX = 144;
 
     static final String viewportMetaJSFunction = """
-        function capacitorSystemBarsCheckMetaViewport() {
-            const meta = document.querySelectorAll("meta[name=viewport]");
-            if (meta.length == 0) {
-                return false;
-            }
-            // get the last found meta viewport tag
-            const metaContent = meta[meta.length - 1].content;
-            return metaContent.includes("viewport-fit=cover");
+    function capacitorSystemBarsCheckMetaViewport() {
+        const meta = document.querySelectorAll("meta[name=viewport]");
+        if (meta.length == 0) {
+            return false;
         }
-        capacitorSystemBarsCheckMetaViewport();
-        """;
+        // get the last found meta viewport tag
+        const metaContent = meta[meta.length - 1].content;
+        return metaContent.includes("viewport-fit=cover");
+    }
+    capacitorSystemBarsCheckMetaViewport();
+    """;
 
     private String insetsHandling = INSETS_HANDLING_CSS;
     private boolean hasViewportCover = false;
@@ -196,7 +196,8 @@ public class SystemBars extends Plugin {
             getActivity().runOnUiThread(() -> {
                 this.bridge.getWebView().evaluateJavascript(viewportMetaJSFunction, (res) -> {
                     hasViewportCover = res.equals("true");
-                    ViewCompat.requestApplyInsets((View) getBridge().getWebView().getParent());
+
+                    getBridge().getWebView().requestApplyInsets();
                 });
             });
         }
@@ -235,8 +236,15 @@ public class SystemBars extends Plugin {
 
     private void initSafeAreaCSSVariables() {
         if (INSETS_HANDLING_CSS.equals(insetsHandling)) {
-            View v = (View) this.getBridge().getWebView().getParent();
-            WindowInsetsCompat insets = ViewCompat.getRootWindowInsets(v);
+            WindowInsetsCompat insets;
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                View v = (View) this.getBridge().getWebView().getParent();
+                insets = ViewCompat.getRootWindowInsets(v);
+            } else {
+                insets = WindowInsetsCompat.CONSUMED;
+            }
+
             if (insets != null) {
                 Insets safeAreaInsets = calcSafeAreaInsets(insets);
                 injectSafeAreaCSS(safeAreaInsets.top, safeAreaInsets.right, safeAreaInsets.bottom, safeAreaInsets.left);
@@ -264,10 +272,8 @@ public class SystemBars extends Plugin {
                 // We need to correct for a possible shown IME
                 v.setPadding(0, 0, 0, keyboardVisible ? imeInsets.bottom : 0);
 
-                if (hasViewportCover && INSETS_HANDLING_CSS.equals(insetsHandling)) {
-                    Insets safeAreaInsets = calcSafeAreaInsets(safeAreaSource);
-                    injectSafeAreaCSS(safeAreaInsets.top, safeAreaInsets.right, safeAreaInsets.bottom, safeAreaInsets.left);
-                }
+                Insets safeAreaInsets = calcSafeAreaInsets(insets);
+                injectSafeAreaCSS(safeAreaInsets.top, safeAreaInsets.right, safeAreaInsets.bottom, safeAreaInsets.left);
 
                 return new WindowInsetsCompat.Builder(insets)
                     .setInsets(
@@ -291,10 +297,8 @@ public class SystemBars extends Plugin {
                 .setInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(), Insets.of(0, 0, 0, 0))
                 .build();
 
-            if (INSETS_HANDLING_CSS.equals(insetsHandling)) {
-                Insets safeAreaInsets = calcSafeAreaInsets(safeAreaSource);
-                injectSafeAreaCSS(safeAreaInsets.top, safeAreaInsets.right, safeAreaInsets.bottom, safeAreaInsets.left);
-            }
+            Insets safeAreaInsets = calcSafeAreaInsets(newInsets);
+            injectSafeAreaCSS(safeAreaInsets.top, safeAreaInsets.right, safeAreaInsets.bottom, safeAreaInsets.left);
 
             return newInsets;
         });
@@ -360,7 +364,6 @@ public class SystemBars extends Plugin {
         if (hide) {
             if (bar.isEmpty()) {
                 windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.systemBars());
-                navBarVisible = false;
             } else if (bar.equals(BAR_STATUS_BAR)) {
                 windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.statusBars());
             } else if (bar.equals(BAR_GESTURE_BAR)) {
@@ -372,7 +375,6 @@ public class SystemBars extends Plugin {
 
         if (bar.isEmpty()) {
             windowInsetsControllerCompat.show(WindowInsetsCompat.Type.systemBars());
-            navBarVisible = true;
         } else if (bar.equals(BAR_STATUS_BAR)) {
             windowInsetsControllerCompat.show(WindowInsetsCompat.Type.statusBars());
         } else if (bar.equals(BAR_GESTURE_BAR)) {
