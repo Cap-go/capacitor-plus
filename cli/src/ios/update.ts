@@ -59,44 +59,43 @@ async function updatePluginFiles(config: Config, plugins: Plugin[], deployment: 
     await generateCordovaPackageFiles(cordovaPlugins, config);
 
     const validSPMPackages = await checkPluginsForPackageSwift(config, plugins);
-    let iosPlatformVersion: string | null = null;
-    try {
-      iosPlatformVersion = await getCapacitorPackageVersion(config, config.ios.name);
-    } catch {
-      iosPlatformVersion = null;
-    }
-    if (iosPlatformVersion) {
-      const platformVersion = iosPlatformVersion;
-      await Promise.all(
-        validSPMPackages.map(async (plugin) => {
-          const packageSwiftPath = join(plugin.rootPath, 'Package.swift');
-          let content = await readFile(packageSwiftPath, { encoding: 'utf-8' });
-          const regex = new RegExp(
-            'url:\\s*"https://github.com/ionic-team/capacitor-swift-pm\\.git",\\s*(?:from|exact):\\s*"([^"]+)"',
-          );
-          const version = content.match(regex)?.[1];
-          if (!version || !valid(version)) {
-            logger.warn(`${plugin.id}: skipping Package.swift version check for invalid version "${version ?? ''}"`);
-            return;
-          }
-          const majorCapVersion = major(platformVersion);
-          if (major(version) != majorCapVersion) {
-            const preCapVersion = prerelease(platformVersion);
-            const forceVersion = preCapVersion ? platformVersion : `${majorCapVersion}.0.0`;
-            content = setAllStringIn(
-              content,
-              `url: "https://github.com/ionic-team/capacitor-swift-pm.git",`,
-              `)`,
-              ` from: "${forceVersion}"`,
-            );
-            await writeFile(packageSwiftPath, content);
-            logger.warn(`${plugin.id} is built for Capacitor ${major(version)}, it might cause issues`);
-          }
-        }),
-      );
-    }
 
     await generatePackageFile(config, validSPMPackages.concat(cordovaPlugins));
+
+    if (validSPMPackages.length > 0) {
+      try {
+        const platformVersion = await getCapacitorPackageVersion(config, config.ios.name);
+        await Promise.all(
+          validSPMPackages.map(async (plugin) => {
+            const packageSwiftPath = join(plugin.rootPath, 'Package.swift');
+            let content = await readFile(packageSwiftPath, { encoding: 'utf-8' });
+            const regex = new RegExp(
+              'url:\\s*"https://github.com/ionic-team/capacitor-swift-pm\\.git",\\s*(?:from|exact):\\s*"([^"]+)"',
+            );
+            const version = content.match(regex)?.[1];
+            if (!version || !valid(version)) {
+              logger.warn(`${plugin.id}: skipping Package.swift version check for invalid version "${version ?? ''}"`);
+              return;
+            }
+            const majorCapVersion = major(platformVersion);
+            if (major(version) != majorCapVersion) {
+              const preCapVersion = prerelease(platformVersion);
+              const forceVersion = preCapVersion ? platformVersion : `${majorCapVersion}.0.0`;
+              content = setAllStringIn(
+                content,
+                `url: "https://github.com/ionic-team/capacitor-swift-pm.git",`,
+                `)`,
+                ` from: "${forceVersion}"`,
+              );
+              await writeFile(packageSwiftPath, content);
+              logger.warn(`${plugin.id} is built for Capacitor ${major(version)}, it might cause issues`);
+            }
+          }),
+        );
+      } catch (err) {
+        logger.warn(`Skipping plugin Package.swift Capacitor version patching: ${err}`);
+      }
+    }
   } else {
     await generateCordovaPodspecs(cordovaPlugins, config);
     await installCocoaPodsPlugins(config, plugins, deployment);

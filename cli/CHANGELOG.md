@@ -132,9 +132,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## [8.3.4](https://github.com/Cap-go/capacitor-plus/compare/8.3.3...8.3.4) (2026-05-07)
 
 
-### Bug Fixes
+## Bug Fixes
 
-* **cli:** link plugin dependencies in Package.swift ([#8457](https://github.com/Cap-go/capacitor-plus/issues/8457)) ([b3c769e](https://github.com/Cap-go/capacitor-plus/commit/b3c769e856c826b1174518877cf86ac7ce73bf09))
+- **cli:** link plugin dependencies in Package.swift ([#8457](https://github.com/Cap-go/capacitor-plus/issues/8457)) ([b3c769e](https://github.com/Cap-go/capacitor-plus/commit/b3c769e856c826b1174518877cf86ac7ce73bf09))
 
 
 
@@ -143,9 +143,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## [8.3.3](https://github.com/Cap-go/capacitor-plus/compare/8.3.2...8.3.3) (2026-05-06)
 
 
-### Bug Fixes
+## Bug Fixes
 
-* **cli:** generate resource entries in Package.swift ([#8455](https://github.com/Cap-go/capacitor-plus/issues/8455)) ([790bd27](https://github.com/Cap-go/capacitor-plus/commit/790bd27123497111984227010c3162cec94a108e))
+- **cli:** generate resource entries in Package.swift ([#8455](https://github.com/Cap-go/capacitor-plus/issues/8455)) ([790bd27](https://github.com/Cap-go/capacitor-plus/commit/790bd27123497111984227010c3162cec94a108e))
 
 
 
@@ -154,35 +154,35 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## [8.3.2](https://github.com/Cap-go/capacitor-plus/compare/8.0.8...8.3.2) (2026-05-05)
 
 
-### Bug Fixes
+## Bug Fixes
 
-* address follow-up review comments ([8bee786](https://github.com/Cap-go/capacitor-plus/commit/8bee786e2c68ca6c351e88f104b518291c1f81e3))
-* **cli:** add cSettings support for compiler flags in generated Package.swift ([#8448](https://github.com/Cap-go/capacitor-plus/issues/8448)) ([0bd0676](https://github.com/Cap-go/capacitor-plus/commit/0bd0676315c5fd77e50312dd7b5bf4990dcbd7d0))
-* **cli:** add system framework and weak framework support in SPM Package.swift ([#8447](https://github.com/Cap-go/capacitor-plus/issues/8447)) ([3232f0f](https://github.com/Cap-go/capacitor-plus/commit/3232f0fe1d9811b0b5c500e3dc05cb8a250177f8))
-* **cli:** Allow to run update on non macOS ([#8344](https://github.com/Cap-go/capacitor-plus/issues/8344)) ([a441280](https://github.com/Cap-go/capacitor-plus/commit/a441280d7c6b310ca516d6fb2736c09525987774))
-* **cli:** check CAPACITOR_COCOAPODS_PATH in determinePackageManager ([#8407](https://github.com/Cap-go/capacitor-plus/issues/8407)) ([acb64ab](https://github.com/Cap-go/capacitor-plus/commit/acb64ab92a37ff53701cde453558e272e2e11eb6))
-* **cli:** correct Capacitor plugin SPM compat check ([#8440](https://github.com/Cap-go/capacitor-plus/issues/8440)) ([e5ccc45](https://github.com/Cap-go/capacitor-plus/commit/e5ccc451dda27d56bca824ed644bd20fe4d988cb))
-* **cli:** Don't overwrite config.server section with `--live-reload` ([#7528](https://github.com/Cap-go/capacitor-plus/issues/7528)) ([782b9d9](https://github.com/Cap-go/capacitor-plus/commit/782b9d9c26dcf1282b918996becb0224c0baca1d))
-* **cli:** generate binaryTarget entries for custom xcframeworks in Package.swift ([#8445](https://github.com/Cap-go/capacitor-plus/issues/8445)) ([1f7e33f](https://github.com/Cap-go/capacitor-plus/commit/1f7e33fca43d183332ec19d22b0d75ef81d8cc6d))
-* **cli:** handle Cordova plugins without iOS source files ([#8443](https://github.com/Cap-go/capacitor-plus/issues/8443)) ([0da130e](https://github.com/Cap-go/capacitor-plus/commit/0da130eb7a861bee4e2c35bc0aac53ba9c983fc3))
-* **cli:** inline CSS sourcemaps in addition to JS sourcemaps ([#8377](https://github.com/Cap-go/capacitor-plus/issues/8377)) ([69476ab](https://github.com/Cap-go/capacitor-plus/commit/69476ab9c0b47911a14d2482cab53a877a5ae784))
-* **cli:** Update tar package ([#8311](https://github.com/Cap-go/capacitor-plus/issues/8311)) ([0969c5c](https://github.com/Cap-go/capacitor-plus/commit/0969c5cd0b16cf23d2489a85a3b8fa1bee2ebf3b))
-* **ios:** support Cordova plugins with Package.swift ([#8438](https://github.com/Cap-go/capacitor-plus/issues/8438)) ([139943b](https://github.com/Cap-go/capacitor-plus/commit/139943b0c05fddb2d1ce2d6f468800fddf17b4cf))
-* resolve upstream sync conflicts ([75cbb30](https://github.com/Cap-go/capacitor-plus/commit/75cbb3097a7068bcb37313cbe6301628079101ca))
-* **SystemBars:** use native safe area insets on Android ([#8384](https://github.com/Cap-go/capacitor-plus/issues/8384)) ([4e99598](https://github.com/Cap-go/capacitor-plus/commit/4e99598a2a57ee97e82be1aaa09492744622fa60))
+- address follow-up review comments ([8bee786](https://github.com/Cap-go/capacitor-plus/commit/8bee786e2c68ca6c351e88f104b518291c1f81e3))
+- **cli:** add cSettings support for compiler flags in generated Package.swift ([#8448](https://github.com/Cap-go/capacitor-plus/issues/8448)) ([0bd0676](https://github.com/Cap-go/capacitor-plus/commit/0bd0676315c5fd77e50312dd7b5bf4990dcbd7d0))
+- **cli:** add system framework and weak framework support in SPM Package.swift ([#8447](https://github.com/Cap-go/capacitor-plus/issues/8447)) ([3232f0f](https://github.com/Cap-go/capacitor-plus/commit/3232f0fe1d9811b0b5c500e3dc05cb8a250177f8))
+- **cli:** Allow to run update on non macOS ([#8344](https://github.com/Cap-go/capacitor-plus/issues/8344)) ([a441280](https://github.com/Cap-go/capacitor-plus/commit/a441280d7c6b310ca516d6fb2736c09525987774))
+- **cli:** check CAPACITOR_COCOAPODS_PATH in determinePackageManager ([#8407](https://github.com/Cap-go/capacitor-plus/issues/8407)) ([acb64ab](https://github.com/Cap-go/capacitor-plus/commit/acb64ab92a37ff53701cde453558e272e2e11eb6))
+- **cli:** correct Capacitor plugin SPM compat check ([#8440](https://github.com/Cap-go/capacitor-plus/issues/8440)) ([e5ccc45](https://github.com/Cap-go/capacitor-plus/commit/e5ccc451dda27d56bca824ed644bd20fe4d988cb))
+- **cli:** Don't overwrite config.server section with `--live-reload` ([#7528](https://github.com/Cap-go/capacitor-plus/issues/7528)) ([782b9d9](https://github.com/Cap-go/capacitor-plus/commit/782b9d9c26dcf1282b918996becb0224c0baca1d))
+- **cli:** generate binaryTarget entries for custom xcframeworks in Package.swift ([#8445](https://github.com/Cap-go/capacitor-plus/issues/8445)) ([1f7e33f](https://github.com/Cap-go/capacitor-plus/commit/1f7e33fca43d183332ec19d22b0d75ef81d8cc6d))
+- **cli:** handle Cordova plugins without iOS source files ([#8443](https://github.com/Cap-go/capacitor-plus/issues/8443)) ([0da130e](https://github.com/Cap-go/capacitor-plus/commit/0da130eb7a861bee4e2c35bc0aac53ba9c983fc3))
+- **cli:** inline CSS sourcemaps in addition to JS sourcemaps ([#8377](https://github.com/Cap-go/capacitor-plus/issues/8377)) ([69476ab](https://github.com/Cap-go/capacitor-plus/commit/69476ab9c0b47911a14d2482cab53a877a5ae784))
+- **cli:** Update tar package ([#8311](https://github.com/Cap-go/capacitor-plus/issues/8311)) ([0969c5c](https://github.com/Cap-go/capacitor-plus/commit/0969c5cd0b16cf23d2489a85a3b8fa1bee2ebf3b))
+- **ios:** support Cordova plugins with Package.swift ([#8438](https://github.com/Cap-go/capacitor-plus/issues/8438)) ([139943b](https://github.com/Cap-go/capacitor-plus/commit/139943b0c05fddb2d1ce2d6f468800fddf17b4cf))
+- resolve upstream sync conflicts ([75cbb30](https://github.com/Cap-go/capacitor-plus/commit/75cbb3097a7068bcb37313cbe6301628079101ca))
+- **SystemBars:** use native safe area insets on Android ([#8384](https://github.com/Cap-go/capacitor-plus/issues/8384)) ([4e99598](https://github.com/Cap-go/capacitor-plus/commit/4e99598a2a57ee97e82be1aaa09492744622fa60))
 
 
-### Features
+## Features
 
-* **cli:** Add --https option for --live-reload ([#8194](https://github.com/Cap-go/capacitor-plus/issues/8194)) ([5db81e6](https://github.com/Cap-go/capacitor-plus/commit/5db81e68c67652e9d2b29d7ad30629b423d2ad30))
-* **cli:** Add packageManager to iOS config ([#8321](https://github.com/Cap-go/capacitor-plus/issues/8321)) ([a125498](https://github.com/Cap-go/capacitor-plus/commit/a1254983bbb9dcb273d93f3c5f639b792e516406))
-* **cli:** Experimental config for swift-tools-version in SPM apps ([#8372](https://github.com/Cap-go/capacitor-plus/issues/8372)) ([d2ee84f](https://github.com/Cap-go/capacitor-plus/commit/d2ee84f8186909b142b418c02fc19f79d3c6a6ed))
-* **cli:** support SPM package traits in generated Package.swift ([#8351](https://github.com/Cap-go/capacitor-plus/issues/8351)) ([27e6aa8](https://github.com/Cap-go/capacitor-plus/commit/27e6aa89cf22e0b1a6d46710faed9aa8899600b0))
+- **cli:** Add --https option for --live-reload ([#8194](https://github.com/Cap-go/capacitor-plus/issues/8194)) ([5db81e6](https://github.com/Cap-go/capacitor-plus/commit/5db81e68c67652e9d2b29d7ad30629b423d2ad30))
+- **cli:** Add packageManager to iOS config ([#8321](https://github.com/Cap-go/capacitor-plus/issues/8321)) ([a125498](https://github.com/Cap-go/capacitor-plus/commit/a1254983bbb9dcb273d93f3c5f639b792e516406))
+- **cli:** Experimental config for swift-tools-version in SPM apps ([#8372](https://github.com/Cap-go/capacitor-plus/issues/8372)) ([d2ee84f](https://github.com/Cap-go/capacitor-plus/commit/d2ee84f8186909b142b418c02fc19f79d3c6a6ed))
+- **cli:** support SPM package traits in generated Package.swift ([#8351](https://github.com/Cap-go/capacitor-plus/issues/8351)) ([27e6aa8](https://github.com/Cap-go/capacitor-plus/commit/27e6aa89cf22e0b1a6d46710faed9aa8899600b0))
 
 
 ### Reverts
 
-* revert version bump from [#8319](https://github.com/Cap-go/capacitor-plus/issues/8319) and [#8320](https://github.com/Cap-go/capacitor-plus/issues/8320) ([a48ebb6](https://github.com/Cap-go/capacitor-plus/commit/a48ebb622ea4ebe92927bf1756a4d8ac6012884b))
+- revert version bump from [#8319](https://github.com/Cap-go/capacitor-plus/issues/8319) and [#8320](https://github.com/Cap-go/capacitor-plus/issues/8320) ([a48ebb6](https://github.com/Cap-go/capacitor-plus/commit/a48ebb622ea4ebe92927bf1756a4d8ac6012884b))
 
 
 
@@ -207,9 +207,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## [8.0.6](https://github.com/Cap-go/capacitor-plus/compare/8.0.5...8.0.6) (2026-01-09)
 
 
-### Bug Fixes
+## Bug Fixes
 
-* **cli:** Support wireless iOS devices in `cap run` ([#8301](https://github.com/Cap-go/capacitor-plus/issues/8301)) ([dcb368c](https://github.com/Cap-go/capacitor-plus/commit/dcb368c33555487f1b6f46a6d8e30736bdd78955))
+- **cli:** Support wireless iOS devices in `cap run` ([#8301](https://github.com/Cap-go/capacitor-plus/issues/8301)) ([dcb368c](https://github.com/Cap-go/capacitor-plus/commit/dcb368c33555487f1b6f46a6d8e30736bdd78955))
 
 
 
@@ -218,9 +218,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## [8.0.5](https://github.com/Cap-go/capacitor-plus/compare/8.0.4...8.0.5) (2026-01-08)
 
 
-### Bug Fixes
+## Bug Fixes
 
-* **cli:** use latest native-run ([#8296](https://github.com/Cap-go/capacitor-plus/issues/8296)) ([121d830](https://github.com/Cap-go/capacitor-plus/commit/121d83013f39e25009121533a2c3ad86e428d6b2))
+- **cli:** use latest native-run ([#8296](https://github.com/Cap-go/capacitor-plus/issues/8296)) ([121d830](https://github.com/Cap-go/capacitor-plus/commit/121d83013f39e25009121533a2c3ad86e428d6b2))
 
 
 
@@ -229,9 +229,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## [8.0.4](https://github.com/Cap-go/capacitor-plus/compare/8.0.3...8.0.4) (2025-12-16)
 
 
-### Features
+## Features
 
-* enhance package resolution by adding fallbacks for Capacitor packages ([7a03a14](https://github.com/Cap-go/capacitor-plus/commit/7a03a14fdf223088594b45f5ddeca29306eab3c6))
+- enhance package resolution by adding fallbacks for Capacitor packages ([7a03a14](https://github.com/Cap-go/capacitor-plus/commit/7a03a14fdf223088594b45f5ddeca29306eab3c6))
 
 
 
@@ -240,9 +240,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## [8.0.3](https://github.com/Cap-go/capacitor-plus/compare/8.0.2...8.0.3) (2025-12-16)
 
 
-### Bug Fixes
+## Bug Fixes
 
-* update homepage URL in package.json files for all platforms ([61ccdc4](https://github.com/Cap-go/capacitor-plus/commit/61ccdc4128a1ce2a7178eb0a195b188876ec0a9d))
+- update homepage URL in package.json files for all platforms ([61ccdc4](https://github.com/Cap-go/capacitor-plus/commit/61ccdc4128a1ce2a7178eb0a195b188876ec0a9d))
 
 
 
@@ -251,9 +251,9 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ## [8.0.2](https://github.com/Cap-go/capacitor-plus/compare/8.0.1...8.0.2) (2025-12-16)
 
 
-### Features
+## Features
 
-* add new workflows for testing and version bumping; update README files for all packages ([a01c2a8](https://github.com/Cap-go/capacitor-plus/commit/a01c2a842c363c2aa58e5681210fa62fac8e5de5))
+- add new workflows for testing and version bumping; update README files for all packages ([a01c2a8](https://github.com/Cap-go/capacitor-plus/commit/a01c2a842c363c2aa58e5681210fa62fac8e5de5))
 
 
 
@@ -261,7 +261,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [8.0.1](https://github.com/Cap-go/capacitor-plus/compare/3.3.4...8.0.1) (2025-12-16)
 
-### Bug Fixes
+## Bug Fixes
 
 - add error code checking to `runPlatformHook` ([#7994](https://github.com/Cap-go/capacitor-plus/issues/7994)) ([8717680](https://github.com/Cap-go/capacitor-plus/commit/871768049187afe9f5d358d3fe08b6f18f70533e))
 - allow double quotes in Gemfile ([#6903](https://github.com/Cap-go/capacitor-plus/issues/6903)) ([3abdbed](https://github.com/Cap-go/capacitor-plus/commit/3abdbed38844d5d59d244f6f0dfc2647f29ce446))
@@ -364,7 +364,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - update package references to use [@capacitor-plus](https://github.com/capacitor-plus) namespace ([6dd88e6](https://github.com/Cap-go/capacitor-plus/commit/6dd88e6c3101b3ab051dfc216a397bc1d1aca0f0))
 - use Capacitor 7 for SPM dependency ([#7835](https://github.com/Cap-go/capacitor-plus/issues/7835)) ([640c3cb](https://github.com/Cap-go/capacitor-plus/commit/640c3cb22a62e4b8fb13cd36031d39307622c60a))
 
-### Features
+## Features
 
 - Add global initialFocus configuration ([#7775](https://github.com/Cap-go/capacitor-plus/issues/7775)) ([61d0165](https://github.com/Cap-go/capacitor-plus/commit/61d01653685d8e3594d2d8a6bd870fa9643ba95c))
 - add livereload to run command ([#6831](https://github.com/Cap-go/capacitor-plus/issues/6831)) ([4099969](https://github.com/Cap-go/capacitor-plus/commit/4099969f70e9b995182bacecc16e160d89bbc746))
@@ -418,7 +418,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [8.3.1](https://github.com/ionic-team/capacitor/compare/8.3.0...8.3.1) (2026-04-16)
 
-### Bug Fixes
+## Bug Fixes
 
 - **cli:** check CAPACITOR_COCOAPODS_PATH in determinePackageManager ([#8407](https://github.com/ionic-team/capacitor/issues/8407)) ([acb64ab](https://github.com/ionic-team/capacitor/commit/acb64ab92a37ff53701cde453558e272e2e11eb6))
 

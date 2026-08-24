@@ -42,15 +42,34 @@ public class SceneDelegateProxy: NSObject, UISceneDelegate {
             return false
         }
 
-        let rootViewController =
-            windowScene.windows.first(where: { $0.isKeyWindow })?.rootViewController
-            ?? windowScene.windows.first?.rootViewController
-
-        guard let bridge = rootViewController as? CAPBridgeViewController else {
-            return false
+        for window in windowScene.windows {
+            guard let bridge = findBridge(in: window.rootViewController) else {
+                continue
+            }
+            if bridge.isViewLoaded && bridge.view.window != nil {
+                return true
+            }
         }
 
-        return bridge.isViewLoaded && bridge.view.window != nil
+        return false
+    }
+
+    private static func findBridge(in viewController: UIViewController?) -> CAPBridgeViewController? {
+        if let bridge = viewController as? CAPBridgeViewController {
+            return bridge
+        }
+        if let navigationController = viewController as? UINavigationController {
+            return findBridge(in: navigationController.visibleViewController)
+        }
+        if let tabBarController = viewController as? UITabBarController {
+            return findBridge(in: tabBarController.selectedViewController)
+        }
+        for child in viewController?.children ?? [] {
+            if let bridge = findBridge(in: child) {
+                return bridge
+            }
+        }
+        return nil
     }
 
     public func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {

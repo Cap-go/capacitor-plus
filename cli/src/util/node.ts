@@ -1,6 +1,6 @@
 import { existsSync } from 'fs';
 import { readFileSync } from 'fs-extra';
-import { dirname, resolve } from 'path';
+import { resolve } from 'path';
 import type typescript from 'typescript';
 import { pathToFileURL } from 'url';
 
@@ -66,9 +66,11 @@ function loadWithClassicCompiler(ts: typeof typescript, id: string): unknown {
 }
 
 function loadWithCliBundledCompiler(id: string): unknown | null {
-  const cliTsPath = resolveNode(dirname(dirname(__dirname)), 'typescript');
-
-  if (!cliTsPath) {
+  const cliRoot = resolve(__dirname, '..', '..');
+  let cliTsPath: string;
+  try {
+    cliTsPath = require.resolve('typescript', { paths: [cliRoot] });
+  } catch {
     return null;
   }
 
