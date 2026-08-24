@@ -27,6 +27,7 @@ public class SceneDelegateProxy: NSObject, UISceneDelegate {
                 NotificationCenter.default.removeObserver(token)
             }
             token = nil
+            guard let self else { return }
             if !connectionOptions.urlContexts.isEmpty {
                 self.scene(scene, openURLContexts: connectionOptions.urlContexts)
             }
