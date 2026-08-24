@@ -152,13 +152,19 @@ describe('scanAndWarn', () => {
     expect(warnSpy).not.toHaveBeenCalled();
   });
 
-  it('skips Pods/, build/, and DerivedData/ directories', async () => {
+  it('skips Pods/, build/, DerivedData/, and .build/ directories', async () => {
     const podsDir = join(iosDir, 'App', 'Pods');
     const buildDir = join(iosDir, 'App', 'build');
+    const derivedDataDir = join(iosDir, 'App', 'DerivedData');
+    const dotBuildDir = join(iosDir, 'App', '.build');
     await mkdirp(podsDir);
     await mkdirp(buildDir);
+    await mkdirp(derivedDataDir);
+    await mkdirp(dotBuildDir);
     writeFileSync(join(podsDir, 'ThirdParty.swift'), `let x = UIApplication.shared.applicationState\n`);
     writeFileSync(join(buildDir, 'Generated.swift'), `class TmpViewController {}\n`);
+    writeFileSync(join(derivedDataDir, 'BuildOutput.swift'), `class TmpViewController {}\n`);
+    writeFileSync(join(dotBuildDir, 'Artifact.swift'), `class TmpViewController {}\n`);
 
     await scanAndWarn(makeConfig());
 

@@ -89,11 +89,11 @@ export async function runCommand(
       return;
     }
 
+    const cordovaPlugins = await getCordovaPlugins(config, platformName);
     try {
       if (options.sync) {
         await sync(config, platformName, false, true);
       }
-      const cordovaPlugins = await getCordovaPlugins(config, platformName);
       if (options.liveReload) {
         await CapLiveReloadHelper.editCapConfigForLiveReload(config, platformName, options);
         if (platformName === config.android.name) {
@@ -118,6 +118,9 @@ export async function runCommand(
     } catch (e: any) {
       if (options.liveReload) {
         await CapLiveReloadHelper.revertCapConfigForLiveReload();
+        if (platformName === config.android.name) {
+          await writeCordovaAndroidManifest(cordovaPlugins, config, platformName, false);
+        }
       }
       if (!isFatal(e)) {
         fatal(e.stack ?? e);

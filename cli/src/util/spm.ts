@@ -137,9 +137,9 @@ let package = Package(
       const options = packageOptions[plugin.id];
       const symlink = options?.symlink;
       const symlinkFolder = join('symlinks', plugin.name);
-      const relPath = symlink
-        ? symlinkFolder
-        : convertToUnixPath(relative(config.ios.nativeXcodeProjDirAbs, plugin.rootPath));
+      const relPath = convertToUnixPath(
+        symlink ? symlinkFolder : relative(config.ios.nativeXcodeProjDirAbs, plugin.rootPath),
+      );
       if (symlink) {
         await ensureSymlink(plugin.rootPath, resolve(config.ios.nativeProjectDirAbs, 'CapApp-SPM', symlinkFolder));
       }
@@ -178,7 +178,7 @@ let package = Package(
     if (getPluginType(plugin, config.ios.name) === PluginType.Cordova) {
       const platformTag = getPluginPlatform(plugin, config.ios.name);
       if (platformTag.$?.package) {
-        pluginText = `,\n                .product(name: "${plugin.id}", package: "${plugin.id}")`;
+        pluginText = `,\n                .product(name: "${plugin.id}", package: "${plugin.id}"${aliasText})`;
       } else {
         const sourceFiles = getPlatformElement(plugin, config.ios.name, 'source-file');
         const headerFiles = getPlatformElement(plugin, config.ios.name, 'header-file');
@@ -275,7 +275,7 @@ export async function addSceneManifestIfNeeded(config: Config): Promise<void> {
         {
           UISceneConfigurationName: 'Default Configuration',
           UISceneDelegateClassName: '$(PRODUCT_MODULE_NAME).SceneDelegate',
-          UISceneStoryboardFile: 'Main',
+          UISceneStoryboardFile: entries['UIMainStoryboardFile'] ?? 'Main',
         },
       ],
     },

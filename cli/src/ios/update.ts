@@ -1,6 +1,6 @@
 import { copy, remove, pathExists, readFile, realpath, writeFile } from 'fs-extra';
 import { basename, dirname, join, relative } from 'path';
-import { major, prerelease } from 'semver';
+import { major, prerelease, valid } from 'semver';
 
 import c from '../colors';
 import { checkPlatformVersions, getCapacitorPackageVersion, runTask } from '../common';
@@ -59,17 +59,21 @@ async function updatePluginFiles(config: Config, plugins: Plugin[], deployment: 
     await generateCordovaPackageFiles(cordovaPlugins, config);
 
     const validSPMPackages = await checkPluginsForPackageSwift(config, plugins);
+    const iosPlatformVersion = await getCapacitorPackageVersion(config, config.ios.name);
     await Promise.all(
       validSPMPackages.map(async (plugin) => {
-        const iosPlatformVersion = await getCapacitorPackageVersion(config, config.ios.name);
         const packageSwiftPath = join(plugin.rootPath, 'Package.swift');
         let content = await readFile(packageSwiftPath, { encoding: 'utf-8' });
         const regex = new RegExp(
-          'url:\\s*"https://github.com/ionic-team/capacitor-swift-pm\\.git",\\s*from:\\s*"([^"]+)"',
+          'url:\\s*"https://github.com/ionic-team/capacitor-swift-pm\\.git",\\s*(?:from|exact):\\s*"([^"]+)"',
         );
         const version = content.match(regex)?.[1];
+        if (!version || !valid(version)) {
+          logger.warn(`${plugin.id}: skipping Package.swift version check for invalid version "${version ?? ''}"`);
+          return;
+        }
         const majorCapVersion = major(iosPlatformVersion);
-        if (version && major(version) != majorCapVersion) {
+        if (major(version) != majorCapVersion) {
           const preCapVersion = prerelease(iosPlatformVersion);
           const forceVersion = preCapVersion ? iosPlatformVersion : `${majorCapVersion}.0.0`;
           content = setAllStringIn(

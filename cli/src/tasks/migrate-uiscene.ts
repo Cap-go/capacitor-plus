@@ -134,21 +134,96 @@ async function scanAndWarn(config: Config): Promise<void> {
   }
 }
 
+function findMatchingBrace(source: string, openIdx: number): number | null {
+  let depth = 1;
+  let i = openIdx + 1;
+  let inLineComment = false;
+  let inBlockComment = false;
+  let inString: '"' | '"""' | null = null;
+
+  while (i < source.length && depth > 0) {
+    const ch = source[i];
+    const next = source[i + 1];
+    const next2 = source[i + 2];
+
+    if (inLineComment) {
+      if (ch === '\n') inLineComment = false;
+      i++;
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (ch === '*' && next === '/') {
+        inBlockComment = false;
+        i += 2;
+        continue;
+      }
+      i++;
+      continue;
+    }
+
+    if (inString === '"') {
+      if (ch === '\\') {
+        i += 2;
+        continue;
+      }
+      if (ch === '"') {
+        inString = null;
+      }
+      i++;
+      continue;
+    }
+
+    if (inString === '"""') {
+      if (ch === '"' && next === '"' && next2 === '"') {
+        inString = null;
+        i += 3;
+        continue;
+      }
+      i++;
+      continue;
+    }
+
+    if (ch === '/' && next === '/') {
+      inLineComment = true;
+      i += 2;
+      continue;
+    }
+
+    if (ch === '/' && next === '*') {
+      inBlockComment = true;
+      i += 2;
+      continue;
+    }
+
+    if (ch === '"' && next === '"' && next2 === '"') {
+      inString = '"""';
+      i += 3;
+      continue;
+    }
+
+    if (ch === '"') {
+      inString = '"';
+      i++;
+      continue;
+    }
+
+    if (ch === '{') depth++;
+    else if (ch === '}') depth--;
+    i++;
+  }
+
+  return depth === 0 ? i - 1 : null;
+}
+
 function hasCustomDelegateBody(source: string, sigRegex: RegExp): boolean {
   const match = source.match(sigRegex);
   if (!match || match.index === undefined) return false;
   const openIdx = source.indexOf('{', match.index);
   if (openIdx === -1) return false;
-  let depth = 1;
-  let i = openIdx + 1;
-  while (i < source.length && depth > 0) {
-    const ch = source[i];
-    if (ch === '{') depth++;
-    else if (ch === '}') depth--;
-    i++;
-  }
-  if (depth !== 0) return false;
-  const body = source.slice(openIdx + 1, i - 1);
+  const closeIdx = findMatchingBrace(source, openIdx);
+  if (closeIdx === null) return false;
+  const body = source.slice(openIdx + 1, closeIdx);
   const codeLines = body
     .split('\n')
     .map((l) => l.trim())
@@ -225,18 +300,11 @@ function extractConfigurationForConnecting(appDelegateSource: string): string | 
   if (openIdx === -1) {
     return null;
   }
-  let depth = 1;
-  let i = openIdx + 1;
-  while (i < appDelegateSource.length && depth > 0) {
-    const ch = appDelegateSource[i];
-    if (ch === '{') depth++;
-    else if (ch === '}') depth--;
-    i++;
-  }
-  if (depth !== 0) {
+  const closeIdx = findMatchingBrace(appDelegateSource, openIdx);
+  if (closeIdx === null) {
     return null;
   }
-  return '\n' + appDelegateSource.slice(sigMatch.index, i) + '\n';
+  return '\n' + appDelegateSource.slice(sigMatch.index, closeIdx + 1) + '\n';
 }
 
 function insertBeforeAppDelegateClassEnd(source: string, snippet: string): string | null {
@@ -246,18 +314,10 @@ function insertBeforeAppDelegateClassEnd(source: string, snippet: string): strin
     return null;
   }
   const openIdx = source.indexOf('{', match.index);
-  let depth = 1;
-  let i = openIdx + 1;
-  while (i < source.length && depth > 0) {
-    const ch = source[i];
-    if (ch === '{') depth++;
-    else if (ch === '}') depth--;
-    i++;
-  }
-  if (depth !== 0) {
+  const closeIdx = findMatchingBrace(source, openIdx);
+  if (closeIdx === null) {
     return null;
   }
-  const closeIdx = i - 1;
   return source.slice(0, closeIdx) + snippet + source.slice(closeIdx);
 }
 

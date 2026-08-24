@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 @objc(CAPSceneDelegateProxy)
 public class SceneDelegateProxy: NSObject, UISceneDelegate {
@@ -21,10 +22,11 @@ public class SceneDelegateProxy: NSObject, UISceneDelegate {
         // missed. Deliver them on the first capacitorViewDidAppear, once plugins are
         // registered.
         var token: NSObjectProtocol?
-        token = NotificationCenter.default.addObserver(forName: .capacitorViewDidAppear, object: nil, queue: .main) { _ in
+        token = NotificationCenter.default.addObserver(forName: .capacitorViewDidAppear, object: nil, queue: .main) { [weak self] _ in
             if let token {
                 NotificationCenter.default.removeObserver(token)
             }
+            token = nil
             if !connectionOptions.urlContexts.isEmpty {
                 self.scene(scene, openURLContexts: connectionOptions.urlContexts)
             }

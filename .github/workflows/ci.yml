@@ -11,6 +11,9 @@ on:
     branches:
       - '**'
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
@@ -18,79 +21,91 @@ concurrency:
 jobs:
   setup:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - name: Get Latest
         uses: actions/setup-node@v6
         with:
-          node-version: 22.x
-      - uses: actions/checkout@v5
+          node-version: 24.x
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Restore Dependency Cache
         uses: actions/cache@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-dependencies-cache-${{ hashFiles('**/package.json') }}
+          path: ~/.bun/install/cache
+          key: ${{ runner.OS }}-bun-dependencies-cache-${{ hashFiles('bun.lock') }}
   lint:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - uses: actions/setup-node@v6
         with:
-          node-version: 22.x
-      - uses: actions/checkout@v5
+          node-version: 24.x
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Restore Dependency Cache
         uses: actions/cache@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-dependencies-cache-${{ hashFiles('**/package.json') }}
-      - run: npm install
+          path: ~/.bun/install/cache
+          key: ${{ runner.OS }}-bun-dependencies-cache-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile --linker=hoisted
       - run: brew install swiftlint
-      - run: npm run lint
+      - run: bun run lint
   test-cli:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 10
     needs:
       - setup
       - lint
     steps:
       - uses: actions/setup-node@v6
         with:
-          node-version: 22.x
-      - uses: actions/checkout@v5
+          node-version: 24.x
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Restore Dependency Cache
         uses: actions/cache@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-dependencies-cache-${{ hashFiles('**/package.json') }}
-      - run: npm install
-      - run: npm run build
+          path: ~/.bun/install/cache
+          key: ${{ runner.OS }}-bun-dependencies-cache-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile --linker=hoisted
+      - run: bun run build
         working-directory: ./cli
-      - run: npm test
+      - run: bun run test
         working-directory: ./cli
   test-core:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     needs:
       - setup
       - lint
     steps:
       - uses: actions/setup-node@v6
         with:
-          node-version: 22.x
-      - uses: actions/checkout@v5
+          node-version: 24.x
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Restore Dependency Cache
         uses: actions/cache@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-dependencies-cache-${{ hashFiles('**/package.json') }}
-      - run: npm install
-      - run: npm run build
+          path: ~/.bun/install/cache
+          key: ${{ runner.OS }}-bun-dependencies-cache-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile --linker=hoisted
+      - run: bun run build
         working-directory: ./core
-      - run: npm test
+      - run: bun run test
         working-directory: ./core
   test-ios:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 10
     needs:
       - setup
       - lint
@@ -104,39 +119,45 @@ jobs:
       - run: xcodebuild -downloadPlatform iOS
       - uses: actions/setup-node@v6
         with:
-          node-version: 22.x
-      - uses: actions/checkout@v5
+          node-version: 24.x
+      - uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Restore Dependency Cache
         uses: actions/cache@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-dependencies-cache-${{ hashFiles('**/package.json') }}
-      - run: npm install
-      - run: npm run verify
+          path: ~/.bun/install/cache
+          key: ${{ runner.OS }}-bun-dependencies-cache-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile --linker=hoisted
+      - run: bun run verify
         working-directory: ./ios
       - name: Validate native podspec
         run: sh ./scripts/native-podspec.sh lint
   test-android:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     needs:
       - setup
       - lint
     steps:
       - uses: actions/setup-node@v6
         with:
-          node-version: 22.x
+          node-version: 24.x
+      - uses: oven-sh/setup-bun@v2
       - name: set up JDK 21
         uses: actions/setup-java@v5
         with:
           java-version: '21'
           distribution: 'zulu'
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
       - name: Restore Dependency Cache
         uses: actions/cache@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.OS }}-dependencies-cache-${{ hashFiles('**/package.json') }}
-      - run: npm install
-      - run: npm run verify
+          path: ~/.bun/install/cache
+          key: ${{ runner.OS }}-bun-dependencies-cache-${{ hashFiles('bun.lock') }}
+      - run: bun install --frozen-lockfile --linker=hoisted
+      - run: bun run verify
         working-directory: ./android
