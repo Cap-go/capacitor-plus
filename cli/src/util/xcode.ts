@@ -31,9 +31,19 @@ export function addSwiftFileToAppTarget(
   }
 
   if (project.hasFile(fileRelPath) && !isSwiftFileInTargetSources(project, fileRelPath, targetUuid)) {
-    const existingFile = project.hasFile(fileRelPath) as { fileRef?: string; path?: string };
+    const fileRefUuid = findFileRefUuid(project, fileRelPath);
+    if (!fileRefUuid) {
+      throw new Error(`Could not find PBXFileReference for ${fileRelPath} in ${pbxprojPath}`);
+    }
+
+    const group = project.getPBXGroupByKey(groupUuid);
+    if (group && !group.children.some((child: { comment?: string }) => child.comment === fileRelPath)) {
+      group.children.push({ value: fileRefUuid, comment: fileRelPath });
+    }
+
     const file = {
-      ...existingFile,
+      fileRef: fileRefUuid,
+      path: fileRelPath,
       target: targetUuid,
       uuid: project.generateUuid(),
     };
@@ -57,17 +67,22 @@ function fileReferenceMatchesPath(ref: { path?: string }, fileRelPath: string): 
   return path === fileRelPath || path === `"${fileRelPath}"`;
 }
 
-function isSwiftFileInTargetSources(project: XcodeProject, fileRelPath: string, targetUuid: string): boolean {
+function findFileRefUuid(project: XcodeProject, fileRelPath: string): string | null {
   const objects = project.hash.project.objects;
   const fileRefs = Object.entries(objects.PBXFileReference).filter(([k]) => !k.endsWith('_comment'));
   const fileRefEntry = fileRefs.find(
     ([, ref]) => typeof ref === 'object' && fileReferenceMatchesPath(ref as { path?: string }, fileRelPath),
   );
-  if (!fileRefEntry) {
+  return fileRefEntry?.[0] ?? null;
+}
+
+function isSwiftFileInTargetSources(project: XcodeProject, fileRelPath: string, targetUuid: string): boolean {
+  const fileRefUuid = findFileRefUuid(project, fileRelPath);
+  if (!fileRefUuid) {
     return false;
   }
 
-  const fileRefUuid = fileRefEntry[0];
+  const objects = project.hash.project.objects;
   const sourcesPhase = project.pbxSourcesBuildPhaseObj(targetUuid);
   if (!sourcesPhase?.files) {
     return false;
