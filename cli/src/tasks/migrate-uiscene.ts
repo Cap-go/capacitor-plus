@@ -140,11 +140,11 @@ function findMatchingBrace(source: string, openIdx: number): number | null {
   let inLineComment = false;
   let blockCommentDepth = 0;
   let inString: '"' | '"""' | null = null;
+  let stringHashes = 0;
 
   while (i < source.length && depth > 0) {
     const ch = source[i];
     const next = source[i + 1];
-    const next2 = source[i + 2];
 
     if (inLineComment) {
       if (ch === '\n') inLineComment = false;
@@ -168,18 +168,19 @@ function findMatchingBrace(source: string, openIdx: number): number | null {
     }
 
     if (inString === '"') {
-      if (ch === '\\') {
+      if (stringHashes === 0 && ch === '\\') {
         i += 2;
         continue;
       }
       if (ch === '"') {
-        let hashes = 0;
-        while (source[i + 1 + hashes] === '#') {
-          hashes++;
+        let closingHashes = 0;
+        while (source[i + 1 + closingHashes] === '#') {
+          closingHashes++;
         }
-        if (source[i + 1 + hashes] === '"') {
-          i += 2 + hashes;
+        if (closingHashes === stringHashes) {
+          i += 1 + closingHashes;
           inString = null;
+          stringHashes = 0;
           continue;
         }
       }
@@ -188,14 +189,15 @@ function findMatchingBrace(source: string, openIdx: number): number | null {
     }
 
     if (inString === '"""') {
-      if (ch === '"' && next === '"' && next2 === '"') {
-        let hashes = 0;
-        while (source[i + 3 + hashes] === '#') {
-          hashes++;
+      if (ch === '"' && source[i + 1] === '"' && source[i + 2] === '"') {
+        let closingHashes = 0;
+        while (source[i + 3 + closingHashes] === '#') {
+          closingHashes++;
         }
-        if (source[i + 3 + hashes] === '"') {
-          i += 4 + hashes;
+        if (closingHashes === stringHashes) {
+          i += 3 + closingHashes;
           inString = null;
+          stringHashes = 0;
           continue;
         }
       }
@@ -215,19 +217,22 @@ function findMatchingBrace(source: string, openIdx: number): number | null {
       continue;
     }
 
-    if (ch === '"') {
+    if (ch === '#' || ch === '"') {
       let hashes = 0;
-      while (source[i + 1 + hashes] === '#') {
+      while (source[i + hashes] === '#') {
         hashes++;
       }
-      if (source[i + 1 + hashes] === '"' && source[i + 2 + hashes] === '"' && source[i + 3 + hashes] === '"') {
-        inString = '"""';
-        i += 4 + hashes;
-        continue;
-      }
-      if (source[i + 1 + hashes] === '"') {
+      const quoteIdx = i + hashes;
+      if (source[quoteIdx] === '"') {
+        if (source[quoteIdx + 1] === '"' && source[quoteIdx + 2] === '"') {
+          inString = '"""';
+          stringHashes = hashes;
+          i = quoteIdx + 3;
+          continue;
+        }
         inString = '"';
-        i += 2 + hashes;
+        stringHashes = hashes;
+        i = quoteIdx + 1;
         continue;
       }
     }
@@ -382,6 +387,7 @@ function describeSignals({
 export const __testables = {
   classify,
   describeSignals,
+  findMatchingBrace,
   insertBeforeAppDelegateClassEnd,
   extractConfigurationForConnecting,
   hasCustomDelegateBody,

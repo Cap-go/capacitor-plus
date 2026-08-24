@@ -1,4 +1,5 @@
 import { writeFileSync } from 'fs-extra';
+import { basename } from 'path';
 import { project as loadXcodeProject } from 'xcode';
 import type { XcodeProject } from 'xcode';
 
@@ -44,6 +45,8 @@ export function addSwiftFileToAppTarget(
     const file = {
       fileRef: fileRefUuid,
       path: fileRelPath,
+      basename: basename(fileRelPath),
+      group: 'Sources',
       target: targetUuid,
       uuid: project.generateUuid(),
     };

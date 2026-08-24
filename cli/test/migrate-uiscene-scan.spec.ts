@@ -7,7 +7,7 @@ import { __testables } from '../src/tasks/migrate-uiscene';
 
 import { mktmp } from './util';
 
-const { hasCustomDelegateBody, scanAndWarn } = __testables;
+const { hasCustomDelegateBody, scanAndWarn, findMatchingBrace } = __testables;
 
 const OPEN_URL_SIG = /func application\([^)]*\bopen url:/;
 const CONTINUE_SIG = /func application\([^)]*\bcontinue userActivity:/;
@@ -79,6 +79,26 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 `;
     expect(hasCustomDelegateBody(source, OPEN_URL_SIG)).toBe(false);
+  });
+});
+
+describe('findMatchingBrace', () => {
+  it('ignores braces inside ordinary string literals', () => {
+    const source = 'class AppDelegate {\n    let payload = "{\\"a\\":1}"\n}';
+    const openIdx = source.indexOf('{');
+    expect(findMatchingBrace(source, openIdx)).toBe(source.length - 1);
+  });
+
+  it('ignores braces inside raw string literals', () => {
+    const source = 'class AppDelegate {\n    let payload = #"}"#\n}';
+    const openIdx = source.indexOf('{');
+    expect(findMatchingBrace(source, openIdx)).toBe(source.length - 1);
+  });
+
+  it('ignores braces inside multiline string literals', () => {
+    const source = 'class AppDelegate {\n    let payload = """\n    }\n    """\n}';
+    const openIdx = source.indexOf('{');
+    expect(findMatchingBrace(source, openIdx)).toBe(source.length - 1);
   });
 });
 
