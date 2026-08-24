@@ -63,8 +63,15 @@ async function updatePluginFiles(config: Config, plugins: Plugin[], deployment: 
     await generatePackageFile(config, validSPMPackages.concat(cordovaPlugins));
 
     if (validSPMPackages.length > 0) {
+      let platformVersion: string | undefined;
       try {
-        const platformVersion = await getCapacitorPackageVersion(config, config.ios.name);
+        platformVersion = await getCapacitorPackageVersion(config, config.ios.name);
+      } catch (err) {
+        logger.warn(`Skipping plugin Package.swift Capacitor version patching: ${err}`);
+      }
+
+      if (platformVersion) {
+        const resolvedPlatformVersion = platformVersion;
         await Promise.all(
           validSPMPackages.map(async (plugin) => {
             const packageSwiftPath = join(plugin.rootPath, 'Package.swift');
@@ -77,10 +84,10 @@ async function updatePluginFiles(config: Config, plugins: Plugin[], deployment: 
               logger.warn(`${plugin.id}: skipping Package.swift version check for invalid version "${version ?? ''}"`);
               return;
             }
-            const majorCapVersion = major(platformVersion);
+            const majorCapVersion = major(resolvedPlatformVersion);
             if (major(version) != majorCapVersion) {
-              const preCapVersion = prerelease(platformVersion);
-              const forceVersion = preCapVersion ? platformVersion : `${majorCapVersion}.0.0`;
+              const preCapVersion = prerelease(resolvedPlatformVersion);
+              const forceVersion = preCapVersion ? resolvedPlatformVersion : `${majorCapVersion}.0.0`;
               content = setAllStringIn(
                 content,
                 `url: "https://github.com/ionic-team/capacitor-swift-pm.git",`,
@@ -92,8 +99,6 @@ async function updatePluginFiles(config: Config, plugins: Plugin[], deployment: 
             }
           }),
         );
-      } catch (err) {
-        logger.warn(`Skipping plugin Package.swift Capacitor version patching: ${err}`);
       }
     }
   } else {
