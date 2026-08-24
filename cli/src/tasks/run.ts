@@ -89,15 +89,18 @@ export async function runCommand(
       return;
     }
 
-    const cordovaPlugins = await getCordovaPlugins(config, platformName);
+    let cordovaPlugins: Awaited<ReturnType<typeof getCordovaPlugins>> | undefined;
+    let liveReloadManifestUpdated = false;
     try {
+      cordovaPlugins = await getCordovaPlugins(config, platformName);
       if (options.sync) {
         await sync(config, platformName, false, true);
       }
       if (options.liveReload) {
         await CapLiveReloadHelper.editCapConfigForLiveReload(config, platformName, options);
         if (platformName === config.android.name) {
-          await await writeCordovaAndroidManifest(cordovaPlugins, config, platformName, true);
+          await writeCordovaAndroidManifest(cordovaPlugins, config, platformName, true);
+          liveReloadManifestUpdated = true;
         }
       }
       await run(config, platformName, options);
@@ -105,7 +108,7 @@ export async function runCommand(
         new Promise((resolve) => process.on('SIGINT', resolve))
           .then(async () => {
             await CapLiveReloadHelper.revertCapConfigForLiveReload();
-            if (platformName === config.android.name) {
+            if (liveReloadManifestUpdated && platformName === config.android.name && cordovaPlugins) {
               await writeCordovaAndroidManifest(cordovaPlugins, config, platformName, false);
             }
           })
@@ -118,7 +121,7 @@ export async function runCommand(
     } catch (e: any) {
       if (options.liveReload) {
         await CapLiveReloadHelper.revertCapConfigForLiveReload();
-        if (platformName === config.android.name) {
+        if (liveReloadManifestUpdated && platformName === config.android.name && cordovaPlugins) {
           await writeCordovaAndroidManifest(cordovaPlugins, config, platformName, false);
         }
       }

@@ -23,10 +23,10 @@ describe('findGroupUuidByComment', () => {
 
     const uuid = findGroupUuidByComment(project, 'App');
 
-    expect(uuid).toMatch(/^[A-F0-9]{24}$/);
     if (!uuid) {
       throw new Error('Expected App group UUID');
     }
+    expect(uuid).toMatch(/^[A-F0-9]{24}$/);
     const group = project.getPBXGroupByKey(uuid);
     expect(group).toBeDefined();
     expect(group?.path).toBe('App');

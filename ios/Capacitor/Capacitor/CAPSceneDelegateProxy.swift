@@ -23,11 +23,11 @@ public class SceneDelegateProxy: NSObject, UISceneDelegate {
         // registered.
         var token: NSObjectProtocol?
         token = NotificationCenter.default.addObserver(forName: .capacitorViewDidAppear, object: nil, queue: .main) { [weak self] _ in
+            guard let self, Self.isBridgeReady(for: scene) else { return }
             if let token {
                 NotificationCenter.default.removeObserver(token)
             }
             token = nil
-            guard let self else { return }
             if !connectionOptions.urlContexts.isEmpty {
                 self.scene(scene, openURLContexts: connectionOptions.urlContexts)
             }
@@ -35,6 +35,22 @@ public class SceneDelegateProxy: NSObject, UISceneDelegate {
                 self.scene(scene, continue: userActivity)
             }
         }
+    }
+
+    private static func isBridgeReady(for scene: UIScene) -> Bool {
+        guard let windowScene = scene as? UIWindowScene else {
+            return false
+        }
+
+        let rootViewController =
+            windowScene.windows.first(where: { $0.isKeyWindow })?.rootViewController
+            ?? windowScene.windows.first?.rootViewController
+
+        guard let bridge = rootViewController as? CAPBridgeViewController else {
+            return false
+        }
+
+        return bridge.isViewLoaded && bridge.view.window != nil
     }
 
     public func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {

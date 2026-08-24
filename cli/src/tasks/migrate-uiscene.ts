@@ -138,7 +138,7 @@ function findMatchingBrace(source: string, openIdx: number): number | null {
   let depth = 1;
   let i = openIdx + 1;
   let inLineComment = false;
-  let inBlockComment = false;
+  let blockCommentDepth = 0;
   let inString: '"' | '"""' | null = null;
 
   while (i < source.length && depth > 0) {
@@ -152,9 +152,14 @@ function findMatchingBrace(source: string, openIdx: number): number | null {
       continue;
     }
 
-    if (inBlockComment) {
+    if (blockCommentDepth > 0) {
       if (ch === '*' && next === '/') {
-        inBlockComment = false;
+        blockCommentDepth--;
+        i += 2;
+        continue;
+      }
+      if (ch === '/' && next === '*') {
+        blockCommentDepth++;
         i += 2;
         continue;
       }
@@ -168,7 +173,15 @@ function findMatchingBrace(source: string, openIdx: number): number | null {
         continue;
       }
       if (ch === '"') {
-        inString = null;
+        let hashes = 0;
+        while (source[i + 1 + hashes] === '#') {
+          hashes++;
+        }
+        if (source[i + 1 + hashes] === '"') {
+          i += 2 + hashes;
+          inString = null;
+          continue;
+        }
       }
       i++;
       continue;
@@ -176,9 +189,15 @@ function findMatchingBrace(source: string, openIdx: number): number | null {
 
     if (inString === '"""') {
       if (ch === '"' && next === '"' && next2 === '"') {
-        inString = null;
-        i += 3;
-        continue;
+        let hashes = 0;
+        while (source[i + 3 + hashes] === '#') {
+          hashes++;
+        }
+        if (source[i + 3 + hashes] === '"') {
+          i += 4 + hashes;
+          inString = null;
+          continue;
+        }
       }
       i++;
       continue;
@@ -191,21 +210,26 @@ function findMatchingBrace(source: string, openIdx: number): number | null {
     }
 
     if (ch === '/' && next === '*') {
-      inBlockComment = true;
+      blockCommentDepth++;
       i += 2;
       continue;
     }
 
-    if (ch === '"' && next === '"' && next2 === '"') {
-      inString = '"""';
-      i += 3;
-      continue;
-    }
-
     if (ch === '"') {
-      inString = '"';
-      i++;
-      continue;
+      let hashes = 0;
+      while (source[i + 1 + hashes] === '#') {
+        hashes++;
+      }
+      if (source[i + 1 + hashes] === '"' && source[i + 2 + hashes] === '"' && source[i + 3 + hashes] === '"') {
+        inString = '"""';
+        i += 4 + hashes;
+        continue;
+      }
+      if (source[i + 1 + hashes] === '"') {
+        inString = '"';
+        i += 2 + hashes;
+        continue;
+      }
     }
 
     if (ch === '{') depth++;
