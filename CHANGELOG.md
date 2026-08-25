@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.5.1](https://github.com/Cap-go/capacitor-plus/compare/8.3.12...8.5.1) (2026-08-25)
+
+
+### Bug Fixes
+
+* **ci:** fetch upstream objects so plus branch sync works ([#109](https://github.com/Cap-go/capacitor-plus/issues/109)) ([1fa7eee](https://github.com/Cap-go/capacitor-plus/commit/1fa7eeeff9494e9b32afb20a9850389b79d6bcec))
+* **ci:** resolve modify/delete conflicts in sync conflict PRs ([#110](https://github.com/Cap-go/capacitor-plus/issues/110)) ([5c29fb9](https://github.com/Cap-go/capacitor-plus/commit/5c29fb9af001b9aafdcde7b7054585e093f44431))
+
+
+
+
+
 # [8.5.0](https://github.com/ionic-team/capacitor/compare/8.4.2...8.5.0) (2026-07-31)
 
 ## Bug Fixes
