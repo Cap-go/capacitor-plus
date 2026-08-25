@@ -1,6 +1,6 @@
 {
   "name": "@capacitor-plus/cli",
-  "version": "8.3.12",
+  "version": "8.5.0",
   "description": "Capacitor+: Enhanced Capacitor with automated upstream sync - Cross-platform apps with JavaScript and the web",
   "homepage": "https://capgo.app/docs/plugins/capacitor-plus/",
   "author": "Capgo Team <support@capgo.app> (https://capgo.app)",
@@ -60,6 +60,8 @@
     "semver": "^7.6.3",
     "tar": "^7.5.3",
     "tslib": "^2.8.1",
+    "typescript": "~5.0.2",
+    "xcode": "^3.0.1",
     "xml2js": "^0.6.2"
   },
   "devDependencies": {
@@ -70,6 +72,7 @@
     "@types/prompts": "^2.4.9",
     "@types/semver": "^7.5.8",
     "@types/tmp": "^0.2.6",
+    "@types/xcode": "^3.0.0",
     "@types/xml2js": "0.4.5",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",

@@ -3,6 +3,45 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [8.5.0](https://github.com/ionic-team/capacitor/compare/8.4.2...8.5.0) (2026-07-31)
+
+## Features
+
+- **ios:** UIScene Support ([#8536](https://github.com/ionic-team/capacitor/issues/8536)) ([3fa04a3](https://github.com/ionic-team/capacitor/commit/3fa04a357c92af34cd6fccb8124791963804a9dc))
+
+## [8.4.2](https://github.com/ionic-team/capacitor/compare/8.4.1...8.4.2) (2026-07-14)
+
+**Note:** Version bump only for package @capacitor/ios
+
+## [8.4.1](https://github.com/ionic-team/capacitor/compare/8.4.0...8.4.1) (2026-06-19)
+
+**Note:** Version bump only for package @capacitor/ios
+
+# [8.4.0](https://github.com/ionic-team/capacitor/compare/8.3.4...8.4.0) (2026-06-02)
+
+## Features
+
+- add method getDouble to plugin config ([#7638](https://github.com/ionic-team/capacitor/issues/7638)) ([93c72de](https://github.com/ionic-team/capacitor/commit/93c72de40a2ec4c78b33659250cb08340083088e))
+
+## [8.3.4](https://github.com/ionic-team/capacitor/compare/8.3.3...8.3.4) (2026-05-12)
+
+**Note:** Version bump only for package @capacitor/ios
+
+## [8.3.3](https://github.com/ionic-team/capacitor/compare/8.3.2...8.3.3) (2026-05-08)
+
+**Note:** Version bump only for package @capacitor/ios
+
+## [8.3.2](https://github.com/ionic-team/capacitor/compare/8.3.1...8.3.2) (2026-05-07)
+
+**Note:** Version bump only for package @capacitor/ios
+
+## [8.3.1](https://github.com/ionic-team/capacitor/compare/8.3.0...8.3.1) (2026-04-16)
+
+### Bug Fixes
+
+- boundary value extraction for form-data requests ([#7518](https://github.com/ionic-team/capacitor/issues/7518)) ([64ab854](https://github.com/ionic-team/capacitor/commit/64ab854c12330804c24275d88d3a9f7c8e52a73d))
+
+
 ## [8.3.12](https://github.com/Cap-go/capacitor-plus/compare/8.3.11...8.3.12) (2026-08-13)
 
 **Note:** Version bump only for package @capacitor-plus/ios
@@ -296,11 +335,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - System Bars Plugin ([#8180](https://github.com/Cap-go/capacitor-plus/issues/8180)) ([a32216a](https://github.com/Cap-go/capacitor-plus/commit/a32216ac0607172a3a9c7ae5cdbfc598769294a6))
 - **webview:** add setServerAssetPath method ([881235b](https://github.com/Cap-go/capacitor-plus/commit/881235b14de23ef988746bfb89a5a0fc3c8d8466))
 
-## [8.3.1](https://github.com/ionic-team/capacitor/compare/8.3.0...8.3.1) (2026-04-16)
-
-### Bug Fixes
-
-- boundary value extraction for form-data requests ([#7518](https://github.com/ionic-team/capacitor/issues/7518)) ([64ab854](https://github.com/ionic-team/capacitor/commit/64ab854c12330804c24275d88d3a9f7c8e52a73d))
 
 ## [8.3.0](https://github.com/ionic-team/capacitor/compare/8.2.0...8.3.0) (2026-03-25)
 
@@ -331,29 +365,29 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [8.0.0](https://github.com/ionic-team/capacitor/compare/8.0.0-beta.0...8.0.0) (2025-12-08)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** move PrivacyInfo.xcprivacy to resource_bundles to fix build… ([#8264](https://github.com/ionic-team/capacitor/issues/8264)) ([e6f50b8](https://github.com/ionic-team/capacitor/commit/e6f50b8c0c41acaaa21af373e195751508c37e9d))
 
-### Features
+## Features
 
 - **android:** Improving SystemBars inset handling ([#8268](https://github.com/ionic-team/capacitor/issues/8268)) ([81ae30a](https://github.com/ionic-team/capacitor/commit/81ae30a503797e417dd125b06262dabc4696c88a))
 
 # [8.0.0-beta.0](https://github.com/ionic-team/capacitor/compare/8.0.0-alpha.3...8.0.0-beta.0) (2025-11-14)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** use ReturnPromise for SystemBars returnType ([#8239](https://github.com/ionic-team/capacitor/issues/8239)) ([eb51288](https://github.com/ionic-team/capacitor/commit/eb5128866953281dc7bed88bd734fc3804b3a702))
 - make Plugin.resolve act consistently ([#8225](https://github.com/ionic-team/capacitor/issues/8225)) ([06aeb9e](https://github.com/ionic-team/capacitor/commit/06aeb9e85d162d6be9d96820edcb2008cd74da84))
 
-### Features
+## Features
 
 - **iOS:** Allow plugins to hook into handling WebView URL authentication challenges ([#8216](https://github.com/ionic-team/capacitor/issues/8216)) ([e8507cf](https://github.com/ionic-team/capacitor/commit/e8507cfe4d93337ddee8ab6597aab5209ebb4858))
 - System Bars Plugin ([#8180](https://github.com/ionic-team/capacitor/issues/8180)) ([a32216a](https://github.com/ionic-team/capacitor/commit/a32216ac0607172a3a9c7ae5cdbfc598769294a6))
 
 # [8.0.0-alpha.3](https://github.com/ionic-team/capacitor/compare/8.0.0-alpha.2...8.0.0-alpha.3) (2025-10-22)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** also call bridge.reset() on webViewWebContentProcessDidTerminate ([#8143](https://github.com/ionic-team/capacitor/issues/8143)) ([1de1f15](https://github.com/ionic-team/capacitor/commit/1de1f157169bc0e23060ffabf044c6d391b98efe))
 - **ios:** Remove Cordova UIView extension ([#8189](https://github.com/ionic-team/capacitor/issues/8189)) ([0c7bcd3](https://github.com/ionic-team/capacitor/commit/0c7bcd3d10f3e3d5a1259f5096879771f8e26436))
@@ -366,7 +400,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [8.0.0-alpha.1](https://github.com/ionic-team/capacitor/compare/7.4.2...8.0.0-alpha.1) (2025-08-20)
 
-### Bug Fixes
+## Bug Fixes
 
 - http content headers not sent when using axios ([#8039](https://github.com/ionic-team/capacitor/issues/8039)) ([67cac40](https://github.com/ionic-team/capacitor/commit/67cac40660b3e8cc78d1d228b7c6915450948ef1))
 
@@ -386,36 +420,36 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [7.3.0](https://github.com/ionic-team/capacitor/compare/7.2.0...7.3.0) (2025-06-05)
 
-### Bug Fixes
+## Bug Fixes
 
 - Remove all plugin listeners in bridge reset ([#7962](https://github.com/ionic-team/capacitor/issues/7962)) ([06aeea9](https://github.com/ionic-team/capacitor/commit/06aeea973aa56ac2fb791f893ebd899253ee65f9))
 
-### Features
+## Features
 
 - expose `appStartPath` on cap config server configuration ([#8019](https://github.com/ionic-team/capacitor/issues/8019)) ([a274fef](https://github.com/ionic-team/capacitor/commit/a274fef069176a8e528a22f4734d1e29a539709c))
 - **ios:** Alternative debug config for SPM ([#7982](https://github.com/ionic-team/capacitor/issues/7982)) ([a054aa5](https://github.com/ionic-team/capacitor/commit/a054aa5bb4d5eabe5da5d42a380bd51b8785958c))
 
 # [7.2.0](https://github.com/ionic-team/capacitor/compare/7.1.0...7.2.0) (2025-03-31)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** respect shouldEncodeUrlParams value ([#7931](https://github.com/ionic-team/capacitor/issues/7931)) ([4fb12a0](https://github.com/ionic-team/capacitor/commit/4fb12a03a92c0f38b0d48b114252342f4bdc17bf))
 
-### Features
+## Features
 
 - **http:** Apply overrideUserAgent to requests ([#7906](https://github.com/ionic-team/capacitor/issues/7906)) ([52482c9](https://github.com/ionic-team/capacitor/commit/52482c9d3c575b737054b41f9d1730c70cc5f471))
 - **ios:** Enable Fullscreen API on WebView ([#7909](https://github.com/ionic-team/capacitor/issues/7909)) ([172638e](https://github.com/ionic-team/capacitor/commit/172638ec7b6eb67bf25f8dac2818122ba31c2c91))
 
 # [7.1.0](https://github.com/ionic-team/capacitor/compare/7.0.1...7.1.0) (2025-03-12)
 
-### Bug Fixes
+## Bug Fixes
 
 - **http:** boundary not added for Request objects ([#7897](https://github.com/ionic-team/capacitor/issues/7897)) ([bdaa6f3](https://github.com/ionic-team/capacitor/commit/bdaa6f3c38c33f3a021ac61f2de89101a5b66cff))
 - **ios:** don't check isMediaExtension on range requests ([#7868](https://github.com/ionic-team/capacitor/issues/7868)) ([028caa5](https://github.com/ionic-team/capacitor/commit/028caa5378d359fb1004098aa93a24ad0f49a4ae))
 - **ios:** listen for CapacitorViewDidAppear ([#7850](https://github.com/ionic-team/capacitor/issues/7850)) ([e24ffb7](https://github.com/ionic-team/capacitor/commit/e24ffb7d4de0bf3d53e92537f21c864f121c1fad))
 - **ios:** Reset plugin listeners when WebView process is terminated ([#7905](https://github.com/ionic-team/capacitor/issues/7905)) ([d039157](https://github.com/ionic-team/capacitor/commit/d0391576726955b2c1b484f1ca9a03465b9ef67e))
 
-### Features
+## Features
 
 - Add function to inject external JS into WebView before document load ([#7864](https://github.com/ionic-team/capacitor/issues/7864)) ([ec0954c](https://github.com/ionic-team/capacitor/commit/ec0954c197543e913939f3ab9c4bcb172bfa3530))
 
@@ -437,11 +471,11 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [7.0.0-beta.0](https://github.com/ionic-team/capacitor/compare/7.0.0-alpha.2...7.0.0-beta.0) (2024-12-20)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** Make Bridge webView first responder ([#7753](https://github.com/ionic-team/capacitor/issues/7753)) ([77e4668](https://github.com/ionic-team/capacitor/commit/77e4668fa8dbb24b4561387e101547f74e37538e))
 
-### Features
+## Features
 
 - Add global initialFocus configuration ([#7775](https://github.com/ionic-team/capacitor/issues/7775)) ([61d0165](https://github.com/ionic-team/capacitor/commit/61d01653685d8e3594d2d8a6bd870fa9643ba95c))
 
@@ -451,11 +485,11 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [7.0.0-alpha.1](https://github.com/ionic-team/capacitor/compare/6.1.2...7.0.0-alpha.1) (2024-10-14)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** fix retain cycle caused by CDVPluginManager ([#7692](https://github.com/ionic-team/capacitor/issues/7692)) ([02bdb3d](https://github.com/ionic-team/capacitor/commit/02bdb3d1d15907dcc577f16b7f2e22050e54ffef))
 
-### Features
+## Features
 
 - **core:** expose `methodName` via `CAPPluginCall` ([#7641](https://github.com/ionic-team/capacitor/issues/7641)) ([df109aa](https://github.com/ionic-team/capacitor/commit/df109aa1cfa1ea824e22feecbd2b7183a57fc693))
 - **ios:** JSValueEncoder/Decoder feature parity with JSONEncoder/Decoder ([#7647](https://github.com/ionic-team/capacitor/issues/7647)) ([410249b](https://github.com/ionic-team/capacitor/commit/410249b6c626e67235f25b466ed4969d52148bd1)), closes [#7576](https://github.com/ionic-team/capacitor/issues/7576)
@@ -475,25 +509,25 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [6.1.0](https://github.com/ionic-team/capacitor/compare/6.0.0...6.1.0) (2024-06-11)
 
-### Bug Fixes
+## Bug Fixes
 
 - **http:** don't override readyState for non POST requests ([#7488](https://github.com/ionic-team/capacitor/issues/7488)) ([30c13a8](https://github.com/ionic-team/capacitor/commit/30c13a865e7710e6dc5f0ee014e951d52d030795))
 - **ios:** check if urlSchemeTask is stopped before calling its methods ([#7482](https://github.com/ionic-team/capacitor/issues/7482)) ([b32b5b1](https://github.com/ionic-team/capacitor/commit/b32b5b17ed14bd43c846b3fcb930bfd88e245e40))
 
-### Features
+## Features
 
 - **ios:** CAPPluginMethod selector-based initializer ([#7412](https://github.com/ionic-team/capacitor/issues/7412)) ([44c5b55](https://github.com/ionic-team/capacitor/commit/44c5b55e36b85471a85ee5a1af47bdb1a5d83a8b))
 
 # [6.0.0](https://github.com/ionic-team/capacitor/compare/6.0.0-rc.2...6.0.0) (2024-04-15)
 
-### Bug Fixes
+## Bug Fixes
 
 - **http:** Add URLSearchParams support ([#7374](https://github.com/ionic-team/capacitor/issues/7374)) ([9367ecc](https://github.com/ionic-team/capacitor/commit/9367ecc56a0c78249dccdf95dca5006422144289))
 - **http:** prevent POST request from being proxied ([#7395](https://github.com/ionic-team/capacitor/issues/7395)) ([7b8c352](https://github.com/ionic-team/capacitor/commit/7b8c3523decd5610dcf09e926640bf35b382d61d))
 
 # [6.0.0-rc.2](https://github.com/ionic-team/capacitor/compare/6.0.0-rc.1...6.0.0-rc.2) (2024-03-25)
 
-### Bug Fixes
+## Bug Fixes
 
 - **http:** change proxy url generation ([#7354](https://github.com/ionic-team/capacitor/issues/7354)) ([318c316](https://github.com/ionic-team/capacitor/commit/318c316847c5b059fb88b46d4acd31e1ced477e5))
 - inject cordova files if a cordova plugin is present ([#7363](https://github.com/ionic-team/capacitor/issues/7363)) ([ce9d505](https://github.com/ionic-team/capacitor/commit/ce9d50585b1cab183245197878bf625cf0289275))
@@ -501,7 +535,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [6.0.0-rc.1](https://github.com/ionic-team/capacitor/compare/6.0.0-rc.0...6.0.0-rc.1) (2024-03-15)
 
-### Bug Fixes
+## Bug Fixes
 
 - **core:** make 'content-type' header count for XMLHttpRequest patch ([#7161](https://github.com/ionic-team/capacitor/issues/7161)) ([26d7f68](https://github.com/ionic-team/capacitor/commit/26d7f688284914c6ef795564ba424119efc32a1c))
 - **http:** handle proxy urls with port ([#7273](https://github.com/ionic-team/capacitor/issues/7273)) ([514409a](https://github.com/ionic-team/capacitor/commit/514409aeb93ad65be105bbe2da8d2cd86ff159b0))
@@ -512,18 +546,18 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - **ios:** Moves `updateBinaryVersion` call to the end of `loadView`. ([#7226](https://github.com/ionic-team/capacitor/issues/7226)) ([7724760](https://github.com/ionic-team/capacitor/commit/77247602ac150797d2375118f702cf9ba39ea957))
 - **ios:** overwrite CORS headers on livereload ([#7339](https://github.com/ionic-team/capacitor/issues/7339)) ([0c8d69b](https://github.com/ionic-team/capacitor/commit/0c8d69b7f9c163730e7d74bb0147b61742c61676))
 
-### Features
+## Features
 
 - **webview:** add setServerAssetPath method ([881235b](https://github.com/ionic-team/capacitor/commit/881235b14de23ef988746bfb89a5a0fc3c8d8466))
 
 # [6.0.0-rc.0](https://github.com/ionic-team/capacitor/compare/6.0.0-beta.2...6.0.0-rc.0) (2024-01-23)
 
-### Bug Fixes
+## Bug Fixes
 
 - remove duplicates from auto registration array using set ([#7192](https://github.com/ionic-team/capacitor/issues/7192)) ([c4984ae](https://github.com/ionic-team/capacitor/commit/c4984ae4433602dbe028f72736cb6e56e8f92bf9))
 - stop crashing from `objc_getClassList` ([#7187](https://github.com/ionic-team/capacitor/issues/7187)) ([e148db7](https://github.com/ionic-team/capacitor/commit/e148db7758e4186ad45fd74185a10fb757ff9b29))
 
-### Features
+## Features
 
 - **ios:** Replace usage of UserDefaults with KeyValueStore. ([#7191](https://github.com/ionic-team/capacitor/issues/7191)) ([cd58ba2](https://github.com/ionic-team/capacitor/commit/cd58ba2a654f40bf72616f430d7b9604b283e23d))
 
@@ -533,36 +567,36 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [6.0.0-beta.1](https://github.com/ionic-team/capacitor/compare/6.0.0-beta.0...6.0.0-beta.1) (2023-12-14)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** Add Codable folder to podspec source_files ([#7131](https://github.com/ionic-team/capacitor/issues/7131)) ([04d1d55](https://github.com/ionic-team/capacitor/commit/04d1d557b51fcac31281a3f547300f06c6dacfb2))
 
 # [6.0.0-beta.0](https://github.com/ionic-team/capacitor/compare/6.0.0-alpha.2...6.0.0-beta.0) (2023-12-13)
 
-### Bug Fixes
+## Bug Fixes
 
 - **http:** parse readablestream data on fetch request objects ([#6919](https://github.com/ionic-team/capacitor/issues/6919)) ([80ec3b7](https://github.com/ionic-team/capacitor/commit/80ec3b73db18b7b6841bf90ed50a67389946ab87))
 - **ios:** add some new cordova-ios classes used by Cordova plugins ([#7096](https://github.com/ionic-team/capacitor/issues/7096)) ([3db9051](https://github.com/ionic-team/capacitor/commit/3db9051eb015cf5f402f81b4cbaa7b27a5c9477a))
 
-### Features
+## Features
 
 - **ios:** Add Codable support for CAPPluginCall and JSValueContainer ([#7119](https://github.com/ionic-team/capacitor/issues/7119)) ([af417e0](https://github.com/ionic-team/capacitor/commit/af417e0cbbb1a3a7b3b62756eebb8d1dc0952cc4))
 
 # [6.0.0-alpha.2](https://github.com/ionic-team/capacitor/compare/6.0.0-alpha.1...6.0.0-alpha.2) (2023-11-15)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** Remove CocoaPods Xcode 15 workaround that causes issues ([#7059](https://github.com/ionic-team/capacitor/issues/7059)) ([043a8db](https://github.com/ionic-team/capacitor/commit/043a8dba4059e33c7445696c186110bef1130e16))
 
 # [6.0.0-alpha.1](https://github.com/ionic-team/capacitor/compare/5.2.3...6.0.0-alpha.1) (2023-11-08)
 
-### Bug Fixes
+## Bug Fixes
 
 - **android:** make local urls use unpatched fetch ([#6953](https://github.com/ionic-team/capacitor/issues/6953)) ([e50e56c](https://github.com/ionic-team/capacitor/commit/e50e56c5231f230497d1bd420e02e2e065c38f86))
 - **http:** add support for Request objects in fetch ([24b3cc1](https://github.com/ionic-team/capacitor/commit/24b3cc113e3d8aae5d85dbf2d25bec0c35136477))
 - **http:** inherit object properties on window.XMLHttpRequest ([91c11d0](https://github.com/ionic-team/capacitor/commit/91c11d06f773c45a10f6f2d52f672ae6f189b162))
 
-### Features
+## Features
 
 - Add XCFrameworks ([#7020](https://github.com/ionic-team/capacitor/issues/7020)) ([5306095](https://github.com/ionic-team/capacitor/commit/53060955dc83cdbfda66bed60c2efcba395a9ca8))
 - **ios:** Makes CapacitorBridge, WebViewAssetHandler, and WebViewDelegationHandler open classes, along with several of their methods ([#7009](https://github.com/ionic-team/capacitor/issues/7009)) ([40d62cb](https://github.com/ionic-team/capacitor/commit/40d62cbce950c2f3972764fe134cc37f2343f33d))
@@ -570,7 +604,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [5.6.0](https://github.com/ionic-team/capacitor/compare/5.5.1...5.6.0) (2023-12-14)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** add some new cordova-ios classes used by Cordova plugins ([#7115](https://github.com/ionic-team/capacitor/issues/7115)) ([5fb902b](https://github.com/ionic-team/capacitor/commit/5fb902b232d9afded2edc865c8d3c0c0e7efe5e7))
 
@@ -600,7 +634,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [5.4.0](https://github.com/ionic-team/capacitor/compare/5.3.0...5.4.0) (2023-09-14)
 
-### Bug Fixes
+## Bug Fixes
 
 - **http:** add support for defining xhr and angular http response types ([09bd040](https://github.com/ionic-team/capacitor/commit/09bd040dfe4b8808d7499b6ee592005420406cac))
 - **http:** add support for Request objects in fetch ([2fe4535](https://github.com/ionic-team/capacitor/commit/2fe4535e781b1a5cfa0f3359c1afa5c360073b6a))
@@ -632,12 +666,12 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [5.2.0](https://github.com/ionic-team/capacitor/compare/5.1.1...5.2.0) (2023-07-12)
 
-### Bug Fixes
+## Bug Fixes
 
 - **cookies:** sanitize url before retrieving/setting cookies ([ca40634](https://github.com/ionic-team/capacitor/commit/ca4063471f215d3f7525e51592d9c72138a52855))
 - **http:** fire events in correct order when using xhr ([5ed3617](https://github.com/ionic-team/capacitor/commit/5ed361787596bb5949f6ae5e366495f296352bf3))
 
-### Features
+## Features
 
 - **http:** support for FormData requests ([#6708](https://github.com/ionic-team/capacitor/issues/6708)) ([849c564](https://github.com/ionic-team/capacitor/commit/849c56458205bea3b078b1ee19807d7fd84c47b1))
 
@@ -649,7 +683,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [5.1.0](https://github.com/ionic-team/capacitor/compare/5.0.5...5.1.0) (2023-06-29)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** Return proper MIME Type for local WASM files ([#6675](https://github.com/ionic-team/capacitor/issues/6675)) ([d7856de](https://github.com/ionic-team/capacitor/commit/d7856de62a4c058ac474ae91a5fd221dabf99c0a))
 - **ios:** set cors headers in asset handler for live reload ([e5a1c81](https://github.com/ionic-team/capacitor/commit/e5a1c81fe81904dfd7e3f5100a04088173effc1c))
@@ -702,11 +736,11 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [5.0.0-beta.2](https://github.com/ionic-team/capacitor/compare/5.0.0-beta.1...5.0.0-beta.2) (2023-04-13)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios/android:** copy url from nativeResponse to response ([#6482](https://github.com/ionic-team/capacitor/issues/6482)) ([828fb71](https://github.com/ionic-team/capacitor/commit/828fb71ebb52c0655d5879ad0edaac7368ab2b96))
 
-### Features
+## Features
 
 - **ios:** add webContentsDebuggingEnabled configuration ([#6495](https://github.com/ionic-team/capacitor/issues/6495)) ([c691e4a](https://github.com/ionic-team/capacitor/commit/c691e4aecbfb7a45ce0465d1fe9020ab715815d3))
 
@@ -716,24 +750,24 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [5.0.0-beta.0](https://github.com/ionic-team/capacitor/compare/5.0.0-alpha.1...5.0.0-beta.0) (2023-03-31)
 
-### Bug Fixes
+## Bug Fixes
 
 - 204 http response ([#6266](https://github.com/ionic-team/capacitor/issues/6266)) ([771f6ce](https://github.com/ionic-team/capacitor/commit/771f6ce1f35159848db218a42dc4f56b5106f750))
 - **ios:** Event listeners were unexpectedly nil ([#6445](https://github.com/ionic-team/capacitor/issues/6445)) ([209d4ed](https://github.com/ionic-team/capacitor/commit/209d4edace610b00e689440a5c08e72f5da60cc2))
 
-### Features
+## Features
 
 - retain multiple calls per event until consumed ([#6419](https://github.com/ionic-team/capacitor/issues/6419)) ([5aba2cb](https://github.com/ionic-team/capacitor/commit/5aba2cbe29bdbab2a7af861c65d8323acf9c54a6))
 
 # [5.0.0-alpha.1](https://github.com/ionic-team/capacitor/compare/4.7.0...5.0.0-alpha.1) (2023-03-16)
 
-### Bug Fixes
+## Bug Fixes
 
 - **iOS:** Separate cookies by `; ` rather than `;` when accessing through `document.cookie` ([#6313](https://github.com/ionic-team/capacitor/issues/6313)) ([beade60](https://github.com/ionic-team/capacitor/commit/beade6020e25dc405e796e1b06bf6dd90b217693))
 
 # [4.7.0](https://github.com/ionic-team/capacitor/compare/4.6.3...4.7.0) (2023-02-22)
 
-### Bug Fixes
+## Bug Fixes
 
 - handle fetch headers that are Headers objects ([#6320](https://github.com/ionic-team/capacitor/issues/6320)) ([cb00e49](https://github.com/ionic-team/capacitor/commit/cb00e4952acca8e877555f30b2190f6685d25934))
 - **ios:** Avoid double encoding on http urls ([#6288](https://github.com/ionic-team/capacitor/issues/6288)) ([4768085](https://github.com/ionic-team/capacitor/commit/4768085414768bb2c013afcc6c645664893cd297))
@@ -759,38 +793,38 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [4.6.0](https://github.com/ionic-team/capacitor/compare/4.5.0...4.6.0) (2022-12-01)
 
-### Bug Fixes
+## Bug Fixes
 
 - **cookies:** Use Set-Cookie headers to persist cookies ([57f8b39](https://github.com/ionic-team/capacitor/commit/57f8b39d7f4c5ee0e5e5cb316913e9450a81d22b))
 
-### Features
+## Features
 
 - **ios:** Plugin Registration and Plugin Instance Support ([#6072](https://github.com/ionic-team/capacitor/issues/6072)) ([9f1d863](https://github.com/ionic-team/capacitor/commit/9f1d863c1222096334a0dd05f39ce7f984a2763a))
 
 # [4.5.0](https://github.com/ionic-team/capacitor/compare/4.4.0...4.5.0) (2022-11-16)
 
-### Bug Fixes
+## Bug Fixes
 
 - **cli/ios:** Read handleApplicationNotifications configuration option ([#6030](https://github.com/ionic-team/capacitor/issues/6030)) ([99ccf18](https://github.com/ionic-team/capacitor/commit/99ccf181f6ee8a00ed97bdbf9076e2b2ea27cd57))
 
-### Features
+## Features
 
 - **cookies:** add get cookies plugin method ([ba1e770](https://github.com/ionic-team/capacitor/commit/ba1e7702a3338714aee24388c0afea39706c9341))
 
 # [4.4.0](https://github.com/ionic-team/capacitor/compare/4.3.0...4.4.0) (2022-10-21)
 
-### Bug Fixes
+## Bug Fixes
 
 - **cookies:** make document.cookie setter synchronous ([2272abf](https://github.com/ionic-team/capacitor/commit/2272abf3d3d9dc82d9ca0d03b17e2b78f11f61fc))
 - **http:** fix local http requests on native platforms ([c4e040a](https://github.com/ionic-team/capacitor/commit/c4e040a6f8c6b54bac6ae320e5f0f008604fe50f))
 
 # [4.3.0](https://github.com/ionic-team/capacitor/compare/4.2.0...4.3.0) (2022-09-21)
 
-### Bug Fixes
+## Bug Fixes
 
 - **core:** Exception object was not set on Cap ([#5917](https://github.com/ionic-team/capacitor/issues/5917)) ([9ca27a4](https://github.com/ionic-team/capacitor/commit/9ca27a4f8441b368f8bf9d97dda57b1a55ac0e4e))
 
-### Features
+## Features
 
 - Capacitor Cookies & Capacitor Http core plugins ([d4047cf](https://github.com/ionic-team/capacitor/commit/d4047cfa947676777f400389a8d65defae140b45))
 
@@ -800,12 +834,12 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [4.1.0](https://github.com/ionic-team/capacitor/compare/4.0.1...4.1.0) (2022-08-18)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** Prevent Xcode 14 warning on CAPWebView ([#5821](https://github.com/ionic-team/capacitor/issues/5821)) ([66954ef](https://github.com/ionic-team/capacitor/commit/66954ef6bc93f2038d85a386ef2f8b582af11bc3))
 - **ios:** return proper mimeType on M1 x86_64 simulators ([#5853](https://github.com/ionic-team/capacitor/issues/5853)) ([325b6fe](https://github.com/ionic-team/capacitor/commit/325b6fe83939efaaef44c7e8624e33de742a57e2)), closes [#5793](https://github.com/ionic-team/capacitor/issues/5793)
 
-### Features
+## Features
 
 - **ios:** Add `setServerBasePath(_:)` to CAPBridgeProtocol ([#5860](https://github.com/ionic-team/capacitor/issues/5860)) ([76f28e7](https://github.com/ionic-team/capacitor/commit/76f28e70a5c0a03e4c6b9a93a0c068666a2c38ff))
 
@@ -817,11 +851,11 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [4.0.0](https://github.com/ionic-team/capacitor/compare/4.0.0-beta.2...4.0.0) (2022-07-27)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** error data is optional ([#5782](https://github.com/ionic-team/capacitor/issues/5782)) ([da48d79](https://github.com/ionic-team/capacitor/commit/da48d798c3463de9de188ae6a6475fd6afba6091))
 
-### Features
+## Features
 
 - **android:** Add Optional Data Param for Error Object ([#5719](https://github.com/ionic-team/capacitor/issues/5719)) ([174172b](https://github.com/ionic-team/capacitor/commit/174172b6c64dc9117c48ed0e20c25e0b6c2fb625))
 - **android:** Use addWebMessageListener where available ([#5427](https://github.com/ionic-team/capacitor/issues/5427)) ([c2dfe80](https://github.com/ionic-team/capacitor/commit/c2dfe808446717412b35e82713d123b7a052f264))
@@ -831,33 +865,33 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [4.0.0-beta.2](https://github.com/ionic-team/capacitor/compare/4.0.0-beta.1...4.0.0-beta.2) (2022-07-08)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** Add check for both serverURL and localURL in navigation ([#5736](https://github.com/ionic-team/capacitor/issues/5736)) ([8e824f3](https://github.com/ionic-team/capacitor/commit/8e824f33ad4df898fb8c0936a8f5e9041832a5c5))
 - **ios:** properly deliver retained events after listener re-add [#5732](https://github.com/ionic-team/capacitor/issues/5732) ([c5d6328](https://github.com/ionic-team/capacitor/commit/c5d632831924a1bcc868bc46b42f7ff619408752))
 
-### Features
+## Features
 
 - **ios:** Add `setServerBasePath(path:)` to CAPWebView ([#5742](https://github.com/ionic-team/capacitor/issues/5742)) ([1afbf8a](https://github.com/ionic-team/capacitor/commit/1afbf8a9dd0b8f7b1ac439d24e5d8ba26f786318))
 - Add CapWebView ([#5715](https://github.com/ionic-team/capacitor/issues/5715)) ([143d266](https://github.com/ionic-team/capacitor/commit/143d266ef0a818bac59dbbdaeda3b5c382ebfa1d))
 
 # [4.0.0-beta.1](https://github.com/ionic-team/capacitor/compare/4.0.0-beta.0...4.0.0-beta.1) (2022-06-27)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** Remove Cordova as an embedded framework ([#5709](https://github.com/ionic-team/capacitor/issues/5709)) ([bbf6d24](https://github.com/ionic-team/capacitor/commit/bbf6d248bf9217a5c5c6c15c7bcfeda209aba5b1))
 
-### Features
+## Features
 
 - **ios:** Allow to configure popover size ([#5717](https://github.com/ionic-team/capacitor/issues/5717)) ([ca1a125](https://github.com/ionic-team/capacitor/commit/ca1a125e5ab05d6066dd303bc75e99dfe21f210a))
 
 # [4.0.0-beta.0](https://github.com/ionic-team/capacitor/compare/3.6.0...4.0.0-beta.0) (2022-06-17)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** make removeAllListeners return a promise ([#5526](https://github.com/ionic-team/capacitor/issues/5526)) ([815f71b](https://github.com/ionic-team/capacitor/commit/815f71b6b62f6c4d5f66e6a36c190bb00a96fdcc))
 
-### Features
+## Features
 
 - **ios:** add getConfig to CAPPlugin ([#5495](https://github.com/ionic-team/capacitor/issues/5495)) ([224a9d0](https://github.com/ionic-team/capacitor/commit/224a9d075629d9c9da9ddc658eb282617fc46d09))
 - **ios:** Add preferredContentMode configuration option ([#5583](https://github.com/ionic-team/capacitor/issues/5583)) ([5b6dfa3](https://github.com/ionic-team/capacitor/commit/5b6dfa3fe29c85632546b299f03cc04a77cf7475))
@@ -865,21 +899,21 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [3.6.0](https://github.com/ionic-team/capacitor/compare/3.5.1...3.6.0) (2022-06-17)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** Use `URL(fileURLWithPath:)` instead of `URL(string:)` ([#5603](https://github.com/ionic-team/capacitor/issues/5603)) ([5fac1b2](https://github.com/ionic-team/capacitor/commit/5fac1b2da5aa5882087716cb2aa862d89173f4a1))
 
-### Features
+## Features
 
 - **iOS, Android:** add AppUUID Lib for plugins ([#5690](https://github.com/ionic-team/capacitor/issues/5690)) ([05e76cf](https://github.com/ionic-team/capacitor/commit/05e76cf526a44e07fa75f9482fa2223a13918638))
 
 # [4.0.0-alpha.2](https://github.com/ionic-team/capacitor/compare/3.4.1...4.0.0-alpha.2) (2022-05-12)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** make removeAllListeners return a promise ([#5526](https://github.com/ionic-team/capacitor/issues/5526)) ([815f71b](https://github.com/ionic-team/capacitor/commit/815f71b6b62f6c4d5f66e6a36c190bb00a96fdcc))
 
-### Features
+## Features
 
 - **ios:** add getConfig to CAPPlugin ([#5495](https://github.com/ionic-team/capacitor/issues/5495)) ([224a9d0](https://github.com/ionic-team/capacitor/commit/224a9d075629d9c9da9ddc658eb282617fc46d09))
 - **ios:** Add preferredContentMode configuration option ([#5583](https://github.com/ionic-team/capacitor/issues/5583)) ([5b6dfa3](https://github.com/ionic-team/capacitor/commit/5b6dfa3fe29c85632546b299f03cc04a77cf7475))
@@ -890,13 +924,13 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [3.5.0](https://github.com/ionic-team/capacitor/compare/3.4.3...3.5.0) (2022-04-22)
 
-### Features
+## Features
 
 - **ios:** Add overrideable routing for CAPBridgeViewController subclasses ([#5546](https://github.com/ionic-team/capacitor/issues/5546)) ([8875d5e](https://github.com/ionic-team/capacitor/commit/8875d5e2721e8a8ee763ce70cb672db383f36efa))
 
 # [4.0.0-alpha.1](https://github.com/ionic-team/capacitor/compare/3.4.1...4.0.0-alpha.1) (2022-03-25)
 
-### Features
+## Features
 
 - **ios:** add getConfig to CAPPlugin ([#5495](https://github.com/ionic-team/capacitor/issues/5495)) ([224a9d0](https://github.com/ionic-team/capacitor/commit/224a9d075629d9c9da9ddc658eb282617fc46d09))
 
@@ -916,7 +950,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [3.4.0](https://github.com/ionic-team/capacitor/compare/3.3.4...3.4.0) (2022-01-19)
 
-### Features
+## Features
 
 - **ios:** Add new iOS 15 Motion permission delegate ([#5317](https://github.com/ionic-team/capacitor/issues/5317)) ([c05a3cb](https://github.com/ionic-team/capacitor/commit/c05a3cbbf02217e3972d5e067970cae18bff3faa))
 - **ios:** Add new iOS15 media capture permission delegate ([#5196](https://github.com/ionic-team/capacitor/issues/5196)) ([d8b54ac](https://github.com/ionic-team/capacitor/commit/d8b54ac23414bfe56e50e1254066630a6f87eb0e))
@@ -941,7 +975,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [3.3.0](https://github.com/ionic-team/capacitor/compare/3.2.5...3.3.0) (2021-11-03)
 
-### Bug Fixes
+## Bug Fixes
 
 - **core:** avoid crash on logging circular objects ([#5186](https://github.com/ionic-team/capacitor/issues/5186)) ([1451ec8](https://github.com/ionic-team/capacitor/commit/1451ec850a9ef73267a032638e73f1fc440647b9))
 - **ios:** Avoid CDVScreenOrientationDelegate umbrella header warning ([#5156](https://github.com/ionic-team/capacitor/issues/5156)) ([31ec30d](https://github.com/ionic-team/capacitor/commit/31ec30de193aa3117dbb7eda928ef3a365d5667c))
@@ -989,11 +1023,11 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [3.1.0](https://github.com/ionic-team/capacitor/compare/3.0.2...3.1.0) (2021-07-07)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** isNewBinary is true if defaults have no stored versions ([#4779](https://github.com/ionic-team/capacitor/issues/4779)) ([bd86dbe](https://github.com/ionic-team/capacitor/commit/bd86dbeb74771ed201d0100773babf49e6764818))
 
-### Features
+## Features
 
 - **ios:** Add limitsNavigationsToAppBoundDomains configuration option ([#4789](https://github.com/ionic-team/capacitor/issues/4789)) ([2b7016f](https://github.com/ionic-team/capacitor/commit/2b7016f3b4d62fd8c9d03fde2745b3d515bf08b2))
 
@@ -1024,27 +1058,27 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [3.0.0-rc.2](https://github.com/ionic-team/capacitor/compare/3.0.0-rc.1...3.0.0-rc.2) (2021-05-07)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** Don't auto release saved calls ([#4535](https://github.com/ionic-team/capacitor/issues/4535)) ([4f76933](https://github.com/ionic-team/capacitor/commit/4f76933b98d0461564d3dca9b36d4ea1eba8ed49))
 
 # [3.0.0-rc.1](https://github.com/ionic-team/capacitor/compare/3.0.0-rc.0...3.0.0-rc.1) (2021-04-29)
 
-### Bug Fixes
+## Bug Fixes
 
 - generate Capacitor.Plugins object ([#4496](https://github.com/ionic-team/capacitor/issues/4496)) ([1c71b7a](https://github.com/ionic-team/capacitor/commit/1c71b7adb2c325e34d980dbf578dc22afb2c332b))
 - **ios:** cordova-plugin-screen-orientation compatibility ([#4367](https://github.com/ionic-team/capacitor/issues/4367)) ([b893a57](https://github.com/ionic-team/capacitor/commit/b893a57aaaf3a16e13db9c33037a12f1a5ac92e0))
 - **ios:** fire resume/pause events if no cordova plugins installed ([#4467](https://github.com/ionic-team/capacitor/issues/4467)) ([0105f7a](https://github.com/ionic-team/capacitor/commit/0105f7a2c68f2e7bec16ca23384b6acbb2f3057b))
 - **ios:** put cancel button of confirm/prompt on the left ([#4464](https://github.com/ionic-team/capacitor/issues/4464)) ([e5b53aa](https://github.com/ionic-team/capacitor/commit/e5b53aa687a70938994802c7b1367cfcbb1e3811))
 
-### Features
+## Features
 
 - Unify logging behavior across environments ([#4416](https://github.com/ionic-team/capacitor/issues/4416)) ([bae0f3d](https://github.com/ionic-team/capacitor/commit/bae0f3d2cee84978636d0f589bc7e2f745671baf))
 - **iOS:** Include native-bridge.js as a resource in both Cocoapods and direct build ([#4505](https://github.com/ionic-team/capacitor/issues/4505)) ([c16ccc0](https://github.com/ionic-team/capacitor/commit/c16ccc0118aec57dc23649894bc3bcd83827f89f))
 
 # [3.0.0-rc.0](https://github.com/ionic-team/capacitor/compare/3.0.0-beta.6...3.0.0-rc.0) (2021-03-10)
 
-### Features
+## Features
 
 - **iOS:** Obj-C convenience accessors on CAPPluginCall ([#4309](https://github.com/ionic-team/capacitor/issues/4309)) ([e3657d7](https://github.com/ionic-team/capacitor/commit/e3657d77647187946ffcd4c4791f4a47c768db7f))
 - **iOS:** Unifying saving plugin calls ([#4253](https://github.com/ionic-team/capacitor/issues/4253)) ([de71da5](https://github.com/ionic-team/capacitor/commit/de71da52b80ff52d0234a5301fc6cae675640a33))
@@ -1063,13 +1097,13 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [3.0.0-beta.3](https://github.com/ionic-team/capacitor/compare/3.0.0-beta.2...3.0.0-beta.3) (2021-02-18)
 
-### Features
+## Features
 
 - **iOS:** Add automatic Date serialization to bridge communication ([#4177](https://github.com/ionic-team/capacitor/issues/4177)) ([3dabc69](https://github.com/ionic-team/capacitor/commit/3dabc69eab1c8ce0b7734acb641b67d349ec3093))
 
 # [3.0.0-beta.2](https://github.com/ionic-team/capacitor/compare/3.0.0-beta.1...3.0.0-beta.2) (2021-02-08)
 
-### Bug Fixes
+## Bug Fixes
 
 - address bug in `isPluginAvailable()` for web and native ([#4114](https://github.com/ionic-team/capacitor/issues/4114)) ([2fbd954](https://github.com/ionic-team/capacitor/commit/2fbd95465a321b8f4c50d4daf22a63d8043cee9b))
 - **iOS:** preserve null values in bridged types ([#4072](https://github.com/ionic-team/capacitor/issues/4072)) ([6dc691e](https://github.com/ionic-team/capacitor/commit/6dc691e66a07a421d5d4b08028ea05a65b3ddd84))
@@ -1088,7 +1122,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [3.0.0-alpha.13](https://github.com/ionic-team/capacitor/compare/3.0.0-alpha.12...3.0.0-alpha.13) (2021-01-13)
 
-### Bug Fixes
+## Bug Fixes
 
 - **iOS:** properly handle date types during JSValue coercion ([#4043](https://github.com/ionic-team/capacitor/issues/4043)) ([1affae7](https://github.com/ionic-team/capacitor/commit/1affae7cf8d2f49681bf25be48633ab985bbd12f))
 - **iOS:** skip Swift type coercion on Cordova plugin calls ([#4048](https://github.com/ionic-team/capacitor/issues/4048)) ([7bb9e0f](https://github.com/ionic-team/capacitor/commit/7bb9e0f22fdea369a6522c2d63a5b56baab9f5ca))
@@ -1099,7 +1133,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [3.0.0-alpha.11](https://github.com/ionic-team/capacitor/compare/3.0.0-alpha.10...3.0.0-alpha.11) (2020-12-26)
 
-### Features
+## Features
 
 - **iOS:** Open CAPBridgeViewController for subclassing ([#3973](https://github.com/ionic-team/capacitor/issues/3973)) ([a601705](https://github.com/ionic-team/capacitor/commit/a601705f8116ac10d1a0b5942511952c07cf474e))
 
@@ -1109,17 +1143,17 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [3.0.0-alpha.8](https://github.com/ionic-team/capacitor/compare/3.0.0-alpha.7...3.0.0-alpha.8) (2020-12-15)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** expose lastURL getter ([#3898](https://github.com/ionic-team/capacitor/issues/3898)) ([90b7fe3](https://github.com/ionic-team/capacitor/commit/90b7fe39f5a7cb9d584618a6fba66338f2bbf5fe))
 
 # [3.0.0-alpha.7](https://github.com/ionic-team/capacitor/compare/3.0.0-alpha.6...3.0.0-alpha.7) (2020-12-02)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** share message handler between webview and bridge ([#3875](https://github.com/ionic-team/capacitor/issues/3875)) ([f7dff2e](https://github.com/ionic-team/capacitor/commit/f7dff2e661a54bee770940ee1ebd9eab6456ba2e))
 
-### Features
+## Features
 
 - **ios:** add local and remote notification router ([#3796](https://github.com/ionic-team/capacitor/issues/3796)) ([f3edaf9](https://github.com/ionic-team/capacitor/commit/f3edaf93d4328ea3ee90df573bf14ef0efc7553b))
 - **ios:** add path utilities to bridge ([#3842](https://github.com/ionic-team/capacitor/issues/3842)) ([c31eb35](https://github.com/ionic-team/capacitor/commit/c31eb35f83a33626a9d88731c0fff18966c71b0b))
@@ -1128,7 +1162,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [3.0.0-alpha.6](https://github.com/ionic-team/capacitor/compare/3.0.0-alpha.5...3.0.0-alpha.6) (2020-10-30)
 
-### Features
+## Features
 
 - unified errors and error codes ([#3673](https://github.com/ionic-team/capacitor/issues/3673)) ([f9e0803](https://github.com/ionic-team/capacitor/commit/f9e08038aa88f7453e8235f380d2767a12a7a073))
 
@@ -1146,14 +1180,15 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [3.0.0-alpha.2](https://github.com/ionic-team/capacitor/compare/3.0.0-alpha.1...3.0.0-alpha.2) (2020-08-31)
 
-### Features
+## Features
 
 - Add extension for creating data from data url ([#3474](https://github.com/ionic-team/capacitor/issues/3474)) ([2909fd0](https://github.com/ionic-team/capacitor/commit/2909fd0ac0d9fdb2cdb7fd25e38742451aa05fb1))
 
 # [3.0.0-alpha.1](https://github.com/ionic-team/capacitor/compare/2.4.0...3.0.0-alpha.1) (2020-08-21)
 
-### Bug Fixes
+## Bug Fixes
 
 - **ios:** config bug from swiftlint refactor ([ace879f](https://github.com/ionic-team/capacitor/commit/ace879f42b19aa064efa80142c3783f736745344))
 
 # [3.0.0-alpha.0](https://github.com/ionic-team/capacitor/compare/2.3.0...3.0.0-alpha.0) (2020-07-23)
+
