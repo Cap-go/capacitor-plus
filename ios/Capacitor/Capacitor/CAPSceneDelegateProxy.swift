@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 @objc(CAPSceneDelegateProxy)
 public class SceneDelegateProxy: NSObject, UISceneDelegate {
@@ -21,10 +22,12 @@ public class SceneDelegateProxy: NSObject, UISceneDelegate {
         // missed. Deliver them on the first capacitorViewDidAppear, once plugins are
         // registered.
         var token: NSObjectProtocol?
-        token = NotificationCenter.default.addObserver(forName: .capacitorViewDidAppear, object: nil, queue: .main) { _ in
+        token = NotificationCenter.default.addObserver(forName: .capacitorViewDidAppear, object: nil, queue: .main) { [weak self] _ in
+            guard let self, Self.isBridgeReady(for: scene) else { return }
             if let token {
                 NotificationCenter.default.removeObserver(token)
             }
+            token = nil
             if !connectionOptions.urlContexts.isEmpty {
                 self.scene(scene, openURLContexts: connectionOptions.urlContexts)
             }
@@ -32,6 +35,41 @@ public class SceneDelegateProxy: NSObject, UISceneDelegate {
                 self.scene(scene, continue: userActivity)
             }
         }
+    }
+
+    private static func isBridgeReady(for scene: UIScene) -> Bool {
+        guard let windowScene = scene as? UIWindowScene else {
+            return false
+        }
+
+        for window in windowScene.windows {
+            guard let bridge = findBridge(in: window.rootViewController) else {
+                continue
+            }
+            if bridge.isViewLoaded && bridge.view.window != nil {
+                return true
+            }
+        }
+
+        return false
+    }
+
+    private static func findBridge(in viewController: UIViewController?) -> CAPBridgeViewController? {
+        if let bridge = viewController as? CAPBridgeViewController {
+            return bridge
+        }
+        if let navigationController = viewController as? UINavigationController {
+            return findBridge(in: navigationController.visibleViewController)
+        }
+        if let tabBarController = viewController as? UITabBarController {
+            return findBridge(in: tabBarController.selectedViewController)
+        }
+        for child in viewController?.children ?? [] {
+            if let bridge = findBridge(in: child) {
+                return bridge
+            }
+        }
+        return nil
     }
 
     public func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {

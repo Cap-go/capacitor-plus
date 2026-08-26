@@ -23,8 +23,11 @@ describe('findGroupUuidByComment', () => {
 
     const uuid = findGroupUuidByComment(project, 'App');
 
+    if (!uuid) {
+      throw new Error('Expected App group UUID');
+    }
     expect(uuid).toMatch(/^[A-F0-9]{24}$/);
-    const group = project.getPBXGroupByKey(uuid!);
+    const group = project.getPBXGroupByKey(uuid);
     expect(group).toBeDefined();
     expect(group?.path).toBe('App');
   });
@@ -38,7 +41,7 @@ describe('findGroupUuidByComment', () => {
 });
 
 describe('addSwiftFileToAppTarget', () => {
-  let tmpDir: any;
+  let tmpDir: Awaited<ReturnType<typeof mktmp>> | undefined;
   let pbxprojPath: string;
 
   beforeEach(async () => {
@@ -47,7 +50,8 @@ describe('addSwiftFileToAppTarget', () => {
   });
 
   afterEach(() => {
-    tmpDir.cleanupCallback();
+    const cleanup = tmpDir?.cleanupCallback as unknown as (() => void) | undefined;
+    cleanup?.();
   });
 
   it('registers a new Swift file in all four pbxproj sections', () => {
@@ -74,11 +78,14 @@ describe('addSwiftFileToAppTarget', () => {
       buildFiles.some(([k]) => (objects.PBXBuildFile as any)[`${k}_comment`]?.includes('SceneDelegate.swift')),
     ).toBe(true);
 
-    const appGroupUuid = findGroupUuidByComment(project, 'App')!;
-    const appGroup = project.getPBXGroupByKey(appGroupUuid)!;
-    expect(appGroup.children.some((c: any) => c.comment === 'SceneDelegate.swift')).toBe(true);
+    const appGroupUuid = findGroupUuidByComment(project, 'App');
+    if (!appGroupUuid) {
+      throw new Error('Expected App group UUID');
+    }
+    const appGroup = project.getPBXGroupByKey(appGroupUuid);
+    expect(appGroup?.children.some((c: any) => c.comment === 'SceneDelegate.swift')).toBe(true);
 
-    const sourcesPhase = objects.PBXSourcesBuildPhase!;
+    const sourcesPhase = objects.PBXSourcesBuildPhase ?? {};
     const sourcesEntries = Object.entries(sourcesPhase).filter(([k]) => !k.endsWith('_comment'));
     const [, sourcesObj] = sourcesEntries[0];
     expect((sourcesObj as any).files.some((f: any) => f.comment?.includes('SceneDelegate.swift'))).toBe(true);

@@ -121,6 +121,9 @@ export async function runCommand(
     } catch (e: any) {
       if (options.liveReload) {
         await CapLiveReloadHelper.revertCapConfigForLiveReload();
+        if (liveReloadManifestUpdated && platformName === config.android.name && cordovaPlugins) {
+          await writeCordovaAndroidManifest(cordovaPlugins, config, platformName, false);
+        }
       }
       if (!isFatal(e)) {
         fatal(e.stack ?? e);

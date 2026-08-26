@@ -44,17 +44,17 @@ public class SystemBars extends Plugin {
     private static final int WEBVIEW_VERSION_WITH_SAFE_AREA_KEYBOARD_FIX = 144;
 
     static final String viewportMetaJSFunction = """
-    function capacitorSystemBarsCheckMetaViewport() {
-        const meta = document.querySelectorAll("meta[name=viewport]");
-        if (meta.length == 0) {
-            return false;
+        function capacitorSystemBarsCheckMetaViewport() {
+            const meta = document.querySelectorAll("meta[name=viewport]");
+            if (meta.length == 0) {
+                return false;
+            }
+            // get the last found meta viewport tag
+            const metaContent = meta[meta.length - 1].content;
+            return metaContent.includes("viewport-fit=cover");
         }
-        // get the last found meta viewport tag
-        const metaContent = meta[meta.length - 1].content;
-        return metaContent.includes("viewport-fit=cover");
-    }
-    capacitorSystemBarsCheckMetaViewport();
-    """;
+        capacitorSystemBarsCheckMetaViewport();
+        """;
 
     private String insetsHandling = INSETS_HANDLING_CSS;
     private boolean hasViewportCover = false;
@@ -272,7 +272,7 @@ public class SystemBars extends Plugin {
                 // We need to correct for a possible shown IME
                 v.setPadding(0, 0, 0, keyboardVisible ? imeInsets.bottom : 0);
 
-                Insets safeAreaInsets = calcSafeAreaInsets(insets);
+                Insets safeAreaInsets = calcSafeAreaInsets(safeAreaSource);
                 injectSafeAreaCSS(safeAreaInsets.top, safeAreaInsets.right, safeAreaInsets.bottom, safeAreaInsets.left);
 
                 return new WindowInsetsCompat.Builder(insets)
@@ -297,7 +297,7 @@ public class SystemBars extends Plugin {
                 .setInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(), Insets.of(0, 0, 0, 0))
                 .build();
 
-            Insets safeAreaInsets = calcSafeAreaInsets(newInsets);
+            Insets safeAreaInsets = calcSafeAreaInsets(safeAreaSource);
             injectSafeAreaCSS(safeAreaInsets.top, safeAreaInsets.right, safeAreaInsets.bottom, safeAreaInsets.left);
 
             return newInsets;
@@ -364,6 +364,7 @@ public class SystemBars extends Plugin {
         if (hide) {
             if (bar.isEmpty()) {
                 windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.systemBars());
+                navBarVisible = false;
             } else if (bar.equals(BAR_STATUS_BAR)) {
                 windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.statusBars());
             } else if (bar.equals(BAR_GESTURE_BAR)) {
@@ -375,6 +376,7 @@ public class SystemBars extends Plugin {
 
         if (bar.isEmpty()) {
             windowInsetsControllerCompat.show(WindowInsetsCompat.Type.systemBars());
+            navBarVisible = true;
         } else if (bar.equals(BAR_STATUS_BAR)) {
             windowInsetsControllerCompat.show(WindowInsetsCompat.Type.statusBars());
         } else if (bar.equals(BAR_GESTURE_BAR)) {
