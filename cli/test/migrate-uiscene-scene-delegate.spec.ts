@@ -14,14 +14,11 @@ describe('extractConfigurationForConnecting', () => {
     const shipped = readFileSync(SHIPPED_APP_DELEGATE_SPM, 'utf-8');
     const snippet = extractConfigurationForConnecting(shipped);
     expect(snippet).not.toBeNull();
-    if (!snippet) {
-      throw new Error('Expected configurationForConnecting snippet');
-    }
     expect(snippet).toContain('configurationForConnecting connectingSceneSession: UISceneSession');
     expect(snippet).toContain('UISceneConfiguration(name: "Default Configuration"');
     expect(snippet).toContain('config.delegateClass = SceneDelegate.self');
-    expect(snippet.startsWith('\n')).toBe(true);
-    expect(snippet.endsWith('\n')).toBe(true);
+    expect(snippet!.startsWith('\n')).toBe(true);
+    expect(snippet!.endsWith('\n')).toBe(true);
   });
 
   it('slices the method out of the shipped Pods AppDelegate', () => {
@@ -43,12 +40,9 @@ describe('insertBeforeAppDelegateClassEnd', () => {
     const shipped = readFileSync(SHIPPED_APP_DELEGATE_SPM, 'utf-8');
     const snippet = extractConfigurationForConnecting(shipped);
     expect(snippet).not.toBeNull();
-    if (!snippet) {
-      throw new Error('Expected configurationForConnecting snippet');
-    }
     const pre = stripConfigurationForConnecting(shipped);
 
-    const patched = insertBeforeAppDelegateClassEnd(pre, snippet);
+    const patched = insertBeforeAppDelegateClassEnd(pre, snippet!);
 
     expect(patched).toBe(shipped);
   });

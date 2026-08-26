@@ -3,14 +3,6 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [8.5.1](https://github.com/Cap-go/capacitor-plus/compare/8.3.12...8.5.1) (2026-08-25)
-
-**Note:** Version bump only for package @capacitor-plus/android
-
-
-
-
-
 # [8.5.0](https://github.com/ionic-team/capacitor/compare/8.4.2...8.5.0) (2026-07-31)
 
 **Note:** Version bump only for package @capacitor/android
