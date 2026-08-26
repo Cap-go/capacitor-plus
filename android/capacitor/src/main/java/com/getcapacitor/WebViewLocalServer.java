@@ -756,6 +756,48 @@ public class WebViewLocalServer {
         }
     }
 
+    /**
+     * An InputStream wrapper that limits the number of bytes that can be read.
+     */
+    static class BoundedInputStream extends InputStream {
+
+        private final InputStream in;
+        private long remaining;
+
+        public BoundedInputStream(InputStream in, long limit) {
+            this.in = in;
+            this.remaining = limit;
+        }
+
+        @Override
+        public int available() throws IOException {
+            int available = in.available();
+            return (int) Math.min(available, remaining);
+        }
+
+        @Override
+        public int read() throws IOException {
+            if (remaining <= 0) return -1;
+            int result = in.read();
+            if (result != -1) remaining--;
+            return result;
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            if (remaining <= 0) return -1;
+            int toRead = (int) Math.min(len, remaining);
+            int result = in.read(b, off, toRead);
+            if (result > 0) remaining -= result;
+            return result;
+        }
+
+        @Override
+        public void close() throws IOException {
+            in.close();
+        }
+    }
+
     // For L and above.
     private static class LollipopLazyInputStream extends LazyInputStream {
 
