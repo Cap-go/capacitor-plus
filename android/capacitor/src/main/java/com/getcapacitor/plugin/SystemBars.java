@@ -272,7 +272,7 @@ public class SystemBars extends Plugin {
                 // We need to correct for a possible shown IME
                 v.setPadding(0, 0, 0, keyboardVisible ? imeInsets.bottom : 0);
 
-                Insets safeAreaInsets = calcSafeAreaInsets(safeAreaSource);
+                Insets safeAreaInsets = calcSafeAreaInsets(insets);
                 injectSafeAreaCSS(safeAreaInsets.top, safeAreaInsets.right, safeAreaInsets.bottom, safeAreaInsets.left);
 
                 return new WindowInsetsCompat.Builder(insets)
@@ -297,7 +297,7 @@ public class SystemBars extends Plugin {
                 .setInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(), Insets.of(0, 0, 0, 0))
                 .build();
 
-            Insets safeAreaInsets = calcSafeAreaInsets(safeAreaSource);
+            Insets safeAreaInsets = calcSafeAreaInsets(newInsets);
             injectSafeAreaCSS(safeAreaInsets.top, safeAreaInsets.right, safeAreaInsets.bottom, safeAreaInsets.left);
 
             return newInsets;
@@ -364,7 +364,6 @@ public class SystemBars extends Plugin {
         if (hide) {
             if (bar.isEmpty()) {
                 windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.systemBars());
-                navBarVisible = false;
             } else if (bar.equals(BAR_STATUS_BAR)) {
                 windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.statusBars());
             } else if (bar.equals(BAR_GESTURE_BAR)) {
@@ -376,7 +375,6 @@ public class SystemBars extends Plugin {
 
         if (bar.isEmpty()) {
             windowInsetsControllerCompat.show(WindowInsetsCompat.Type.systemBars());
-            navBarVisible = true;
         } else if (bar.equals(BAR_STATUS_BAR)) {
             windowInsetsControllerCompat.show(WindowInsetsCompat.Type.statusBars());
         } else if (bar.equals(BAR_GESTURE_BAR)) {
