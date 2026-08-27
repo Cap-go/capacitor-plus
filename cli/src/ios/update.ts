@@ -1,6 +1,6 @@
 import { copy, remove, pathExists, readFile, realpath, writeFile } from 'fs-extra';
 import { basename, dirname, join, relative } from 'path';
-import { major, prerelease } from 'semver';
+import { major, prerelease, valid } from 'semver';
 
 import c from '../colors';
 import { checkPlatformVersions, getCapacitorPackageVersion, runTask } from '../common';
