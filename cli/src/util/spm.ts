@@ -137,9 +137,7 @@ let package = Package(
       const options = packageOptions[plugin.id];
       const symlink = options?.symlink;
       const symlinkFolder = join('symlinks', plugin.name);
-      const relPath = convertToUnixPath(
-        symlink ? symlinkFolder : relative(config.ios.nativeXcodeProjDirAbs, plugin.rootPath),
-      );
+      const relPath = symlink ? symlinkFolder : relative(config.ios.nativeXcodeProjDirAbs, plugin.rootPath);
       if (symlink) {
         await ensureSymlink(plugin.rootPath, resolve(config.ios.nativeProjectDirAbs, 'CapApp-SPM', symlinkFolder));
       }
