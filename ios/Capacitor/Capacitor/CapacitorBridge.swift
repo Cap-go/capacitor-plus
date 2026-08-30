@@ -263,13 +263,16 @@ open class CapacitorBridge: NSObject, CAPBridgeProtocol {
             exportCordovaJS()
             registerCordovaPlugins()
         } else {
-            observers.append(NotificationCenter.default.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: OperationQueue.main) { [weak self] _ in
-                guard self?.viewController?.view.window?.windowScene == nil else { return }
-                self?.triggerDocumentJSEvent(eventName: "resume")
+            observers.append(NotificationCenter.default.addObserver(forName: UIScene.willEnterForegroundNotification, object: nil, queue: OperationQueue.main) { [weak self] notification in
+                if let scene = notification.object as? UIWindowScene, scene === self?.viewController?.view.window?.windowScene {
+                    self?.triggerDocumentJSEvent(eventName: "resume")
+                }
+
             })
-            observers.append(NotificationCenter.default.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: OperationQueue.main) { [weak self] _ in
-                guard self?.viewController?.view.window?.windowScene == nil else { return }
-                self?.triggerDocumentJSEvent(eventName: "pause")
+            observers.append(NotificationCenter.default.addObserver(forName: UIScene.didEnterBackgroundNotification, object: nil, queue: OperationQueue.main) { [weak self] notification in
+                if let scene = notification.object as? UIWindowScene, scene === self?.viewController?.view.window?.windowScene {
+                    self?.triggerDocumentJSEvent(eventName: "pause")
+                }
             })
             observers.append(NotificationCenter.default.addObserver(forName: UIScene.willEnterForegroundNotification, object: nil, queue: OperationQueue.main) { [weak self] notification in
                 if let scene = notification.object as? UIWindowScene, scene === self?.viewController?.view.window?.windowScene {
