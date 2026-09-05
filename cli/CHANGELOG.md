@@ -3,29 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [8.5.2](https://github.com/Cap-go/capacitor-plus/compare/8.5.1...8.5.2) (2026-08-26)
+## [8.5.1](https://github.com/ionic-team/capacitor/compare/8.5.0...8.5.1) (2026-08-31)
 
-**Note:** Version bump only for package @capacitor-plus/cli
+### Bug Fixes
 
-
-
-
-
-## [8.5.1](https://github.com/Cap-go/capacitor-plus/compare/8.3.12...8.5.1) (2026-08-25)
-
-**Note:** Version bump only for package @capacitor-plus/cli
-
-
-
-
+- **cli:** use POSIX paths in CapApp-SPM Package.swift ([#8549](https://github.com/ionic-team/capacitor/issues/8549)) ([5e5bb3b](https://github.com/ionic-team/capacitor/commit/5e5bb3befc312477900252ab07e23b596f8cb0d1))
 
 # [8.5.0](https://github.com/ionic-team/capacitor/compare/8.4.2...8.5.0) (2026-07-31)
 
-## Bug Fixes
+### Bug Fixes
 
 - **cli:** support TypeScript 7 when loading capacitor.config.ts ([#8534](https://github.com/ionic-team/capacitor/issues/8534)) ([4c1c870](https://github.com/ionic-team/capacitor/commit/4c1c8709413b9c19b008c99122ca330cc3c90e6f))
 
-## Features
+### Features
 
 - **cli:** add migrator functionality for adopting UIScene ([#8544](https://github.com/ionic-team/capacitor/issues/8544)) ([984fa85](https://github.com/ionic-team/capacitor/commit/984fa85ba0adab0aacf895aed6323bf4b503dccb))
 
@@ -42,11 +32,11 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 # [8.4.0](https://github.com/ionic-team/capacitor/compare/8.3.4...8.4.0) (2026-06-02)
 
-## Bug Fixes
+### Bug Fixes
 
 - **cli:** revert live reload config on failure ([#8485](https://github.com/ionic-team/capacitor/issues/8485)) ([1d031a4](https://github.com/ionic-team/capacitor/commit/1d031a4abec2c793079ba8897ad2e40c4cc6c7f9))
 
-## Features
+### Features
 
 - **cli:** add experimental packageOptions ([#8471](https://github.com/ionic-team/capacitor/issues/8471)) ([258867b](https://github.com/ionic-team/capacitor/commit/258867b7bf37b1837b99b02ec9638e5a6df08d97))
 - **cli:** capture ios_package_manager in telemetry ([#8482](https://github.com/ionic-team/capacitor/issues/8482)) ([b4b297a](https://github.com/ionic-team/capacitor/commit/b4b297a52f8732659662d5e5aaeff81c0f7d9835))
