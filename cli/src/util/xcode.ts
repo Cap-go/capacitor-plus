@@ -1,5 +1,4 @@
 import { writeFileSync } from 'fs-extra';
-import { basename } from 'path';
 import { project as loadXcodeProject } from 'xcode';
 import type { XcodeProject } from 'xcode';
 
@@ -21,8 +20,7 @@ export function addSwiftFileToAppTarget(
   const project = loadXcodeProject(pbxprojPath);
   project.parseSync();
 
-  const targetUuid = project.getFirstTarget().uuid;
-  if (project.hasFile(fileRelPath) && isSwiftFileInTargetSources(project, fileRelPath, targetUuid)) {
+  if (project.hasFile(fileRelPath)) {
     return { added: false };
   }
 
@@ -31,31 +29,7 @@ export function addSwiftFileToAppTarget(
     throw new Error(`Could not find PBXGroup with comment "${groupName}" in ${pbxprojPath}`);
   }
 
-  if (project.hasFile(fileRelPath) && !isSwiftFileInTargetSources(project, fileRelPath, targetUuid)) {
-    const fileRefUuid = findFileRefUuid(project, fileRelPath);
-    if (!fileRefUuid) {
-      throw new Error(`Could not find PBXFileReference for ${fileRelPath} in ${pbxprojPath}`);
-    }
-
-    const group = project.getPBXGroupByKey(groupUuid);
-    if (group && !group.children.some((child: { comment?: string }) => child.comment === fileRelPath)) {
-      group.children.push({ value: fileRefUuid, comment: fileRelPath });
-    }
-
-    const file = {
-      fileRef: fileRefUuid,
-      path: fileRelPath,
-      basename: basename(fileRelPath),
-      group: 'Sources',
-      target: targetUuid,
-      uuid: project.generateUuid(),
-    };
-    (project as XcodeProject & { addToPbxBuildFileSection: (file: unknown) => void }).addToPbxBuildFileSection(file);
-    (project as XcodeProject & { addToPbxSourcesBuildPhase: (file: unknown) => void }).addToPbxSourcesBuildPhase(file);
-    writeFileSync(pbxprojPath, project.writeSync(), 'utf-8');
-    return { added: true };
-  }
-
+  const targetUuid = project.getFirstTarget().uuid;
   const result = project.addSourceFile(fileRelPath, { target: targetUuid }, groupUuid);
   if (!result) {
     throw new Error(`Failed to register ${fileRelPath} in ${pbxprojPath}`);
@@ -63,38 +37,6 @@ export function addSwiftFileToAppTarget(
 
   writeFileSync(pbxprojPath, project.writeSync(), 'utf-8');
   return { added: true };
-}
-
-function fileReferenceMatchesPath(ref: { path?: string }, fileRelPath: string): boolean {
-  const path = ref.path;
-  return path === fileRelPath || path === `"${fileRelPath}"`;
-}
-
-function findFileRefUuid(project: XcodeProject, fileRelPath: string): string | null {
-  const objects = project.hash.project.objects;
-  const fileRefs = Object.entries(objects.PBXFileReference).filter(([k]) => !k.endsWith('_comment'));
-  const fileRefEntry = fileRefs.find(
-    ([, ref]) => typeof ref === 'object' && fileReferenceMatchesPath(ref as { path?: string }, fileRelPath),
-  );
-  return fileRefEntry?.[0] ?? null;
-}
-
-function isSwiftFileInTargetSources(project: XcodeProject, fileRelPath: string, targetUuid: string): boolean {
-  const fileRefUuid = findFileRefUuid(project, fileRelPath);
-  if (!fileRefUuid) {
-    return false;
-  }
-
-  const objects = project.hash.project.objects;
-  const sourcesPhase = project.pbxSourcesBuildPhaseObj(targetUuid);
-  if (!sourcesPhase?.files) {
-    return false;
-  }
-
-  return sourcesPhase.files.some((file: { value?: string }) => {
-    const buildFile = objects.PBXBuildFile[file.value ?? ''];
-    return typeof buildFile === 'object' && buildFile?.fileRef === fileRefUuid;
-  });
 }
 
 // Exported for tests.
