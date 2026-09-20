@@ -446,7 +446,7 @@ async function writeBreakingChanges() {
       )}.`,
     );
   }
-  if (allDependencies['@capacitor/ios'] || allDependencies['@capacitor-plus/ios']) {
+  if (allDependencies['@capacitor/ios']) {
     logger.info(
       'IMPORTANT: Capacitor 8.5 adopts UIScene on iOS. ' +
         'See https://capacitorjs.com/docs/updating/8-5 for the full 8.4 → 8.5 migration guide.',
