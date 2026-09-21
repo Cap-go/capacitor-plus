@@ -185,6 +185,11 @@ public class WebViewLocalServer {
         Uri loadingUrl = request.getUrl();
 
         if (null != loadingUrl.getPath() && loadingUrl.getPath().startsWith(Bridge.CAPACITOR_HTTP_INTERCEPTOR_START)) {
+            // Only fetch/XHR should reach the proxy; a document would run remote content at the app origin.
+            boolean httpEnabled = bridge.getConfig().getPluginConfiguration("CapacitorHttp").getBoolean("enabled", false);
+            if (!httpEnabled || isDocumentRequest(request)) {
+                return null;
+            }
             Logger.debug("Handling CapacitorHttp request: " + loadingUrl);
             try {
                 return handleCapacitorHttpRequest(request);
@@ -208,6 +213,24 @@ public class WebViewLocalServer {
         } else {
             return handleProxyRequest(request, handler);
         }
+    }
+
+    /** isForMainFrame() is false for an iframe and a fetch alike; only navigations send this header. */
+    private boolean isDocumentRequest(WebResourceRequest request) {
+        if (request.isForMainFrame()) {
+            return true;
+        }
+        Map<String, String> headers = request.getRequestHeaders();
+        if (headers == null) {
+            // The proxy needs the headers too, so the request fails there anyway.
+            return false;
+        }
+        for (String header : headers.keySet()) {
+            if ("Upgrade-Insecure-Requests".equalsIgnoreCase(header)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isLocalFile(Uri uri) {
@@ -332,6 +355,9 @@ public class WebViewLocalServer {
 
         int responseCode = connection.getResponseCode();
         String reasonPhrase = getReasonPhraseFromResponseCode(responseCode);
+
+        // Nothing should render this. If anything does, sandbox keeps it inert and off the app origin.
+        responseHeaders.put("Content-Security-Policy", "sandbox; frame-ancestors 'none'");
 
         return new WebResourceResponse(mimeType, encoding, responseCode, reasonPhrase, responseHeaders, inputStream);
     }
@@ -753,48 +779,6 @@ public class WebViewLocalServer {
         public long skip(long n) throws IOException {
             InputStream is = getInputStream();
             return is != null ? is.skip(n) : 0;
-        }
-    }
-
-    /**
-     * An InputStream wrapper that limits the number of bytes that can be read.
-     */
-    static class BoundedInputStream extends InputStream {
-
-        private final InputStream in;
-        private long remaining;
-
-        public BoundedInputStream(InputStream in, long limit) {
-            this.in = in;
-            this.remaining = limit;
-        }
-
-        @Override
-        public int available() throws IOException {
-            int available = in.available();
-            return (int) Math.min(available, remaining);
-        }
-
-        @Override
-        public int read() throws IOException {
-            if (remaining <= 0) return -1;
-            int result = in.read();
-            if (result != -1) remaining--;
-            return result;
-        }
-
-        @Override
-        public int read(byte[] b, int off, int len) throws IOException {
-            if (remaining <= 0) return -1;
-            int toRead = (int) Math.min(len, remaining);
-            int result = in.read(b, off, toRead);
-            if (result > 0) remaining -= result;
-            return result;
-        }
-
-        @Override
-        public void close() throws IOException {
-            in.close();
         }
     }
 
