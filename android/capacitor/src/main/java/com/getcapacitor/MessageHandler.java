@@ -26,7 +26,8 @@ public class MessageHandler {
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER) && !bridge.getConfig().isUsingLegacyBridge()) {
             WebViewCompat.WebMessageListener capListener = (view, message, sourceOrigin, isMainFrame, replyProxy) -> {
                 if (isMainFrame) {
-                    onModernBridgeMessage(message.getData(), replyProxy);
+                    javaScriptReplyProxy = replyProxy;
+                    postMessage(message.getData());
                 } else {
                     Logger.warn("Plugin execution is allowed in Main Frame only");
                 }
