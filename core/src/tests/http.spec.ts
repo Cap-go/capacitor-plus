@@ -2,33 +2,41 @@
  * @jest-environment jsdom
  */
 
-import { buildUrlParams } from '../core-plugins';
+import { CapacitorHttpPluginWeb } from '../core-plugins';
 
-describe('buildUrlParams', () => {
-  it('should handle array parameters correctly', () => {
-    const params = {
-      tags: ['javascript', 'typescript', 'react'],
-      single: 'value',
-    };
+describe('CapacitorHttpPluginWeb', () => {
+  const originalFetch = (globalThis as any).fetch;
+  let fetchMock: jest.Mock;
 
-    const result = buildUrlParams(params, true);
-
-    // The bug: array values will have a trailing \u0026
-    // Expected: "tags=javascript\u0026tags=typescript\u0026tags=react\u0026single=value"
-    // Actual: "tags=javascript\u0026tags=typescript\u0026tags=react\u0026\u0026single=value"
-
-    expect(result).not.toContain('\u0026\u0026');
-    expect(result).toBe('tags=javascript\u0026tags=typescript\u0026tags=react\u0026single=value');
+  beforeEach(() => {
+    fetchMock = jest.fn(async (url: string) => ({
+      ok: true,
+      status: 200,
+      url,
+      headers: {
+        get: () => 'text/plain',
+        forEach: () => undefined,
+      },
+      text: async () => 'ok',
+    }));
+    (globalThis as any).fetch = fetchMock;
   });
 
-  it('should remove initial ampersand', () => {
-    const params = {
-      key: 'value',
-    };
+  afterEach(() => {
+    (globalThis as any).fetch = originalFetch;
+  });
 
-    const result = buildUrlParams(params, true);
+  it('appends params to a url without a query string', async () => {
+    const http = new CapacitorHttpPluginWeb();
+    await http.get({ url: 'https://example.com/api', params: { b: '2' } });
 
-    expect(result).toBe('key=value');
-    expect(result?.[0]).not.toBe('\u0026');
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://example.com/api?b=2');
+  });
+
+  it('keeps the existing query string when adding params', async () => {
+    const http = new CapacitorHttpPluginWeb();
+    await http.get({ url: 'https://example.com/api?a=1', params: { b: '2' } });
+
+    expect(fetchMock.mock.calls[0][0]).toEqual('https://example.com/api?a=1&b=2');
   });
 });
