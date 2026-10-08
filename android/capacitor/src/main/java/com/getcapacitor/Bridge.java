@@ -394,6 +394,12 @@ public class Bridge {
     }
 
     public boolean launchIntent(Uri url) {
+        // The proxy returns a remote body at the app origin, so block it before plugins can allow it.
+        String path = url.getPath();
+        if (path != null && path.startsWith(CAPACITOR_HTTP_INTERCEPTOR_START)) {
+            return true;
+        }
+
         /*
          * Give plugins the chance to handle the url
          */
@@ -663,6 +669,7 @@ public class Bridge {
         this.registerPlugin(com.getcapacitor.plugin.WebView.class);
         this.registerPlugin(com.getcapacitor.plugin.CapacitorHttp.class);
         this.registerPlugin(com.getcapacitor.plugin.SystemBars.class);
+        this.registerPlugin(com.getcapacitor.plugin.Foldable.class);
 
         for (Class<? extends Plugin> pluginClass : this.initialPlugins) {
             this.registerPlugin(pluginClass);
@@ -1262,6 +1269,10 @@ public class Bridge {
                     }
                 }
             }
+        } else {
+            Logger.warn(
+                String.format("getPermissionStates: missing @CapacitorPlugin annotation for plugin %s", plugin.getPluginHandle().getId())
+            );
         }
 
         return permissionsResults;
