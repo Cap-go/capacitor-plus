@@ -15,12 +15,15 @@ public class CAPHttpPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func http(_ call: CAPPluginCall, _ httpMethod: String?) {
         do {
-            if let handler = NSClassFromString("SSLPinningHttpRequestHandlerClass") as? CAPSSLPinningHttpRequestHandler.Type {
-                handler.request([
+            // appstore-2.5.2-allow: optional SSL pinning handler plugin class lookup
+            if let clazz = NSClassFromString(CAPAppStorePrivateAPI.sslPinningHttpRequestHandlerClassName) {
+                // swiftlint:disable force_cast
+                (clazz as! NSObject.Type).perform(#selector(CAPHttpPlugin.request(_:)), with: [
                     "call": call,
                     "httpMethod": httpMethod as Any,
                     "config": self.bridge?.config as Any
                 ])
+                // swiftlint:enable force_cast
             } else {
                 try HttpRequestHandler.request(call, httpMethod, self.bridge?.config)
             }

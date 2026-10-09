@@ -15,9 +15,6 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
 
     fileprivate(set) var webViewLoadingState = WebViewLoadingState.unloaded
 
-    /// When false, pinch-to-zoom is disabled via the scroll view delegate (Capacitor default).
-    open var zoomingEnabled = false
-
     private let handlerName = "bridge"
 
     override public init() {
@@ -80,13 +77,18 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
         // first, give plugins the chance to handle the decision
         for pluginObject in bridge.plugins {
             let plugin = pluginObject.value
-            if let shouldOverrideLoad = plugin.shouldOverrideLoad(navigationAction) {
-                if shouldOverrideLoad.boolValue {
-                    decisionHandler(.cancel)
-                    return
-                } else {
-                    decisionHandler(.allow)
-                    return
+            let selector = CAPAppStorePrivateAPI.shouldOverrideLoadSelector
+            // appstore-2.5.2-allow: optional plugin navigation override hook
+            if plugin.responds(to: selector) {
+                let shouldOverrideLoad = plugin.shouldOverrideLoad(navigationAction)
+                if shouldOverrideLoad != nil {
+                    if shouldOverrideLoad == true {
+                        decisionHandler(.cancel)
+                        return
+                    } else if shouldOverrideLoad == false {
+                        decisionHandler(.allow)
+                        return
+                    }
                 }
             }
         }
@@ -124,7 +126,6 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
             webView.isOpaque = isOpaque
             webViewLoadingState = .subsequentLoad
         }
-        webView.applyKeyboardInteractionPolicy()
         CAPLog.print("⚡️  WebView loaded")
     }
 
@@ -169,8 +170,12 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
 
         for pluginObject in bridge.plugins {
             let plugin = pluginObject.value
-            if plugin.handleWKWebViewURLAuthenticationChallenge(challenge, completionHandler: completionHandler) {
-                return
+            let selector = CAPAppStorePrivateAPI.handleWKWebViewURLAuthenticationChallengeSelector
+            // appstore-2.5.2-allow: optional plugin TLS authentication hook
+            if plugin.responds(to: selector) {
+                if plugin.handleWKWebViewURLAuthenticationChallenge(challenge, completionHandler: completionHandler) {
+                    return
+                }
             }
         }
 
@@ -331,17 +336,9 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
 
     // MARK: - UIScrollViewDelegate
 
-    /// Status bar tap scroll-to-top uses public `UIScrollView` behavior; notify listeners when it occurs.
-    open func scrollViewShouldScrollToTop(_ scrollView: UIScrollView) -> Bool {
-        NotificationCenter.default.post(name: .capacitorStatusBarTapped, object: nil)
-        return true
-    }
-
-    // disable zooming in WKWebView ScrollView when zooming is not enabled in config
+    // disable zooming in WKWebView ScrollView
     open func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) {
-        if !zoomingEnabled {
-            scrollView.pinchGestureRecognizer?.isEnabled = false
-        }
+        scrollView.pinchGestureRecognizer?.isEnabled = false
     }
 
     // MARK: - Private

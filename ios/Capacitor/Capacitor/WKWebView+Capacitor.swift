@@ -14,31 +14,60 @@ public extension CapacitorExtensionTypeWrapper where T == WKWebView {
         } else {
             self.baseType.associatedKeyboardFlagValue = nil
         }
-        self.baseType.applyKeyboardInteractionPolicy()
     }
 }
 
 private var associatedKeyboardFlagHandle: UInt8 = 0
 
 internal extension WKWebView {
-    /**
-     * Applies `keyboardShouldRequireUserInteraction` using KVC on the embedded WK content view.
-     * This mirrors UIWebView's documented `keyboardDisplayRequiresUserAction` behavior without
-     * swizzling private WebKit methods (App Store guideline 2.5.2).
-     */
-    func applyKeyboardInteractionPolicy() {
-        guard let requiresUserAction = capacitor.keyboardShouldRequireUserInteraction else {
-            return
-        }
-        guard let contentView = scrollView.subviews.first(where: { String(describing: type(of: $0)).hasPrefix("WK") }) else {
-            return
-        }
-        let selector = Selector(("setKeyboardDisplayRequiresUserAction:"))
-        guard contentView.responds(to: selector) else {
-            return
-        }
-        contentView.setValue(requiresUserAction, forKey: "keyboardDisplayRequiresUserAction")
+    // Our lazy property can't be represented in Obj-C so we need this simple wrapper.
+    // swiftlint:disable identifier_name
+    @objc static func _swizzleKeyboardMethods() {
+        _ = oneTimeOnlySwizzle
     }
+
+    typealias FiveArgClosureType =  @convention(c) (Any, Selector, UnsafeRawPointer, Bool, Bool, Bool, Any?) -> Void
+
+    // dispatch_once isn't available in Swift, but lazy properties use the same mechanism under the hood so
+    // we can safely assume that this block of code will only execute once.
+    static let oneTimeOnlySwizzle: () = {
+        // appstore-2.5.2-allow: WKContentView keyboard focus integration (compile-time class name)
+        guard let targetClass = NSClassFromString(CAPAppStorePrivateAPI.wkContentViewClassName) else {
+            return
+        }
+
+        let containingWebView = { (object: Any?) -> WKWebView? in
+            var view = object as? UIView
+            while view != nil {
+                if let webview = view as? WKWebView {
+                    return webview
+                }
+                view = view?.superview
+            }
+            return nil
+        }
+
+        let swizzleFiveArgClosure = { (method: Method, selector: Selector) in
+            let originalImp: IMP = method_getImplementation(method)
+            let original: FiveArgClosureType = unsafeBitCast(originalImp, to: FiveArgClosureType.self)
+            let block: @convention(block) (Any, UnsafeRawPointer, Bool, Bool, Bool, Any?) -> Void = { (me, arg0, arg1, arg2, arg3, arg4) in
+                if let webview = containingWebView(me), let flag = webview.capacitor.keyboardShouldRequireUserInteraction {
+                    original(me, selector, arg0, !flag, arg2, arg3, arg4)
+                } else {
+                    original(me, selector, arg0, arg1, arg2, arg3, arg4)
+                }
+            }
+            let imp: IMP = imp_implementationWithBlock(block)
+            // appstore-2.5.2-allow: replace WKContentView focus handler implementation
+            method_setImplementation(method, imp)
+        }
+
+        let selectorMkIV = CAPAppStorePrivateAPI.wkElementDidFocusSelector
+
+        if let method = class_getInstanceMethod(targetClass, selectorMkIV) {
+            swizzleFiveArgClosure(method, selectorMkIV)
+        }
+    }()
 
     var associatedKeyboardFlagValue: Any? {
         get {

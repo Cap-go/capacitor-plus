@@ -54,7 +54,6 @@ import Cordova
         assetHandler.setAssetPath(configuration.appLocation.path)
         assetHandler.setServerUrl(configuration.serverURL)
         let delegationHandler = WebViewDelegationHandler()
-        delegationHandler.zoomingEnabled = configuration.zoomingEnabled
         prepareWebView(with: configuration, assetHandler: assetHandler, delegationHandler: delegationHandler)
         view = webView
         // create the bridge
@@ -319,7 +318,6 @@ extension CAPBridgeViewController {
         aWebView.scrollView.contentInsetAdjustmentBehavior = configuration.contentInsetAdjustmentBehavior
         aWebView.allowsLinkPreview = configuration.allowLinkPreviews
         aWebView.scrollView.isScrollEnabled = configuration.scrollingEnabled
-        aWebView.scrollView.scrollsToTop = true
         if let overrideUserAgent = configuration.overridenUserAgentString {
             aWebView.customUserAgent = overrideUserAgent
         }
@@ -337,7 +335,9 @@ extension CAPBridgeViewController {
         // set our delegates
         aWebView.uiDelegate = delegationHandler
         aWebView.navigationDelegate = delegationHandler
-        aWebView.scrollView.delegate = delegationHandler
+        if !configuration.zoomingEnabled {
+            aWebView.scrollView.delegate = delegationHandler
+        }
     }
 
     private func updateBinaryVersion() {
