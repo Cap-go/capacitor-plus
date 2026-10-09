@@ -77,17 +77,13 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
         // first, give plugins the chance to handle the decision
         for pluginObject in bridge.plugins {
             let plugin = pluginObject.value
-            let selector = NSSelectorFromString("shouldOverrideLoad:")
-            if plugin.responds(to: selector) {
-                let shouldOverrideLoad = plugin.shouldOverrideLoad(navigationAction)
-                if shouldOverrideLoad != nil {
-                    if shouldOverrideLoad == true {
-                        decisionHandler(.cancel)
-                        return
-                    } else if shouldOverrideLoad == false {
-                        decisionHandler(.allow)
-                        return
-                    }
+            if let shouldOverrideLoad = plugin.shouldOverrideLoad(navigationAction) {
+                if shouldOverrideLoad.boolValue {
+                    decisionHandler(.cancel)
+                    return
+                } else {
+                    decisionHandler(.allow)
+                    return
                 }
             }
         }
@@ -169,11 +165,8 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
 
         for pluginObject in bridge.plugins {
             let plugin = pluginObject.value
-            let selector = NSSelectorFromString("handleWKWebViewURLAuthenticationChallenge:completionHandler:")
-            if plugin.responds(to: selector) {
-                if plugin.handleWKWebViewURLAuthenticationChallenge(challenge, completionHandler: completionHandler) {
-                    return
-                }
+            if plugin.handleWKWebViewURLAuthenticationChallenge(challenge, completionHandler: completionHandler) {
+                return
             }
         }
 
@@ -333,6 +326,12 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
     }
 
     // MARK: - UIScrollViewDelegate
+
+    /// Status bar tap scroll-to-top uses public `UIScrollView` behavior; notify listeners when it occurs.
+    open func scrollViewShouldScrollToTop(_ scrollView: UIScrollView) -> Bool {
+        NotificationCenter.default.post(name: .capacitorStatusBarTapped, object: nil)
+        return true
+    }
 
     // disable zooming in WKWebView ScrollView
     open func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) {

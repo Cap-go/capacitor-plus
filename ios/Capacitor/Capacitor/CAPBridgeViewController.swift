@@ -335,9 +335,7 @@ extension CAPBridgeViewController {
         // set our delegates
         aWebView.uiDelegate = delegationHandler
         aWebView.navigationDelegate = delegationHandler
-        if !configuration.zoomingEnabled {
-            aWebView.scrollView.delegate = delegationHandler
-        }
+        aWebView.scrollView.delegate = delegationHandler
     }
 
     private func updateBinaryVersion() {

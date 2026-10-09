@@ -20,55 +20,11 @@ public extension CapacitorExtensionTypeWrapper where T == WKWebView {
 private var associatedKeyboardFlagHandle: UInt8 = 0
 
 internal extension WKWebView {
-    // Our lazy property can't be represented in Obj-C so we need this simple wrapper.
-    // swiftlint:disable identifier_name
-    @objc static func _swizzleKeyboardMethods() {
-        _ = oneTimeOnlySwizzle
-    }
-
-    typealias FiveArgClosureType =  @convention(c) (Any, Selector, UnsafeRawPointer, Bool, Bool, Bool, Any?) -> Void
-
-    // dispatch_once isn't available in Swift, but lazy properties use the same mechanism under the hood so
-    // we can safely assume that this block of code will only execute once.
-    static let oneTimeOnlySwizzle: () = {
-        let frameworkName = "WK"
-        let className = "ContentView"
-        guard let targetClass = NSClassFromString(frameworkName + className) else {
-            return
-        }
-
-        let containingWebView = { (object: Any?) -> WKWebView? in
-            var view = object as? UIView
-            while view != nil {
-                if let webview = view as? WKWebView {
-                    return webview
-                }
-                view = view?.superview
-            }
-            return nil
-        }
-
-        let swizzleFiveArgClosure = { (method: Method, selector: Selector) in
-            let originalImp: IMP = method_getImplementation(method)
-            let original: FiveArgClosureType = unsafeBitCast(originalImp, to: FiveArgClosureType.self)
-            let block: @convention(block) (Any, UnsafeRawPointer, Bool, Bool, Bool, Any?) -> Void = { (me, arg0, arg1, arg2, arg3, arg4) in
-                if let webview = containingWebView(me), let flag = webview.capacitor.keyboardShouldRequireUserInteraction {
-                    original(me, selector, arg0, !flag, arg2, arg3, arg4)
-                } else {
-                    original(me, selector, arg0, arg1, arg2, arg3, arg4)
-                }
-            }
-            let imp: IMP = imp_implementationWithBlock(block)
-            method_setImplementation(method, imp)
-        }
-
-        let selectorMkIV: Selector = sel_getUid("_elementDidFocus:userIsInteracting:blurPreviousNode:activityStateChanges:userObject:")
-
-        if let method = class_getInstanceMethod(targetClass, selectorMkIV) {
-            swizzleFiveArgClosure(method, selectorMkIV)
-        }
-    }()
-
+    /**
+     * Previously implemented via private WebKit swizzling. iOS does not expose a public API to force
+     * programmatic focus without user interaction; this flag is retained for API compatibility but
+     * has no effect on WKWebView keyboard behavior.
+     */
     var associatedKeyboardFlagValue: Any? {
         get {
             return objc_getAssociatedObject(self, &associatedKeyboardFlagHandle)

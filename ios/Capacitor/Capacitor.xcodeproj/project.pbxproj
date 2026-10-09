@@ -43,7 +43,7 @@
 		62959B1D2524DA7800A3D7F1 /* UIColor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62959AE92524DA7700A3D7F1 /* UIColor.swift */; };
 		62959B222524DA7800A3D7F1 /* Console.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62959AEF2524DA7700A3D7F1 /* Console.swift */; };
 		62959B262524DA7800A3D7F1 /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62959AF32524DA7700A3D7F1 /* WebView.swift */; };
-		62959B302524DA7800A3D7F1 /* UIStatusBarManager+CAPHandleTapAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 62959AFE2524DA7700A3D7F1 /* UIStatusBarManager+CAPHandleTapAction.m */; };
+		F1A2B3C42E5F6789012345AC /* CAPSSLPinningHttpRequestHandler.h in Headers */ = {isa = PBXBuildFile; fileRef = F1A2B3C32E5F6789012345AC /* CAPSSLPinningHttpRequestHandler.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		62959B312524DA7800A3D7F1 /* JS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62959AFF2524DA7700A3D7F1 /* JS.swift */; };
 		62959B332524DA7800A3D7F1 /* CAPPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = 62959B012524DA7700A3D7F1 /* CAPPlugin.m */; };
 		62959B362524DA7800A3D7F1 /* CAPBridgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62959B042524DA7700A3D7F1 /* CAPBridgeViewController.swift */; };
@@ -69,7 +69,6 @@
 		62A91C3F2553710E00861508 /* nonjson.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 62A91C392553710300861508 /* nonjson.json */; };
 		62ADC0CA25CB678000E914DE /* PluginCallResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62ADC0C925CB678000E914DE /* PluginCallResult.swift */; };
 		62D43AF02581817500673C24 /* WKWebView+Capacitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62D43AEF2581817500673C24 /* WKWebView+Capacitor.swift */; };
-		62D43B652582A13D00673C24 /* WKWebView+Capacitor.m in Sources */ = {isa = PBXBuildFile; fileRef = 62D43B642582A13D00673C24 /* WKWebView+Capacitor.m */; };
 		62E0736125535E8700BAAADB /* server.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 62E0735225535E6500BAAADB /* server.json */; };
 		62E0736225535E8700BAAADB /* bad.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 62E0735325535E6500BAAADB /* bad.json */; };
 		62E0736325535E8700BAAADB /* flat.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 62E0735425535E6500BAAADB /* flat.json */; };
@@ -89,6 +88,7 @@
 		A38C3D7B2848BE6F004B3680 /* CapacitorCookieManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A38C3D7A2848BE6F004B3680 /* CapacitorCookieManager.swift */; };
 		A71289E627F380A500DADDF3 /* Router.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71289E527F380A500DADDF3 /* Router.swift */; };
 		A71289EB27F380FD00DADDF3 /* RouterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A71289EA27F380FD00DADDF3 /* RouterTests.swift */; };
+		F1A2B3C72E5F6789012345AD /* WebViewDelegationHandlerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C62E5F6789012345AD /* WebViewDelegationHandlerTests.swift */; };
 		A7187FD22BD1CB7D00093C45 /* CAPPluginMethod.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7187FD12BD1CB7D00093C45 /* CAPPluginMethod.swift */; };
 		A76739792B98E09700795F7B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A76739782B98E09700795F7B /* PrivacyInfo.xcprivacy */; };
 		A771ADEE2C8B845000AF234D /* DateCodableTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A771ADED2C8B845000AF234D /* DateCodableTests.swift */; };
@@ -196,7 +196,7 @@
 		62959AE92524DA7700A3D7F1 /* UIColor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UIColor.swift; sourceTree = "<group>"; };
 		62959AEF2524DA7700A3D7F1 /* Console.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Console.swift; sourceTree = "<group>"; };
 		62959AF32524DA7700A3D7F1 /* WebView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
-		62959AFE2524DA7700A3D7F1 /* UIStatusBarManager+CAPHandleTapAction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIStatusBarManager+CAPHandleTapAction.m"; sourceTree = "<group>"; };
+		F1A2B3C32E5F6789012345AC /* CAPSSLPinningHttpRequestHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CAPSSLPinningHttpRequestHandler.h; sourceTree = "<group>"; };
 		62959AFF2524DA7700A3D7F1 /* JS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JS.swift; sourceTree = "<group>"; };
 		62959B012524DA7700A3D7F1 /* CAPPlugin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CAPPlugin.m; sourceTree = "<group>"; };
 		62959B042524DA7700A3D7F1 /* CAPBridgeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CAPBridgeViewController.swift; sourceTree = "<group>"; };
@@ -228,7 +228,6 @@
 		62A91C392553710300861508 /* nonjson.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = nonjson.json; sourceTree = "<group>"; };
 		62ADC0C925CB678000E914DE /* PluginCallResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginCallResult.swift; sourceTree = "<group>"; };
 		62D43AEF2581817500673C24 /* WKWebView+Capacitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WKWebView+Capacitor.swift"; sourceTree = "<group>"; };
-		62D43B642582A13D00673C24 /* WKWebView+Capacitor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "WKWebView+Capacitor.m"; sourceTree = "<group>"; };
 		62E0735225535E6500BAAADB /* server.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = server.json; sourceTree = "<group>"; };
 		62E0735325535E6500BAAADB /* bad.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = bad.json; sourceTree = "<group>"; };
 		62E0735425535E6500BAAADB /* flat.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = flat.json; sourceTree = "<group>"; };
@@ -248,6 +247,7 @@
 		A38C3D7A2848BE6F004B3680 /* CapacitorCookieManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CapacitorCookieManager.swift; sourceTree = "<group>"; };
 		A71289E527F380A500DADDF3 /* Router.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Router.swift; sourceTree = "<group>"; };
 		A71289EA27F380FD00DADDF3 /* RouterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouterTests.swift; sourceTree = "<group>"; };
+		F1A2B3C62E5F6789012345AD /* WebViewDelegationHandlerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewDelegationHandlerTests.swift; sourceTree = "<group>"; };
 		A7187FD12BD1CB7D00093C45 /* CAPPluginMethod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CAPPluginMethod.swift; sourceTree = "<group>"; };
 		A76739782B98E09700795F7B /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A771ADED2C8B845000AF234D /* DateCodableTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateCodableTests.swift; sourceTree = "<group>"; };
@@ -350,6 +350,7 @@
 				62E79C712638B23300414164 /* JSExportTests.swift */,
 				62959BBD2526510200A3D7F1 /* Info.plist */,
 				A71289EA27F380FD00DADDF3 /* RouterTests.swift */,
+				F1A2B3C62E5F6789012345AD /* WebViewDelegationHandlerTests.swift */,
 			);
 			path = CapacitorTests;
 			sourceTree = "<group>";
@@ -404,11 +405,10 @@
 				62959B112524DA7700A3D7F1 /* Data+Capacitor.swift */,
 				62FABD1925AE5C01007B3814 /* Array+Capacitor.swift */,
 				62D43AEF2581817500673C24 /* WKWebView+Capacitor.swift */,
-				62D43B642582A13D00673C24 /* WKWebView+Capacitor.m */,
 				2F81F5C726FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.h */,
 				2F81F5C826FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.m */,
 				62959AE92524DA7700A3D7F1 /* UIColor.swift */,
-				62959AFE2524DA7700A3D7F1 /* UIStatusBarManager+CAPHandleTapAction.m */,
+				F1A2B3C32E5F6789012345AC /* CAPSSLPinningHttpRequestHandler.h */,
 				62959B122524DA7700A3D7F1 /* Info.plist */,
 				62959B8225253A9500A3D7F1 /* Capacitor.modulemap */,
 				373A69C0255C9360000A6F44 /* NotificationHandlerProtocol.swift */,
@@ -519,6 +519,7 @@
 				62959B192524DA7800A3D7F1 /* CAPBridgedPlugin.h in Headers */,
 				621ECCB82542045900D3D615 /* CAPBridgedJSTypes.h in Headers */,
 				2F81F5C926FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.h in Headers */,
+				F1A2B3C42E5F6789012345AC /* CAPSSLPinningHttpRequestHandler.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -734,11 +735,9 @@
 				2F81F5CA26FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.m in Sources */,
 				62ADC0CA25CB678000E914DE /* PluginCallResult.swift in Sources */,
 				62959B472524DA7800A3D7F1 /* CAPNotifications.swift in Sources */,
-				62D43B652582A13D00673C24 /* WKWebView+Capacitor.m in Sources */,
 				62959B312524DA7800A3D7F1 /* JS.swift in Sources */,
 				373A69F2255C95D0000A6F44 /* NotificationRouter.swift in Sources */,
 				62959B1A2524DA7800A3D7F1 /* CAPPluginCall.swift in Sources */,
-				62959B302524DA7800A3D7F1 /* UIStatusBarManager+CAPHandleTapAction.m in Sources */,
 				62959B392524DA7800A3D7F1 /* CapacitorExtension.swift in Sources */,
 				A327E6B628DB8B2900CA8B0A /* HttpRequestHandler.swift in Sources */,
 				957BD9402E78A4A50056874C /* SystemBars.swift in Sources */,
@@ -777,6 +776,7 @@
 				62FABD2325AE60BA007B3814 /* BridgedTypesTests.m in Sources */,
 				621ECCC3254204B700D3D615 /* BridgedTypesTests.swift in Sources */,
 				A71289EB27F380FD00DADDF3 /* RouterTests.swift in Sources */,
+				F1A2B3C72E5F6789012345AD /* WebViewDelegationHandlerTests.swift in Sources */,
 				6263686025F6EC0100576C1C /* PluginCallAccessorTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

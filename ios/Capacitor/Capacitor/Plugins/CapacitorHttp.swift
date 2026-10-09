@@ -15,14 +15,12 @@ public class CAPHttpPlugin: CAPPlugin, CAPBridgedPlugin {
 
     @objc func http(_ call: CAPPluginCall, _ httpMethod: String?) {
         do {
-            if let clazz = NSClassFromString("SSLPinningHttpRequestHandlerClass") {
-                // swiftlint:disable force_cast
-                (clazz as! NSObject.Type).perform(#selector(self.request(_:)), with: [
+            if let handler = NSClassFromString("SSLPinningHttpRequestHandlerClass") as? CAPSSLPinningHttpRequestHandler.Type {
+                handler.request([
                     "call": call,
                     "httpMethod": httpMethod as Any,
                     "config": self.bridge?.config as Any
                 ])
-                // swiftlint:enable force_cast
             } else {
                 try HttpRequestHandler.request(call, httpMethod, self.bridge?.config)
             }
