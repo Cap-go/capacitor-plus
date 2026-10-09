@@ -332,7 +332,6 @@ extension CAPBridgeViewController {
             aWebView.scrollView.backgroundColor = UIColor.systemBackground
         }
         aWebView.capacitor.setKeyboardShouldRequireUserInteraction(false)
-        aWebView.applyKeyboardInteractionPolicy()
         // set our ivar
         webView = aWebView
         // set our delegates

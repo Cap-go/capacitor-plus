@@ -18,7 +18,10 @@ const forbiddenPatterns = [
   { name: 'method_setImplementation', regex: /method_setImplementation/ },
   { name: 'sel_getUid private selector', regex: /sel_getUid\s*\(\s*"_/ },
   { name: 'UIStatusBarManager handleTapAction swizzle', regex: /handleTapAction:/ },
-  { name: 'WKContentView private class', regex: /NSClassFromString\s*\(\s*["']WK["']\s*\+\s*["']ContentView["']\)/ },
+  {
+    name: 'WKContentView private class',
+    regex: /NSClassFromString\s*\(\s*(?:["']WKContentView["']|["']WK["']\s*\+\s*["']ContentView["'])\s*\)/,
+  },
   {
     name: 'NSSelectorFromString shouldOverrideLoad',
     regex: /NSSelectorFromString\s*\(\s*["']shouldOverrideLoad:/,
