@@ -15,6 +15,9 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
 
     fileprivate(set) var webViewLoadingState = WebViewLoadingState.unloaded
 
+    /// When false, pinch-to-zoom is disabled via the scroll view delegate (Capacitor default).
+    open var zoomingEnabled = false
+
     private let handlerName = "bridge"
 
     override public init() {
@@ -121,6 +124,7 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
             webView.isOpaque = isOpaque
             webViewLoadingState = .subsequentLoad
         }
+        webView.applyKeyboardInteractionPolicy()
         CAPLog.print("⚡️  WebView loaded")
     }
 
@@ -333,9 +337,11 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
         return true
     }
 
-    // disable zooming in WKWebView ScrollView
+    // disable zooming in WKWebView ScrollView when zooming is not enabled in config
     open func scrollViewWillBeginZooming(_ scrollView: UIScrollView, with view: UIView?) {
-        scrollView.pinchGestureRecognizer?.isEnabled = false
+        if !zoomingEnabled {
+            scrollView.pinchGestureRecognizer?.isEnabled = false
+        }
     }
 
     // MARK: - Private
