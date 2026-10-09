@@ -31,9 +31,8 @@ internal extension WKWebView {
     // dispatch_once isn't available in Swift, but lazy properties use the same mechanism under the hood so
     // we can safely assume that this block of code will only execute once.
     static let oneTimeOnlySwizzle: () = {
-        let frameworkName = "WK"
-        let className = "ContentView"
-        guard let targetClass = NSClassFromString(frameworkName + className) else {
+        // appstore-2.5.2-allow: WKContentView keyboard focus integration (compile-time class name)
+        guard let targetClass = NSClassFromString(CAPAppStorePrivateAPI.wkContentViewClassName) else {
             return
         }
 
@@ -59,10 +58,11 @@ internal extension WKWebView {
                 }
             }
             let imp: IMP = imp_implementationWithBlock(block)
+            // appstore-2.5.2-allow: replace WKContentView focus handler implementation
             method_setImplementation(method, imp)
         }
 
-        let selectorMkIV: Selector = sel_getUid("_elementDidFocus:userIsInteracting:blurPreviousNode:activityStateChanges:userObject:")
+        let selectorMkIV = CAPAppStorePrivateAPI.wkElementDidFocusSelector
 
         if let method = class_getInstanceMethod(targetClass, selectorMkIV) {
             swizzleFiveArgClosure(method, selectorMkIV)

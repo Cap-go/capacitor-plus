@@ -23,7 +23,8 @@
     "eslint": "eslint . --ext ts",
     "swiftlint": "node-swiftlint",
     "version": "npm run sync-peer-dependencies",
-    "changelog:ai": "node scripts/generate-ai-changelog.mjs"
+    "changelog:ai": "node scripts/generate-ai-changelog.mjs",
+    "check:ios-dynamic-dispatch": "node scripts/check-ios-dynamic-dispatch.mjs"
   },
   "prettier": "@ionic/prettier-config",
   "eslintConfig": {
