@@ -824,7 +824,6 @@ public class WebViewLocalServer {
         }
     }
 
-
     // For L and above.
     private static class LollipopLazyInputStream extends LazyInputStream {
 
