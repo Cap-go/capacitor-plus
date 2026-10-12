@@ -64,6 +64,20 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
         decisionHandler(.grant)
     }
 
+    /// Returns whether navigation to the internal HTTP interceptor path should be cancelled.
+    /// Evaluated before `targetFrame` checks so main-frame and subframe navigations behave the same.
+    internal static func shouldCancelHttpInterceptorNavigation(for url: URL, appOrigins: [URL]) -> Bool {
+        guard url.path.starts(with: CapacitorBridge.httpInterceptorStartIdentifier) else {
+            return false
+        }
+
+        return appOrigins.contains { origin in
+            url.scheme?.lowercased() == origin.scheme?.lowercased() &&
+                url.host?.lowercased() == origin.host?.lowercased() &&
+                url.port == origin.port
+        }
+    }
+
     open func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         // post a notification for any listeners
         NotificationCenter.default.post(name: .capacitorDecidePolicyForNavigationAction, object: navigationAction)
@@ -71,6 +85,15 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
         // sanity check, these shouldn't ever be nil in practice
         guard let bridge = bridge, let navURL = navigationAction.request.url else {
             decisionHandler(.allow)
+            return
+        }
+
+        // The proxy returns a remote body at the app origin, so block it before plugins can allow it.
+        if Self.shouldCancelHttpInterceptorNavigation(
+            for: navURL,
+            appOrigins: [bridge.config.localURL, bridge.config.serverURL]
+        ) {
+            decisionHandler(.cancel)
             return
         }
 
