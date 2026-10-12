@@ -83,7 +83,7 @@ public class BridgeCallPluginMethodTest {
 
     private static void setSyncTaskHandler(Bridge bridge) throws Exception {
         Handler syncHandler = mock(Handler.class);
-        doAnswer(invocation -> {
+        doAnswer((invocation) -> {
             Runnable runnable = invocation.getArgument(0);
             runnable.run();
             return true;
