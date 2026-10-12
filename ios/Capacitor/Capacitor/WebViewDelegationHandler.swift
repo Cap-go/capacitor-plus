@@ -77,7 +77,8 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
         // first, give plugins the chance to handle the decision
         for pluginObject in bridge.plugins {
             let plugin = pluginObject.value
-            let selector = NSSelectorFromString("shouldOverrideLoad:")
+            let selector = CAPAppStorePrivateAPI.shouldOverrideLoadSelector
+            // appstore-2.5.2-allow: optional plugin navigation override hook
             if plugin.responds(to: selector) {
                 let shouldOverrideLoad = plugin.shouldOverrideLoad(navigationAction)
                 if shouldOverrideLoad != nil {
@@ -169,7 +170,8 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
 
         for pluginObject in bridge.plugins {
             let plugin = pluginObject.value
-            let selector = NSSelectorFromString("handleWKWebViewURLAuthenticationChallenge:completionHandler:")
+            let selector = CAPAppStorePrivateAPI.handleWKWebViewURLAuthenticationChallengeSelector
+            // appstore-2.5.2-allow: optional plugin TLS authentication hook
             if plugin.responds(to: selector) {
                 if plugin.handleWKWebViewURLAuthenticationChallenge(challenge, completionHandler: completionHandler) {
                     return
