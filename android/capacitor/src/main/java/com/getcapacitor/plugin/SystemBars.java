@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.os.Build;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.Window;
@@ -60,6 +61,8 @@ public class SystemBars extends Plugin {
 
     private String currentStatusBarStyle = STYLE_DEFAULT;
     private String currentGestureBarStyle = STYLE_DEFAULT;
+
+    private boolean navBarVisible = true;
 
     // Declare variable at this scope to help prevent adding multiple listeners.
     private WebViewListener webViewListener;
