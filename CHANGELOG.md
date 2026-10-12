@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.5.3](https://github.com/Cap-go/capacitor-plus/compare/8.5.2...8.5.3) (2026-10-12)
+
+
+### Bug Fixes
+
+* **ios:** make private API calls static for App Store 2.5.2 ([#187](https://github.com/Cap-go/capacitor-plus/issues/187)) ([07910b7](https://github.com/Cap-go/capacitor-plus/commit/07910b705f24840c0fe0827eb7b77b4bf7125ed1))
+
+
+
+
+
 ## [8.5.2](https://github.com/Cap-go/capacitor-plus/compare/8.5.1...8.5.2) (2026-08-26)
 
 **Note:** Version bump only for package capacitor
