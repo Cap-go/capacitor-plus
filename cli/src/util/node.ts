@@ -83,7 +83,7 @@ export const requireTS = async (ts: typeof typescript, p: string): Promise<unkno
   delete require.extensions['.ts'];
 
   return m;
-}
+};
 
 function loadWithCliBundledCompiler(id: string): unknown | null {
   const cliRoot = resolve(__dirname, '..', '..');
