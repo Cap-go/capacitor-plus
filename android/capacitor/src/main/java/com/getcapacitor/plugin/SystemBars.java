@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.os.Build;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.Window;
@@ -43,17 +44,17 @@ public class SystemBars extends Plugin {
     private static final int WEBVIEW_VERSION_WITH_SAFE_AREA_KEYBOARD_FIX = 144;
 
     static final String viewportMetaJSFunction = """
-    function capacitorSystemBarsCheckMetaViewport() {
-        const meta = document.querySelectorAll("meta[name=viewport]");
-        if (meta.length == 0) {
-            return false;
+        function capacitorSystemBarsCheckMetaViewport() {
+            const meta = document.querySelectorAll("meta[name=viewport]");
+            if (meta.length == 0) {
+                return false;
+            }
+            // get the last found meta viewport tag
+            const metaContent = meta[meta.length - 1].content;
+            return metaContent.includes("viewport-fit=cover");
         }
-        // get the last found meta viewport tag
-        const metaContent = meta[meta.length - 1].content;
-        return metaContent.includes("viewport-fit=cover");
-    }
-    capacitorSystemBarsCheckMetaViewport();
-    """;
+        capacitorSystemBarsCheckMetaViewport();
+        """;
 
     private String insetsHandling = INSETS_HANDLING_CSS;
     private boolean hasViewportCover = false;
@@ -95,12 +96,14 @@ public class SystemBars extends Plugin {
                 @Override
                 public void onPageCommitVisible(WebView view, String url) {
                     super.onPageCommitVisible(view, url);
-                    bridge.getWebView().evaluateJavascript(viewportMetaJSFunction, (res) -> {
-                        hasViewportCover = res.equals("true");
+                    bridge
+                        .getWebView()
+                        .evaluateJavascript(viewportMetaJSFunction, (res) -> {
+                            hasViewportCover = res.equals("true");
 
-                        // Request new execution tree of `setOnApplyWindowInsetsListener`
-                        bridge.getWebView().requestApplyInsets();
-                    });
+                            // Request new execution tree of `setOnApplyWindowInsetsListener`
+                            bridge.getWebView().requestApplyInsets();
+                        });
                 }
             };
             this.getBridge().addWebViewListener(webViewListener);
@@ -323,7 +326,6 @@ public class SystemBars extends Plugin {
                 windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.statusBars());
             } else if (bar.equals(BAR_GESTURE_BAR)) {
                 windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.navigationBars());
-                navBarVisible = false;
             }
             return;
         }
@@ -334,7 +336,6 @@ public class SystemBars extends Plugin {
             windowInsetsControllerCompat.show(WindowInsetsCompat.Type.statusBars());
         } else if (bar.equals(BAR_GESTURE_BAR)) {
             windowInsetsControllerCompat.show(WindowInsetsCompat.Type.navigationBars());
-            navBarVisible = true;
         }
     }
 

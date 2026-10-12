@@ -137,9 +137,9 @@ let package = Package(
       const options = packageOptions[plugin.id];
       const symlink = options?.symlink;
       const symlinkFolder = join('symlinks', plugin.name);
-      const relPath = symlink
-        ? symlinkFolder
-        : convertToUnixPath(relative(config.ios.nativeXcodeProjDirAbs, plugin.rootPath));
+      const relPath = convertToUnixPath(
+        symlink ? symlinkFolder : relative(config.ios.nativeXcodeProjDirAbs, plugin.rootPath),
+      );
       if (symlink) {
         await ensureSymlink(plugin.rootPath, resolve(config.ios.nativeProjectDirAbs, 'CapApp-SPM', symlinkFolder));
       }
@@ -268,16 +268,19 @@ export async function addSceneManifestIfNeeded(config: Config): Promise<void> {
     return;
   }
 
+  const sceneConfiguration: Mutable<PlistObject> = {
+    UISceneConfigurationName: 'Default Configuration',
+    UISceneDelegateClassName: '$(PRODUCT_MODULE_NAME).SceneDelegate',
+  };
+  const mainStoryboard = entries['UIMainStoryboardFile'];
+  if (typeof mainStoryboard === 'string' && mainStoryboard.length > 0) {
+    sceneConfiguration['UISceneStoryboardFile'] = mainStoryboard;
+  }
+
   entries['UIApplicationSceneManifest'] = {
     UIApplicationSupportsMultipleScenes: false,
     UISceneConfigurations: {
-      UIWindowSceneSessionRoleApplication: [
-        {
-          UISceneConfigurationName: 'Default Configuration',
-          UISceneDelegateClassName: '$(PRODUCT_MODULE_NAME).SceneDelegate',
-          UISceneStoryboardFile: 'Main',
-        },
-      ],
+      UIWindowSceneSessionRoleApplication: [sceneConfiguration],
     },
   };
 
