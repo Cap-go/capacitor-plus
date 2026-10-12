@@ -62,6 +62,8 @@ public class SystemBars extends Plugin {
     private String currentStatusBarStyle = STYLE_DEFAULT;
     private String currentGestureBarStyle = STYLE_DEFAULT;
 
+    private boolean navBarVisible = true;
+
     // Declare variable at this scope to help prevent adding multiple listeners.
     private WebViewListener webViewListener;
 
