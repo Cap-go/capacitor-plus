@@ -522,12 +522,7 @@ public class BridgeWebChromeClient extends WebChromeClient {
             if (message.length() > MAX_CONSOLE_MESSAGE_LENGTH) {
                 message = message.substring(0, MAX_CONSOLE_MESSAGE_LENGTH) + "… [truncated]";
             }
-            String msg = String.format(
-                "File: %s - Line %d - Msg: %s",
-                consoleMessage.sourceId(),
-                consoleMessage.lineNumber(),
-                message
-            );
+            String msg = String.format("File: %s - Line %d - Msg: %s", consoleMessage.sourceId(), consoleMessage.lineNumber(), message);
             String level = consoleMessage.messageLevel().name();
             if ("ERROR".equalsIgnoreCase(level)) {
                 Logger.error(tag, msg, null);
