@@ -44,6 +44,8 @@
 		62959B222524DA7800A3D7F1 /* Console.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62959AEF2524DA7700A3D7F1 /* Console.swift */; };
 		62959B262524DA7800A3D7F1 /* WebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62959AF32524DA7700A3D7F1 /* WebView.swift */; };
 		62959B302524DA7800A3D7F1 /* UIStatusBarManager+CAPHandleTapAction.m in Sources */ = {isa = PBXBuildFile; fileRef = 62959AFE2524DA7700A3D7F1 /* UIStatusBarManager+CAPHandleTapAction.m */; };
+		62D43B652582A13D00673C24 /* WKWebView+Capacitor.m in Sources */ = {isa = PBXBuildFile; fileRef = 62D43B642582A13D00673C24 /* WKWebView+Capacitor.m */; };
+		F1A2B3C82E5F6789012345AE /* CAPAppStorePrivateAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1A2B3C92E5F6789012345AE /* CAPAppStorePrivateAPI.swift */; };
 		62959B312524DA7800A3D7F1 /* JS.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62959AFF2524DA7700A3D7F1 /* JS.swift */; };
 		62959B332524DA7800A3D7F1 /* CAPPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = 62959B012524DA7700A3D7F1 /* CAPPlugin.m */; };
 		62959B362524DA7800A3D7F1 /* CAPBridgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62959B042524DA7700A3D7F1 /* CAPBridgeViewController.swift */; };
@@ -69,7 +71,6 @@
 		62A91C3F2553710E00861508 /* nonjson.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 62A91C392553710300861508 /* nonjson.json */; };
 		62ADC0CA25CB678000E914DE /* PluginCallResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62ADC0C925CB678000E914DE /* PluginCallResult.swift */; };
 		62D43AF02581817500673C24 /* WKWebView+Capacitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62D43AEF2581817500673C24 /* WKWebView+Capacitor.swift */; };
-		62D43B652582A13D00673C24 /* WKWebView+Capacitor.m in Sources */ = {isa = PBXBuildFile; fileRef = 62D43B642582A13D00673C24 /* WKWebView+Capacitor.m */; };
 		62E0736125535E8700BAAADB /* server.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 62E0735225535E6500BAAADB /* server.json */; };
 		62E0736225535E8700BAAADB /* bad.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 62E0735325535E6500BAAADB /* bad.json */; };
 		62E0736325535E8700BAAADB /* flat.json in CopyFiles */ = {isa = PBXBuildFile; fileRef = 62E0735425535E6500BAAADB /* flat.json */; };
@@ -197,6 +198,8 @@
 		62959AEF2524DA7700A3D7F1 /* Console.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Console.swift; sourceTree = "<group>"; };
 		62959AF32524DA7700A3D7F1 /* WebView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WebView.swift; sourceTree = "<group>"; };
 		62959AFE2524DA7700A3D7F1 /* UIStatusBarManager+CAPHandleTapAction.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "UIStatusBarManager+CAPHandleTapAction.m"; sourceTree = "<group>"; };
+		62D43B642582A13D00673C24 /* WKWebView+Capacitor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "WKWebView+Capacitor.m"; sourceTree = "<group>"; };
+		F1A2B3C92E5F6789012345AE /* CAPAppStorePrivateAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CAPAppStorePrivateAPI.swift; sourceTree = "<group>"; };
 		62959AFF2524DA7700A3D7F1 /* JS.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = JS.swift; sourceTree = "<group>"; };
 		62959B012524DA7700A3D7F1 /* CAPPlugin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CAPPlugin.m; sourceTree = "<group>"; };
 		62959B042524DA7700A3D7F1 /* CAPBridgeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CAPBridgeViewController.swift; sourceTree = "<group>"; };
@@ -228,7 +231,6 @@
 		62A91C392553710300861508 /* nonjson.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = nonjson.json; sourceTree = "<group>"; };
 		62ADC0C925CB678000E914DE /* PluginCallResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PluginCallResult.swift; sourceTree = "<group>"; };
 		62D43AEF2581817500673C24 /* WKWebView+Capacitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WKWebView+Capacitor.swift"; sourceTree = "<group>"; };
-		62D43B642582A13D00673C24 /* WKWebView+Capacitor.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "WKWebView+Capacitor.m"; sourceTree = "<group>"; };
 		62E0735225535E6500BAAADB /* server.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = server.json; sourceTree = "<group>"; };
 		62E0735325535E6500BAAADB /* bad.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = bad.json; sourceTree = "<group>"; };
 		62E0735425535E6500BAAADB /* flat.json */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.json; path = flat.json; sourceTree = "<group>"; };
@@ -405,6 +407,7 @@
 				62FABD1925AE5C01007B3814 /* Array+Capacitor.swift */,
 				62D43AEF2581817500673C24 /* WKWebView+Capacitor.swift */,
 				62D43B642582A13D00673C24 /* WKWebView+Capacitor.m */,
+				F1A2B3C92E5F6789012345AE /* CAPAppStorePrivateAPI.swift */,
 				2F81F5C726FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.h */,
 				2F81F5C826FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.m */,
 				62959AE92524DA7700A3D7F1 /* UIColor.swift */,
@@ -715,6 +718,9 @@
 				621ECCB72542045900D3D615 /* CAPBridgedJSTypes.m in Sources */,
 				621ECCD6254205BD00D3D615 /* CAPBridgeProtocol.swift in Sources */,
 				62D43AF02581817500673C24 /* WKWebView+Capacitor.swift in Sources */,
+				62D43B652582A13D00673C24 /* WKWebView+Capacitor.m in Sources */,
+				F1A2B3C82E5F6789012345AE /* CAPAppStorePrivateAPI.swift in Sources */,
+				62959B302524DA7800A3D7F1 /* UIStatusBarManager+CAPHandleTapAction.m in Sources */,
 				62959B432524DA7800A3D7F1 /* Data+Capacitor.swift in Sources */,
 				62E207AE2588234500A78983 /* WebViewDelegationHandler.swift in Sources */,
 				A7187FD22BD1CB7D00093C45 /* CAPPluginMethod.swift in Sources */,
@@ -734,11 +740,9 @@
 				2F81F5CA26FB7CB400DD35BE /* CAPBridgeViewController+CDVScreenOrientationDelegate.m in Sources */,
 				62ADC0CA25CB678000E914DE /* PluginCallResult.swift in Sources */,
 				62959B472524DA7800A3D7F1 /* CAPNotifications.swift in Sources */,
-				62D43B652582A13D00673C24 /* WKWebView+Capacitor.m in Sources */,
 				62959B312524DA7800A3D7F1 /* JS.swift in Sources */,
 				373A69F2255C95D0000A6F44 /* NotificationRouter.swift in Sources */,
 				62959B1A2524DA7800A3D7F1 /* CAPPluginCall.swift in Sources */,
-				62959B302524DA7800A3D7F1 /* UIStatusBarManager+CAPHandleTapAction.m in Sources */,
 				62959B392524DA7800A3D7F1 /* CapacitorExtension.swift in Sources */,
 				A327E6B628DB8B2900CA8B0A /* HttpRequestHandler.swift in Sources */,
 				957BD9402E78A4A50056874C /* SystemBars.swift in Sources */,
