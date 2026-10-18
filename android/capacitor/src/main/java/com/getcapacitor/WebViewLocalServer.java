@@ -374,22 +374,16 @@ public class WebViewLocalServer {
             Map<String, String> tempResponseHeaders = handler.buildDefaultResponseHeaders();
             int statusCode = 206;
             try {
-                int totalSize = responseStream.available();
+                int totalRange = responseStream.available();
                 String[] parts = rangeString.split("=");
                 String[] streamParts = parts[1].split("-");
-                int fromRange = Integer.parseInt(streamParts[0]);
-                int endRange = totalSize - 1;
-                if (streamParts.length > 1 && !streamParts[1].isEmpty()) {
-                    endRange = Integer.parseInt(streamParts[1]);
+                String fromRange = streamParts[0];
+                int range = totalRange - 1;
+                if (streamParts.length > 1) {
+                    range = Integer.parseInt(streamParts[1]);
                 }
-
-                // Truncate the stream at the end of the requested range.
-                // Somewhere in the request pipeline, the stream gets automatically
-                // seeked to the correct start position, so we don't need to skip to the fromRange position here.
-                responseStream = new BoundedInputStream(responseStream, endRange + 1);
-
                 tempResponseHeaders.put("Accept-Ranges", "bytes");
-                tempResponseHeaders.put("Content-Range", "bytes " + fromRange + "-" + endRange + "/" + totalSize);
+                tempResponseHeaders.put("Content-Range", "bytes " + fromRange + "-" + range + "/" + totalRange);
             } catch (IOException e) {
                 statusCode = 404;
             }
