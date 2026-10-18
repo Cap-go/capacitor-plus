@@ -502,14 +502,10 @@ public class Plugin {
     private String[] getPermissionStringsForAliases(@NonNull String[] aliases) {
         CapacitorPlugin annotation = handle.getPluginAnnotation();
         HashSet<String> perms = new HashSet<>();
-        if (annotation != null) {
-            for (Permission perm : annotation.permissions()) {
-                if (Arrays.asList(aliases).contains(perm.alias())) {
-                    perms.addAll(Arrays.asList(perm.strings()));
-                }
+        for (Permission perm : annotation.permissions()) {
+            if (Arrays.asList(aliases).contains(perm.alias())) {
+                perms.addAll(Arrays.asList(perm.strings()));
             }
-        } else {
-            Logger.warn(String.format("getPermissionStringsForAliases: missing @CapacitorPlugin annotation for plugin %s", handle.getId()));
         }
 
         return perms.toArray(new String[0]);
@@ -1007,8 +1003,7 @@ public class Plugin {
      * Give the plugins a chance to take control when a URL is about to be loaded in the WebView.
      * Returning true causes the WebView to abort loading the URL.
      * Returning false causes the WebView to continue loading the URL.
-     * Returning null will defer to the default Capacitor policy.
-     * Not called for Capacitor's internal HTTP proxy path, which is always blocked.
+     * Returning null will defer to the default Capacitor policy
      */
     @SuppressWarnings("unused")
     public Boolean shouldOverrideLoad(Uri url) {

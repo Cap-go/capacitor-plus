@@ -134,21 +134,125 @@ async function scanAndWarn(config: Config): Promise<void> {
   }
 }
 
+function findMatchingBrace(source: string, openIdx: number): number | null {
+  let depth = 1;
+  let i = openIdx + 1;
+  let inLineComment = false;
+  let blockCommentDepth = 0;
+  let inString: '"' | '"""' | null = null;
+  let stringHashes = 0;
+
+  while (i < source.length && depth > 0) {
+    const ch = source[i];
+    const next = source[i + 1];
+
+    if (inLineComment) {
+      if (ch === '\n') inLineComment = false;
+      i++;
+      continue;
+    }
+
+    if (blockCommentDepth > 0) {
+      if (ch === '*' && next === '/') {
+        blockCommentDepth--;
+        i += 2;
+        continue;
+      }
+      if (ch === '/' && next === '*') {
+        blockCommentDepth++;
+        i += 2;
+        continue;
+      }
+      i++;
+      continue;
+    }
+
+    if (inString === '"') {
+      if (stringHashes === 0 && ch === '\\') {
+        i += 2;
+        continue;
+      }
+      if (ch === '"') {
+        let closingHashes = 0;
+        while (source[i + 1 + closingHashes] === '#') {
+          closingHashes++;
+        }
+        if (closingHashes === stringHashes) {
+          i += 1 + closingHashes;
+          inString = null;
+          stringHashes = 0;
+          continue;
+        }
+      }
+      i++;
+      continue;
+    }
+
+    if (inString === '"""') {
+      if (ch === '"' && source[i + 1] === '"' && source[i + 2] === '"') {
+        let closingHashes = 0;
+        while (source[i + 3 + closingHashes] === '#') {
+          closingHashes++;
+        }
+        if (closingHashes === stringHashes) {
+          i += 3 + closingHashes;
+          inString = null;
+          stringHashes = 0;
+          continue;
+        }
+      }
+      i++;
+      continue;
+    }
+
+    if (ch === '/' && next === '/') {
+      inLineComment = true;
+      i += 2;
+      continue;
+    }
+
+    if (ch === '/' && next === '*') {
+      blockCommentDepth++;
+      i += 2;
+      continue;
+    }
+
+    if (ch === '#' || ch === '"') {
+      let hashes = 0;
+      while (source[i + hashes] === '#') {
+        hashes++;
+      }
+      const quoteIdx = i + hashes;
+      if (source[quoteIdx] === '"') {
+        if (source[quoteIdx + 1] === '"' && source[quoteIdx + 2] === '"') {
+          inString = '"""';
+          stringHashes = hashes;
+          i = quoteIdx + 3;
+          continue;
+        }
+        inString = '"';
+        stringHashes = hashes;
+        i = quoteIdx + 1;
+        continue;
+      }
+    }
+
+    if (ch === '{') depth++;
+    else if (ch === '}') depth--;
+    i++;
+  }
+
+  return depth === 0 ? i - 1 : null;
+}
+
 function hasCustomDelegateBody(source: string, sigRegex: RegExp): boolean {
   const match = source.match(sigRegex);
   if (!match || match.index === undefined) return false;
   const openIdx = source.indexOf('{', match.index);
   if (openIdx === -1) return false;
-  let depth = 1;
-  let i = openIdx + 1;
-  while (i < source.length && depth > 0) {
-    const ch = source[i];
-    if (ch === '{') depth++;
-    else if (ch === '}') depth--;
-    i++;
-  }
-  if (depth !== 0) return false;
-  const body = source.slice(openIdx + 1, i - 1);
+  const closeIdx = findMatchingBrace(source, openIdx);
+  if (closeIdx === null) return false;
+  const body = source.slice(openIdx + 1, closeIdx);
   const codeLines = body
     .split('\n')
     .map((l) => l.trim())
@@ -225,18 +329,11 @@ function extractConfigurationForConnecting(appDelegateSource: string): string | 
   if (openIdx === -1) {
     return null;
   }
-  let depth = 1;
-  let i = openIdx + 1;
-  while (i < appDelegateSource.length && depth > 0) {
-    const ch = appDelegateSource[i];
-    if (ch === '{') depth++;
-    else if (ch === '}') depth--;
-    i++;
-  }
-  if (depth !== 0) {
+  const closeIdx = findMatchingBrace(appDelegateSource, openIdx);
+  if (closeIdx === null) {
     return null;
   }
-  return '\n' + appDelegateSource.slice(sigMatch.index, i) + '\n';
+  return '\n' + appDelegateSource.slice(sigMatch.index, closeIdx + 1) + '\n';
 }
 
 function insertBeforeAppDelegateClassEnd(source: string, snippet: string): string | null {
@@ -246,18 +343,10 @@ function insertBeforeAppDelegateClassEnd(source: string, snippet: string): strin
     return null;
   }
   const openIdx = source.indexOf('{', match.index);
-  let depth = 1;
-  let i = openIdx + 1;
-  while (i < source.length && depth > 0) {
-    const ch = source[i];
-    if (ch === '{') depth++;
-    else if (ch === '}') depth--;
-    i++;
-  }
-  if (depth !== 0) {
+  const closeIdx = findMatchingBrace(source, openIdx);
+  if (closeIdx === null) {
     return null;
   }
-  const closeIdx = i - 1;
   return source.slice(0, closeIdx) + snippet + source.slice(closeIdx);
 }
 
@@ -298,6 +387,7 @@ function describeSignals({
 export const __testables = {
   classify,
   describeSignals,
+  findMatchingBrace,
   insertBeforeAppDelegateClassEnd,
   extractConfigurationForConnecting,
   hasCustomDelegateBody,

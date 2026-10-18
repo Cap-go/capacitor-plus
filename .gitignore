@@ -10,7 +10,6 @@ Pods/
 Podfile.lock
 Build/*
 build/
-.build/
 Index/
 .*.sw*
 android-template.iml
