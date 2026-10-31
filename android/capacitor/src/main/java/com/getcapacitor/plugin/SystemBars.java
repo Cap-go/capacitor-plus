@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.os.Build;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.Window;
@@ -325,7 +326,6 @@ public class SystemBars extends Plugin {
                 windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.statusBars());
             } else if (bar.equals(BAR_GESTURE_BAR)) {
                 windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.navigationBars());
-                navBarVisible = false;
             }
             return;
         }
@@ -336,7 +336,6 @@ public class SystemBars extends Plugin {
             windowInsetsControllerCompat.show(WindowInsetsCompat.Type.statusBars());
         } else if (bar.equals(BAR_GESTURE_BAR)) {
             windowInsetsControllerCompat.show(WindowInsetsCompat.Type.navigationBars());
-            navBarVisible = true;
         }
     }
 
