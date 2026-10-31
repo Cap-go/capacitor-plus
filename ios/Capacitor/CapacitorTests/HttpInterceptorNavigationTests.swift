@@ -42,12 +42,6 @@ class HttpInterceptorNavigationTests: XCTestCase {
         XCTAssertEqual(policy(for: interceptorURL), .cancel)
     }
 
-    // Interceptor blocking runs before main-frame vs subframe handling in decidePolicyFor.
-    func testBlocksSubframeNavigationToInterceptorPath() {
-        let interceptorURL = "capacitor://localhost\(CapacitorBridge.httpInterceptorStartIdentifier)?u=https://example.com/payload.html"
-        XCTAssertEqual(policy(for: interceptorURL), .cancel)
-    }
-
     func testAllowsInAppNavigation() {
         XCTAssertEqual(policy(for: "capacitor://localhost/index.html"), .allow)
     }

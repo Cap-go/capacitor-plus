@@ -85,10 +85,11 @@ const pluginVersion = '^8.0.0';
 const gradleVersion = '8.14.3';
 const iOSVersion = '15';
 const kotlinVersion = '2.2.20';
-let installFailed = false;
-let scriptsBlocked = false;
 
 export async function migrateCommand(config: Config, noprompt: boolean, packagemanager: string): Promise<void> {
+  let installFailed = false;
+  let scriptsBlocked = false;
+
   if (config === null) {
     fatal('Config data missing');
   }
