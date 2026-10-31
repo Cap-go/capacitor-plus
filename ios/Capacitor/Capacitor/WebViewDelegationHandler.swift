@@ -65,8 +65,13 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
     }
 
     /// Test seam: avoids subclassing `WKNavigationAction` in unit tests.
-    static func shouldBlockHttpInterceptorNavigation(for url: URL) -> Bool {
-        url.path.starts(with: CapacitorBridge.httpInterceptorStartIdentifier)
+    static func shouldBlockHttpInterceptorNavigation(for url: URL, serverURL: URL, localURL: URL) -> Bool {
+        guard url.path.starts(with: CapacitorBridge.httpInterceptorStartIdentifier) else {
+            return false
+        }
+        let matchesServer = url.scheme == serverURL.scheme && url.host == serverURL.host
+        let matchesLocal = url.scheme == localURL.scheme && url.host == localURL.host
+        return matchesServer || matchesLocal
     }
 
     open func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
@@ -80,7 +85,11 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
         }
 
         // The proxy returns a remote body at the app origin, so block it before plugins can allow it.
-        if Self.shouldBlockHttpInterceptorNavigation(for: navURL) {
+        if Self.shouldBlockHttpInterceptorNavigation(
+            for: navURL,
+            serverURL: bridge.config.serverURL,
+            localURL: bridge.config.localURL
+        ) {
             decisionHandler(.cancel)
             return
         }

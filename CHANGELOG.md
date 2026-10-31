@@ -3,51 +3,36 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-# [8.6.0](https://github.com/ionic-team/capacitor/compare/8.5.3...8.6.0) (2026-10-28)
+## [8.5.3](https://github.com/Cap-go/capacitor-plus/compare/8.5.2...8.5.3) (2026-10-12)
 
-## Bug Fixes
-
-- **android:** keep callbacks on non-public base classes from R8 ([02e43f8](https://github.com/ionic-team/capacitor/commit/02e43f83f7e101f1773e9d33cd12e3c52e7d2c4b))
-- **android:** keep plugin annotation types from R8 full mode ([#8646](https://github.com/ionic-team/capacitor/issues/8646)) ([9dc5aeb](https://github.com/ionic-team/capacitor/commit/9dc5aebd0335e0553827d81b4ce0f79e8a1c51aa))
-- **cli:** bump xcode to ^4.0.0 to drop vulnerable uuid@7 ([#8674](https://github.com/ionic-team/capacitor/issues/8674)) ([463225f](https://github.com/ionic-team/capacitor/commit/463225f31d9edade1098ccbadef766deb1aafbe8))
-- **cli:** redact sensitive values from telemetry payloads ([#8665](https://github.com/ionic-team/capacitor/issues/8665)) ([d19f1ea](https://github.com/ionic-team/capacitor/commit/d19f1ea0bd7018a2eb13a643c76c6b4ba60795bb))
-- **cli:** report npm 12 blocked install scripts in doctor and migrate ([#8655](https://github.com/ionic-team/capacitor/issues/8655)) ([841017a](https://github.com/ionic-team/capacitor/commit/841017a3c7ddb84c614be389e74a24ea0a629ff5))
-
-## Features
-
-- **android:** recognize @capacitor-community/ssl-pinning for cert pinning ([#8669](https://github.com/ionic-team/capacitor/issues/8669)) ([19d2a40](https://github.com/ionic-team/capacitor/commit/19d2a40b920120ac97a118ec56105b202ee99d0a))
-- **cli:** recognize @capacitor-community/ssl-pinning for auto cert copy ([#8666](https://github.com/ionic-team/capacitor/issues/8666)) ([50a3c51](https://github.com/ionic-team/capacitor/commit/50a3c511e1b02083b6961f8359b76cc2bab92d14))
-
-## Reverts
-
-- Revert "chore(ios): add `App/CapApp-SPM/Package.resolved` to `.gitignore` (#8649)" ([175c933](https://github.com/ionic-team/capacitor/commit/175c93398b1bb4de34c55386e18aaee2e5551c83)), closes [#8649](https://github.com/ionic-team/capacitor/issues/8649)
-
-## [8.5.3](https://github.com/ionic-team/capacitor/compare/8.5.2...8.5.3) (2026-10-07)
 
 ### Bug Fixes
 
-- **ios:** make private API calls static for App Store 2.5.2 ([#187](https://github.com/Cap-go/capacitor-plus/issues/187)) ([07910b7](https://github.com/Cap-go/capacitor-plus/commit/07910b705f24840c0fe0827eb7b77b4bf7125ed1))
-- **cli:** change Cordova AppDelegate.h imports for SPM ([#8618](https://github.com/ionic-team/capacitor/issues/8618)) ([145560e](https://github.com/ionic-team/capacitor/commit/145560ee590d86637dc9dd2e2c9f4c08b0f631c0))
+* **ios:** make private API calls static for App Store 2.5.2 ([#187](https://github.com/Cap-go/capacitor-plus/issues/187)) ([07910b7](https://github.com/Cap-go/capacitor-plus/commit/07910b705f24840c0fe0827eb7b77b4bf7125ed1))
 
-## [8.5.2](https://github.com/ionic-team/capacitor/compare/8.5.1...8.5.2) (2026-09-11)
+
+
+
+
+## [8.5.2](https://github.com/Cap-go/capacitor-plus/compare/8.5.1...8.5.2) (2026-08-26)
 
 **Note:** Version bump only for package capacitor
 
+
+
+
+
+## [8.5.1](https://github.com/Cap-go/capacitor-plus/compare/8.3.12...8.5.1) (2026-08-25)
+
+
 ### Bug Fixes
 
-- **android:** add null checks for plugin annotation when retrieving permissions ([#8400](https://github.com/ionic-team/capacitor/issues/8400)) ([035b16a](https://github.com/ionic-team/capacitor/commit/035b16aca15eab136efc49eaec64b45987cfefeb))
-- **ios:** do not forward scene lifecycle events to the page before it has loaded ([#8595](https://github.com/ionic-team/capacitor/issues/8595)) ([c567328](https://github.com/ionic-team/capacitor/commit/c567328d0feb90c306ea824edc5a799bdfe26542))
-- resolve issues with safe area / systembars plugin ([#8535](https://github.com/ionic-team/capacitor/issues/8535)) ([e37d9c6](https://github.com/ionic-team/capacitor/commit/e37d9c60785368acf2a83cfd4c20f47076672bdd))
+* **ci:** fetch upstream objects so plus branch sync works ([#109](https://github.com/Cap-go/capacitor-plus/issues/109)) ([1fa7eee](https://github.com/Cap-go/capacitor-plus/commit/1fa7eeeff9494e9b32afb20a9850389b79d6bcec))
+* **ci:** resolve modify/delete conflicts in sync conflict PRs ([#110](https://github.com/Cap-go/capacitor-plus/issues/110)) ([5c29fb9](https://github.com/Cap-go/capacitor-plus/commit/5c29fb9af001b9aafdcde7b7054585e093f44431))
 
-## [8.5.1](https://github.com/ionic-team/capacitor/compare/8.5.0...8.5.1) (2026-08-31)
 
-### Bug Fixes
 
-- **ci:** fetch upstream objects so plus branch sync works ([#109](https://github.com/Cap-go/capacitor-plus/issues/109)) ([1fa7eee](https://github.com/Cap-go/capacitor-plus/commit/1fa7eeeff9494e9b32afb20a9850389b79d6bcec))
-- **ci:** resolve modify/delete conflicts in sync conflict PRs ([#110](https://github.com/Cap-go/capacitor-plus/issues/110)) ([5c29fb9](https://github.com/Cap-go/capacitor-plus/commit/5c29fb9af001b9aafdcde7b7054585e093f44431))
-- block navigation to the internal HTTP proxy path ([ee586ae](https://github.com/ionic-team/capacitor/commit/ee586ae680887ba99d066616f976db149542d922))
-- **cli:** use POSIX paths in CapApp-SPM Package.swift ([#8549](https://github.com/ionic-team/capacitor/issues/8549)) ([5e5bb3b](https://github.com/ionic-team/capacitor/commit/5e5bb3befc312477900252ab07e23b596f8cb0d1))
-- **core:** prevent removeListener from removing wrong listener ([#8271](https://github.com/ionic-team/capacitor/issues/8271)) ([5ac4dd6](https://github.com/ionic-team/capacitor/commit/5ac4dd613ae989d8dc8738ea25b77efbd4fa21fe))
+
 
 # [8.5.0](https://github.com/ionic-team/capacitor/compare/8.4.2...8.5.0) (2026-07-31)
 
