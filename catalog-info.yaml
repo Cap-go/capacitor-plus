@@ -1,0 +1,80 @@
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata:
+  name: capacitor-plus
+  title: Capacitor Plus
+  description: Enhanced Capacitor fork with automated upstream sync for iOS, Android, and the web.
+  annotations:
+    github.com/project-slug: Cap-go/capacitor-plus
+  links:
+    - url: https://capgo.app/docs/plugins/capacitor-plus/
+      title: Documentation
+  tags: [capacitor, mobile, typescript, swift, java]
+spec:
+  owner: group:default/mobile-ecosystem
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: capacitor-plus-core
+  title: '@capacitor-plus/core'
+  description: JavaScript runtime and plugin bridge.
+  annotations:
+    github.com/project-slug: Cap-go/capacitor-plus
+    backstage.io/source-location: url:https://github.com/Cap-go/capacitor-plus/tree/plus/core/
+  tags: [typescript, npm-package]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:default/mobile-ecosystem
+  system: capacitor-plus
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: capacitor-plus-cli
+  title: '@capacitor-plus/cli'
+  description: CLI for creating, syncing, building, and running Capacitor apps.
+  annotations:
+    github.com/project-slug: Cap-go/capacitor-plus
+    backstage.io/source-location: url:https://github.com/Cap-go/capacitor-plus/tree/plus/cli/
+  tags: [typescript, cli, npm-package]
+spec:
+  type: tool
+  lifecycle: production
+  owner: group:default/mobile-ecosystem
+  system: capacitor-plus
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: capacitor-plus-android
+  title: '@capacitor-plus/android'
+  description: Android native runtime for Capacitor Plus.
+  annotations:
+    github.com/project-slug: Cap-go/capacitor-plus
+    backstage.io/source-location: url:https://github.com/Cap-go/capacitor-plus/tree/plus/android/
+  tags: [java, android, npm-package]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:default/mobile-ecosystem
+  system: capacitor-plus
+  dependsOn: [component:default/capacitor-plus-core]
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: capacitor-plus-ios
+  title: '@capacitor-plus/ios'
+  description: iOS native runtime for Capacitor Plus.
+  annotations:
+    github.com/project-slug: Cap-go/capacitor-plus
+    backstage.io/source-location: url:https://github.com/Cap-go/capacitor-plus/tree/plus/ios/
+  tags: [swift, ios, npm-package]
+spec:
+  type: library
+  lifecycle: production
+  owner: group:default/mobile-ecosystem
+  system: capacitor-plus
+  dependsOn: [component:default/capacitor-plus-core]

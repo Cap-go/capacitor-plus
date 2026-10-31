@@ -393,7 +393,21 @@ public class Bridge {
         return 0;
     }
 
+    public static boolean shouldBlockHttpInterceptorNavigation(Uri url, Uri appOrigin) {
+        String path = url.getPath();
+        if (path == null || !path.startsWith(CAPACITOR_HTTP_INTERCEPTOR_START)) {
+            return false;
+        }
+        return appOrigin.getHost().equals(url.getHost()) && url.getScheme().equals(appOrigin.getScheme());
+    }
+
     public boolean launchIntent(Uri url) {
+        // The proxy returns a remote body at the app origin, so block it before plugins can allow it.
+        Uri appUri = Uri.parse(appUrl);
+        if (shouldBlockHttpInterceptorNavigation(url, appUri)) {
+            return true;
+        }
+
         /*
          * Give plugins the chance to handle the url
          */
@@ -411,7 +425,6 @@ public class Bridge {
             return false;
         }
 
-        Uri appUri = Uri.parse(appUrl);
         if (
             !(appUri.getHost().equals(url.getHost()) && url.getScheme().equals(appUri.getScheme())) &&
             !appAllowNavigationMask.matches(url.getHost())
@@ -1262,6 +1275,10 @@ public class Bridge {
                     }
                 }
             }
+        } else {
+            Logger.warn(
+                String.format("getPermissionStates: missing @CapacitorPlugin annotation for plugin %s", plugin.getPluginHandle().getId())
+            );
         }
 
         return permissionsResults;
