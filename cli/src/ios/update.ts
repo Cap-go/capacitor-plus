@@ -618,6 +618,9 @@ async function copyPluginsNativeFiles(config: Config, cordovaPlugins: Plugin[]) 
     const sourceFiles = getPlatformElement(p, platform, 'source-file');
     const headerFiles = getPlatformElement(p, platform, 'header-file');
     const codeFiles = sourceFiles.concat(headerFiles);
+    const pluginSuppliesAppDelegate = codeFiles.some(
+      (codeFile: { $: { src: string } }) => codeFile.$.src.split('/').pop() === 'AppDelegate.h',
+    );
     const frameworks = getPlatformElement(p, platform, 'framework');
     let sourcesFolderName = 'sources';
     if (!isSPM && needsStaticPod(p)) {
@@ -668,7 +671,7 @@ async function copyPluginsNativeFiles(config: Config, cordovaPlugins: Plugin[]) 
             fileContent = fileContent.replace(/self.webView.superview/g, 'self.viewController.view');
             await writeFile(fileDest, fileContent, { encoding: 'utf-8' });
           }
-          if (isSPM && fileContent.includes(`#import "AppDelegate.h"`)) {
+          if (isSPM && !pluginSuppliesAppDelegate && fileContent.includes(`#import "AppDelegate.h"`)) {
             fileContent = fileContent.replace(`#import "AppDelegate.h"`, `#import <Cordova/AppDelegate.h>`);
             await writeFile(fileDest, fileContent, { encoding: 'utf-8' });
           }

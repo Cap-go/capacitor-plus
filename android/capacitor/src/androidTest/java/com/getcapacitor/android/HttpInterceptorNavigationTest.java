@@ -27,6 +27,24 @@ public class HttpInterceptorNavigationTest {
     private static final String IN_APP_URL = "https://localhost/index.html";
     private static final String EXTERNAL_URL = "https://example.com/";
 
+    /** The proxy path must match the app origin; external hosts with a similar path are not blocked here. */
+    @Test
+    public void interceptorBlockRequiresAppOrigin() {
+        Uri appOrigin = Uri.parse("https://localhost");
+        assertTrue(
+            Bridge.shouldBlockHttpInterceptorNavigation(
+                Uri.parse("https://localhost" + Bridge.CAPACITOR_HTTP_INTERCEPTOR_START + "?u=https://example.com/payload.html"),
+                appOrigin
+            )
+        );
+        assertFalse(
+            Bridge.shouldBlockHttpInterceptorNavigation(
+                Uri.parse("https://example.com" + Bridge.CAPACITOR_HTTP_INTERCEPTOR_START + "/x"),
+                appOrigin
+            )
+        );
+    }
+
     /** A plugin registered by the test host returns "allow" for the proxy path; it must not win. */
     @Test
     public void blocksNavigationToInterceptorPath() {
