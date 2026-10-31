@@ -130,7 +130,7 @@ export function telemetryAction(config: Config, action: CommanderAction): Comman
     const capacitorPackages = packages.filter(([k]) => k.startsWith('@capacitor-plus/'));
 
     const versions = capacitorPackages.map(([k, v]): [string, string] => [
-      `${k.replace(/^@capacitor\//, '').replace(/-/g, '_')}_version`,
+      `${k.replace(/^@capacitor-plus\//, '').replace(/-/g, '_')}_version`,
       getTelemetryVersion(v),
     ]);
 

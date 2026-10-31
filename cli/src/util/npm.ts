@@ -117,7 +117,7 @@ export function parseBlockedInstallScripts(commandOutput: string | null): Blocke
  * scripts say anything about whether the migration finished.
  */
 export function hasBlockedCapacitorScripts(blocked: BlockedInstallScript[]): boolean {
-  return blocked.some(({ name }) => name.startsWith('@capacitor/'));
+  return blocked.some(({ name }) => name.startsWith('@capacitor-plus/') || name.startsWith('@capacitor/'));
 }
 
 export function logBlockedInstallScripts(blocked: BlockedInstallScript[]): void {

@@ -138,7 +138,7 @@ let package = Package(
       const symlink = options?.symlink;
       const symlinkFolder = join('symlinks', plugin.name);
       const relPath = symlink
-        ? symlinkFolder
+        ? convertToUnixPath(join('symlinks', plugin.name))
         : convertToUnixPath(relative(config.ios.nativeXcodeProjDirAbs, plugin.rootPath));
       if (symlink) {
         await ensureSymlink(plugin.rootPath, resolve(config.ios.nativeProjectDirAbs, 'CapApp-SPM', symlinkFolder));
@@ -275,7 +275,9 @@ export async function addSceneManifestIfNeeded(config: Config): Promise<void> {
         {
           UISceneConfigurationName: 'Default Configuration',
           UISceneDelegateClassName: '$(PRODUCT_MODULE_NAME).SceneDelegate',
-          UISceneStoryboardFile: 'Main',
+          ...(typeof entries['UIMainStoryboardFile'] === 'string' && entries['UIMainStoryboardFile'].length > 0
+            ? { UISceneStoryboardFile: entries['UIMainStoryboardFile'] }
+            : {}),
         },
       ],
     },
