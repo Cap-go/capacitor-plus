@@ -21,7 +21,7 @@ concurrency:
 jobs:
   setup:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - name: Get Latest
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
@@ -38,7 +38,7 @@ jobs:
           key: ${{ runner.OS }}-bun-dependencies-cache-${{ hashFiles('bun.lock') }}
   lint:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 10
     steps:
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
@@ -57,7 +57,7 @@ jobs:
       - run: bun run lint
   test-cli:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 10
     needs:
       - setup
       - lint
@@ -81,7 +81,7 @@ jobs:
         working-directory: ./cli
   test-core:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     needs:
       - setup
       - lint
@@ -105,7 +105,7 @@ jobs:
         working-directory: ./core
   test-ios:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 10
     needs:
       - setup
       - lint
@@ -136,7 +136,7 @@ jobs:
         run: sh ./scripts/native-podspec.sh lint
   test-android:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
     needs:
       - setup
       - lint
