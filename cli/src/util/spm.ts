@@ -343,7 +343,7 @@ export async function addSceneManifestIfNeeded(config: Config): Promise<void> {
     return;
   }
 
-  const sceneConfiguration: PlistObject = {
+  const sceneConfiguration: MutablePlistObject = {
     UISceneConfigurationName: 'Default Configuration',
     UISceneDelegateClassName: '$(PRODUCT_MODULE_NAME).SceneDelegate',
   };
