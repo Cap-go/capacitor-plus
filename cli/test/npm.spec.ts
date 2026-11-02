@@ -152,7 +152,7 @@ describe('isNpmProject', () => {
 
 describe('getBlockedInstallScripts', () => {
   it('warns when conflicting lockfiles make the package manager ambiguous', async () => {
-    const writeSpy = jest.spyOn(output, 'write').mockImplementation(() => undefined);
+    const writeSpy = jest.spyOn(output, 'write').mockImplementation(() => true);
     const dir = project({ 'package-lock.json': '', 'yarn.lock': '' });
 
     await getBlockedInstallScripts(dir);
