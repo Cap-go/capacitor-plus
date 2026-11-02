@@ -1,4 +1,4 @@
-import { mkdtempSync, writeFileSync } from 'fs-extra';
+import { mkdtempSync, rmSync, writeFileSync } from 'fs-extra';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
@@ -53,13 +53,22 @@ const ONE_DENIED = `{
   ]
 }`;
 
+const projectDirs: string[] = [];
+
 function project(files: { [name: string]: string }): string {
   const dir = mkdtempSync(join(tmpdir(), 'cap-npm-'));
+  projectDirs.push(dir);
   for (const [name, contents] of Object.entries(files)) {
     writeFileSync(join(dir, name), contents, { encoding: 'utf-8' });
   }
   return dir;
 }
+
+afterAll(() => {
+  for (const dir of projectDirs) {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
 
 describe('parseBlockedInstallScripts', () => {
   it('returns nothing when no scripts are blocked', () => {

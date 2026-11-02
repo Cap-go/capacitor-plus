@@ -8,7 +8,7 @@ if [ ! -f CHANGELOG.md ]; then
   exit 0
 fi
 
-PRESERVE_MJS="$(mktemp)"
+PRESERVE_MJS="$(mktemp --suffix=.mjs)"
 trap 'rm -f "$PRESERVE_MJS" /tmp/plus-changelog.md' EXIT
 
 git show "${TRUSTED_PLUS_REF}:CHANGELOG.md" > /tmp/plus-changelog.md

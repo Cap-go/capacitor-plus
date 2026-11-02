@@ -186,7 +186,9 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
 
       if (runNpmInstall && !installFailed) {
         const blocked = await getBlockedInstallScripts(config.app.rootDir, installerType);
-        if (blocked.length > 0) {
+        if (blocked === null) {
+          scriptsBlocked = true;
+        } else if (blocked.length > 0) {
           logBlockedInstallScripts(blocked);
           scriptsBlocked = hasBlockedCapacitorScripts(blocked);
         }

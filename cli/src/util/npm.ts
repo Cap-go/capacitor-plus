@@ -91,7 +91,7 @@ export async function isNpmProject(rootDir: string): Promise<boolean> {
 export async function getBlockedInstallScripts(
   rootDir: string,
   packageManager?: string,
-): Promise<BlockedInstallScript[]> {
+): Promise<BlockedInstallScript[] | null> {
   if (packageManager === undefined) {
     logAmbiguousLockfiles(rootDir);
   }
@@ -102,9 +102,22 @@ export async function getBlockedInstallScripts(
     return [];
   }
 
-  return parseBlockedInstallScripts(
-    await getCommandOutput('npm', ['install-scripts', 'ls', '--json'], { cwd: rootDir }),
+  const commandOutput = await getCommandOutput(
+    'npm',
+    ['install-scripts', 'ls', '--json', '--all=false'],
+    { cwd: rootDir },
   );
+
+  if (commandOutput === null) {
+    output.write(
+      `${c.strong('Blocked install scripts:')}\n\n` +
+        `  Could not query npm for blocked install scripts. ` +
+        `If ${c.input('all=true')} is set in ${c.input('.npmrc')}, run ${c.input('npm install-scripts ls --all=false')} manually.\n\n`,
+    );
+    return null;
+  }
+
+  return parseBlockedInstallScripts(commandOutput);
 }
 
 export function parseBlockedInstallScripts(commandOutput: string | null): BlockedInstallScript[] {
