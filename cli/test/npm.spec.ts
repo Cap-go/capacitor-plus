@@ -2,13 +2,13 @@ import { mkdtempSync, writeFileSync } from 'fs-extra';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
+import { output } from '../src/log';
 import {
-  hasBlockedCapacitorScripts,
   getBlockedInstallScripts,
+  hasBlockedCapacitorScripts,
   isNpmProject,
   parseBlockedInstallScripts,
 } from '../src/util/npm';
-import { output } from '../src/log';
 
 // Captured from a real `npm install-scripts ls --json` on npm@12.2.0.
 const NOTHING_BLOCKED = `{
@@ -152,7 +152,7 @@ describe('isNpmProject', () => {
 
 describe('getBlockedInstallScripts', () => {
   it('warns when conflicting lockfiles make the package manager ambiguous', async () => {
-    const writeSpy = jest.spyOn(output, 'write').mockImplementation(() => {});
+    const writeSpy = jest.spyOn(output, 'write').mockImplementation(() => undefined);
     const dir = project({ 'package-lock.json': '', 'yarn.lock': '' });
 
     await getBlockedInstallScripts(dir);
