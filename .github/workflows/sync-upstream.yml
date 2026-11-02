@@ -29,6 +29,9 @@ env:
   UPSTREAM_REPO: ionic-team/capacitor
   UPSTREAM_BRANCH: main
 
+permissions:
+  contents: read
+
 jobs:
   # Job 1: Fetch all open PRs from upstream and create corresponding PRs
   sync-open-prs:
@@ -187,7 +190,7 @@ jobs:
             if git merge upstream-pr-$PR_NUMBER --no-edit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR"; then
               echo "Merge successful!"
 
-              bash .github/scripts/preserve-fork-changelog.sh
+              git show plus:.github/scripts/preserve-fork-changelog.sh | TRUSTED_PLUS_REF=plus bash -s
 
               # Run formatter to ensure lint passes
               echo "Running formatter..."
@@ -253,7 +256,7 @@ jobs:
                 continue
               fi
 
-              bash .github/scripts/preserve-fork-changelog.sh
+              git show plus:.github/scripts/preserve-fork-changelog.sh | TRUSTED_PLUS_REF=plus bash -s
 
               git push origin "$SYNC_BRANCH" --force
 
@@ -357,7 +360,7 @@ jobs:
 
           # Merge upstream changes
           if git merge upstream/main --no-edit -m "chore: sync with upstream main branch"; then
-            bash .github/scripts/preserve-fork-changelog.sh
+            git show plus:.github/scripts/preserve-fork-changelog.sh | TRUSTED_PLUS_REF=plus bash -s
 
             # Run formatter to ensure lint passes
             echo "Running formatter..."
@@ -403,7 +406,7 @@ jobs:
               exit 1
             fi
 
-            bash .github/scripts/preserve-fork-changelog.sh
+            git show plus:.github/scripts/preserve-fork-changelog.sh | TRUSTED_PLUS_REF=plus bash -s
 
             git push origin "$SYNC_BRANCH" --force
 
@@ -499,7 +502,7 @@ jobs:
 
           # Merge the PR commits
           if git merge upstream-pr-$PR_NUMBER --no-edit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR"; then
-            bash .github/scripts/preserve-fork-changelog.sh
+            git show plus:.github/scripts/preserve-fork-changelog.sh | TRUSTED_PLUS_REF=plus bash -s
 
             # Run formatter to ensure lint passes
             echo "Running formatter..."
@@ -552,7 +555,7 @@ jobs:
               exit 1
             fi
 
-            bash .github/scripts/preserve-fork-changelog.sh
+            git show plus:.github/scripts/preserve-fork-changelog.sh | TRUSTED_PLUS_REF=plus bash -s
 
             git push origin "$SYNC_BRANCH" --force
 

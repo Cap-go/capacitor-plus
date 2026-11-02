@@ -61,13 +61,13 @@ public class HttpInterceptorNavigationTest {
     }
 
     @Test
-    public void doesNotBlockExternalOriginWithInterceptorPathPrefix() {
+    public void externalOriginWithInterceptorPathIsHandledByNavigationRules() {
         try (ActivityScenario<TestHostActivity> scenario = ActivityScenario.launch(TestHostActivity.class)) {
             scenario.onActivity((activity) -> {
                 Bridge bridge = activity.getBridge();
                 assertNotNull(bridge);
                 assertTrue(
-                    "external URL with interceptor path must open externally",
+                    "external URL with interceptor path must open externally (plugin only applies on app origin)",
                     bridge.launchIntent(Uri.parse(EXTERNAL_INTERCEPTOR_URL))
                 );
             });

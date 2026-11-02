@@ -142,7 +142,31 @@ describe('addSceneManifestIfNeeded', () => {
     expect(parsed['UIMainStoryboardFile']).toBe('Main');
   });
 
-  it('is a no-op when the manifest already exists and does not overwrite user data', async () => {
+  it('adds UISceneStoryboardFile when a manifest exists but the scene config is missing it', async () => {
+    writeFileSync(
+      plistPath,
+      POST_UISCENE_INFO_PLIST.replace(
+        '<string>My App</string>',
+        `<string>My App</string>
+  <key>UIMainStoryboardFile</key>
+  <string>Main</string>`,
+      ),
+    );
+    const lprojDir = join(tmpDir.path, 'Base.lproj');
+    mkdirSync(lprojDir, { recursive: true });
+    writeFileSync(join(lprojDir, 'Main.storyboard'), '<?xml version="1.0" encoding="UTF-8"?>\n');
+
+    await addSceneManifestIfNeeded(config);
+
+    const parsed = parse(readFileSync(plistPath, 'utf-8')) as PlistObject;
+    const manifest = parsed['UIApplicationSceneManifest'] as PlistObject;
+    const configs = manifest['UISceneConfigurations'] as PlistObject;
+    const roleArray = configs['UIWindowSceneSessionRoleApplication'] as PlistObject[];
+    expect(roleArray[0]['UISceneConfigurationName']).toBe('Existing Configuration');
+    expect(roleArray[0]['UISceneStoryboardFile']).toBe('Main');
+  });
+
+  it('does not overwrite unrelated manifest fields when no storyboard resource exists', async () => {
     writeFileSync(plistPath, POST_UISCENE_INFO_PLIST);
 
     await addSceneManifestIfNeeded(config);
@@ -153,10 +177,12 @@ describe('addSceneManifestIfNeeded', () => {
     const roleArray = configs['UIWindowSceneSessionRoleApplication'] as PlistObject[];
     expect(roleArray[0]['UISceneConfigurationName']).toBe('Existing Configuration');
     expect(roleArray[0]['UISceneDelegateClassName']).toBe('$(PRODUCT_MODULE_NAME).CustomSceneDelegate');
+    expect(roleArray[0]['UISceneStoryboardFile']).toBeUndefined();
   });
 
   it('is idempotent across repeated runs', async () => {
     writeFileSync(plistPath, PRE_UISCENE_INFO_PLIST);
+    writeFileSync(join(tmpDir.path, 'Main.storyboard'), '<?xml version="1.0" encoding="UTF-8"?>\n');
 
     await addSceneManifestIfNeeded(config);
     const firstOutput = readFileSync(plistPath, 'utf-8');

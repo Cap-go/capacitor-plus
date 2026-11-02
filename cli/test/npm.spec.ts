@@ -2,7 +2,13 @@ import { mkdtempSync, writeFileSync } from 'fs-extra';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
-import { hasBlockedCapacitorScripts, isNpmProject, parseBlockedInstallScripts } from '../src/util/npm';
+import {
+  hasBlockedCapacitorScripts,
+  getBlockedInstallScripts,
+  isNpmProject,
+  parseBlockedInstallScripts,
+} from '../src/util/npm';
+import { output } from '../src/log';
 
 // Captured from a real `npm install-scripts ls --json` on npm@12.2.0.
 const NOTHING_BLOCKED = `{
@@ -46,6 +52,14 @@ const ONE_DENIED = `{
     }
   ]
 }`;
+
+function project(files: { [name: string]: string }): string {
+  const dir = mkdtempSync(join(tmpdir(), 'cap-npm-'));
+  for (const [name, contents] of Object.entries(files)) {
+    writeFileSync(join(dir, name), contents, { encoding: 'utf-8' });
+  }
+  return dir;
+}
 
 describe('parseBlockedInstallScripts', () => {
   it('returns nothing when no scripts are blocked', () => {
@@ -95,14 +109,6 @@ describe('parseBlockedInstallScripts', () => {
 });
 
 describe('isNpmProject', () => {
-  function project(files: { [name: string]: string }): string {
-    const dir = mkdtempSync(join(tmpdir(), 'cap-npm-'));
-    for (const [name, contents] of Object.entries(files)) {
-      writeFileSync(join(dir, name), contents, { encoding: 'utf-8' });
-    }
-    return dir;
-  }
-
   it.each([
     ['package-lock.json', true],
     ['npm-shrinkwrap.json', true],
@@ -141,6 +147,19 @@ describe('isNpmProject', () => {
 
   it('is not npm for a workspace package, which carries no lockfile of its own', async () => {
     expect(await isNpmProject(project({ 'package.json': '{"name":"myapp"}' }))).toBe(false);
+  });
+});
+
+describe('getBlockedInstallScripts', () => {
+  it('warns when conflicting lockfiles make the package manager ambiguous', async () => {
+    const writeSpy = jest.spyOn(output, 'write').mockImplementation(() => {});
+    const dir = project({ 'package-lock.json': '', 'yarn.lock': '' });
+
+    await getBlockedInstallScripts(dir);
+
+    expect(writeSpy).toHaveBeenCalled();
+    expect(String(writeSpy.mock.calls[0]?.[0])).toContain('Ambiguous package manager');
+    writeSpy.mockRestore();
   });
 });
 
