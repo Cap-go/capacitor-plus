@@ -26,6 +26,8 @@ public class HttpInterceptorNavigationTest {
         "https://localhost" + Bridge.CAPACITOR_HTTP_INTERCEPTOR_START + "?u=https://example.com/payload.html";
     private static final String IN_APP_URL = "https://localhost/index.html";
     private static final String EXTERNAL_URL = "https://example.com/";
+    private static final String EXTERNAL_INTERCEPTOR_URL =
+        "https://example.com" + Bridge.CAPACITOR_HTTP_INTERCEPTOR_START + "/page";
 
     /** A plugin registered by the test host returns "allow" for the proxy path; it must not win. */
     @Test
@@ -37,6 +39,20 @@ public class HttpInterceptorNavigationTest {
                 assertTrue("interceptor navigation must be blocked", bridge.launchIntent(Uri.parse(INTERCEPTOR_URL)));
                 assertFalse("in-app navigation must stay in the WebView", bridge.launchIntent(Uri.parse(IN_APP_URL)));
                 assertTrue("external navigation must leave the WebView", bridge.launchIntent(Uri.parse(EXTERNAL_URL)));
+            });
+        }
+    }
+
+    @Test
+    public void doesNotBlockExternalOriginWithInterceptorPathPrefix() {
+        try (ActivityScenario<TestHostActivity> scenario = ActivityScenario.launch(TestHostActivity.class)) {
+            scenario.onActivity((activity) -> {
+                Bridge bridge = activity.getBridge();
+                assertNotNull(bridge);
+                assertTrue(
+                    "external URL with interceptor path must open externally",
+                    bridge.launchIntent(Uri.parse(EXTERNAL_INTERCEPTOR_URL))
+                );
             });
         }
     }

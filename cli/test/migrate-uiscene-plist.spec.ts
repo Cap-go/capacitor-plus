@@ -70,6 +70,7 @@ describe('addSceneManifestIfNeeded', () => {
 
   it('adds the scene manifest when absent', async () => {
     writeFileSync(plistPath, PRE_UISCENE_INFO_PLIST);
+    writeFileSync(join(tmpDir.path, 'Main.storyboard'), '<?xml version="1.0" encoding="UTF-8"?>\n');
 
     await addSceneManifestIfNeeded(config);
 
@@ -84,8 +85,39 @@ describe('addSceneManifestIfNeeded', () => {
     expect(roleArray[0]['UISceneStoryboardFile']).toBe('Main');
   });
 
+  it('uses the configured storyboard name when the resource exists', async () => {
+    const customPlist = PRE_UISCENE_INFO_PLIST.replace('<string>Main</string>', '<string>Launch</string>');
+    writeFileSync(plistPath, customPlist);
+    writeFileSync(join(tmpDir.path, 'Launch.storyboard'), '<?xml version="1.0" encoding="UTF-8"?>\n');
+
+    await addSceneManifestIfNeeded(config);
+
+    const parsed = parse(readFileSync(plistPath, 'utf-8')) as PlistObject;
+    const manifest = parsed['UIApplicationSceneManifest'] as PlistObject;
+    const configs = manifest['UISceneConfigurations'] as PlistObject;
+    const roleArray = configs['UIWindowSceneSessionRoleApplication'] as PlistObject[];
+    expect(roleArray[0]['UISceneStoryboardFile']).toBe('Launch');
+  });
+
+  it('omits UISceneStoryboardFile when the project has no storyboard resource', async () => {
+    const codeOnlyPlist = PRE_UISCENE_INFO_PLIST.replace(
+      '  <key>UIMainStoryboardFile</key>\n  <string>Main</string>\n',
+      '',
+    );
+    writeFileSync(plistPath, codeOnlyPlist);
+
+    await addSceneManifestIfNeeded(config);
+
+    const parsed = parse(readFileSync(plistPath, 'utf-8')) as PlistObject;
+    const manifest = parsed['UIApplicationSceneManifest'] as PlistObject;
+    const configs = manifest['UISceneConfigurations'] as PlistObject;
+    const roleArray = configs['UIWindowSceneSessionRoleApplication'] as PlistObject[];
+    expect(roleArray[0]['UISceneStoryboardFile']).toBeUndefined();
+  });
+
   it('preserves sibling keys', async () => {
     writeFileSync(plistPath, PRE_UISCENE_INFO_PLIST);
+    writeFileSync(join(tmpDir.path, 'Main.storyboard'), '<?xml version="1.0" encoding="UTF-8"?>\n');
 
     await addSceneManifestIfNeeded(config);
 
@@ -110,6 +142,7 @@ describe('addSceneManifestIfNeeded', () => {
 
   it('is idempotent across repeated runs', async () => {
     writeFileSync(plistPath, PRE_UISCENE_INFO_PLIST);
+    writeFileSync(join(tmpDir.path, 'Main.storyboard'), '<?xml version="1.0" encoding="UTF-8"?>\n');
 
     await addSceneManifestIfNeeded(config);
     const firstOutput = readFileSync(plistPath, 'utf-8');

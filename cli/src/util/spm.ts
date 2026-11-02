@@ -268,16 +268,23 @@ export async function addSceneManifestIfNeeded(config: Config): Promise<void> {
     return;
   }
 
+  const sceneConfiguration: PlistObject = {
+    UISceneConfigurationName: 'Default Configuration',
+    UISceneDelegateClassName: '$(PRODUCT_MODULE_NAME).SceneDelegate',
+  };
+
+  const mainStoryboard = entries['UIMainStoryboardFile'];
+  if (typeof mainStoryboard === 'string' && mainStoryboard.trim() !== '') {
+    const storyboardPath = resolve(config.ios.nativeTargetDirAbs, `${mainStoryboard}.storyboard`);
+    if (existsSync(storyboardPath)) {
+      sceneConfiguration['UISceneStoryboardFile'] = mainStoryboard;
+    }
+  }
+
   entries['UIApplicationSceneManifest'] = {
     UIApplicationSupportsMultipleScenes: false,
     UISceneConfigurations: {
-      UIWindowSceneSessionRoleApplication: [
-        {
-          UISceneConfigurationName: 'Default Configuration',
-          UISceneDelegateClassName: '$(PRODUCT_MODULE_NAME).SceneDelegate',
-          UISceneStoryboardFile: 'Main',
-        },
-      ],
+      UIWindowSceneSessionRoleApplication: [sceneConfiguration],
     },
   };
 

@@ -397,7 +397,16 @@ public class Bridge {
         // The proxy returns a remote body at the app origin, so block it before plugins can allow it.
         String path = url.getPath();
         if (path != null && path.startsWith(CAPACITOR_HTTP_INTERCEPTOR_START)) {
-            return true;
+            Uri appUri = Uri.parse(appUrl);
+            if (
+                url.getHost() != null &&
+                appUri.getHost() != null &&
+                url.getHost().equals(appUri.getHost()) &&
+                url.getScheme() != null &&
+                url.getScheme().equals(appUri.getScheme())
+            ) {
+                return true;
+            }
         }
 
         /*

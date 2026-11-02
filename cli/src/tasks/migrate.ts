@@ -89,6 +89,9 @@ let installFailed = false;
 let scriptsBlocked = false;
 
 export async function migrateCommand(config: Config, noprompt: boolean, packagemanager: string): Promise<void> {
+  installFailed = false;
+  scriptsBlocked = false;
+
   if (config === null) {
     fatal('Config data missing');
   }

@@ -203,7 +203,7 @@ public class SystemBars extends Plugin {
             return;
         }
 
-        View view = getActivity().getWindow().getDecorView();
+        View view = (View) getBridge().getWebView().getParent();
 
         ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
             boolean shouldPassthroughInsets = getWebViewMajorVersion() >= WEBVIEW_VERSION_WITH_SAFE_AREA_FIX && hasViewportCover;

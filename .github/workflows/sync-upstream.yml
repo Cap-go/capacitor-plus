@@ -187,6 +187,8 @@ jobs:
             if git merge upstream-pr-$PR_NUMBER --no-edit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR"; then
               echo "Merge successful!"
 
+              bash .github/scripts/preserve-fork-changelog.sh
+
               # Run formatter to ensure lint passes
               echo "Running formatter..."
               bun run fmt || echo "Formatter had some issues, continuing..."
@@ -250,6 +252,8 @@ jobs:
                 git branch -D upstream-pr-$PR_NUMBER 2>/dev/null || true
                 continue
               fi
+
+              bash .github/scripts/preserve-fork-changelog.sh
 
               git push origin "$SYNC_BRANCH" --force
 
@@ -353,6 +357,8 @@ jobs:
 
           # Merge upstream changes
           if git merge upstream/main --no-edit -m "chore: sync with upstream main branch"; then
+            bash .github/scripts/preserve-fork-changelog.sh
+
             # Run formatter to ensure lint passes
             echo "Running formatter..."
             bun run fmt || echo "Formatter had some issues, continuing..."
@@ -396,6 +402,8 @@ jobs:
                 "The scheduled sync of upstream main could not be resolved with Git's upstream-preferred strategy. Manual resolution is required." || true
               exit 1
             fi
+
+            bash .github/scripts/preserve-fork-changelog.sh
 
             git push origin "$SYNC_BRANCH" --force
 
@@ -491,6 +499,8 @@ jobs:
 
           # Merge the PR commits
           if git merge upstream-pr-$PR_NUMBER --no-edit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR"; then
+            bash .github/scripts/preserve-fork-changelog.sh
+
             # Run formatter to ensure lint passes
             echo "Running formatter..."
             bun run fmt || echo "Formatter had some issues, continuing..."
@@ -541,6 +551,8 @@ jobs:
                 "The sync of upstream PR #$PR_NUMBER could not be resolved with Git's upstream-preferred strategy. Manual resolution is required." || true
               exit 1
             fi
+
+            bash .github/scripts/preserve-fork-changelog.sh
 
             git push origin "$SYNC_BRANCH" --force
 

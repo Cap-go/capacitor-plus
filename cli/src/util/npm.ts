@@ -39,10 +39,15 @@ export async function isNpmProject(rootDir: string): Promise<boolean> {
     // no package.json, or an unreadable one: fall through to the lockfiles
   }
 
+  const managers = new Set<string>();
   for (const [lockfile, manager] of LOCKFILE_MANAGERS) {
     if (existsSync(join(rootDir, lockfile))) {
-      return manager === 'npm';
+      managers.add(manager);
     }
+  }
+
+  if (managers.size === 1) {
+    return managers.has('npm');
   }
 
   return false;
