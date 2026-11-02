@@ -102,11 +102,9 @@ export async function getBlockedInstallScripts(
     return [];
   }
 
-  const commandOutput = await getCommandOutput(
-    'npm',
-    ['install-scripts', 'ls', '--json', '--all=false'],
-    { cwd: rootDir },
-  );
+  const commandOutput = await getCommandOutput('npm', ['install-scripts', 'ls', '--json', '--all=false'], {
+    cwd: rootDir,
+  });
 
   if (commandOutput === null) {
     output.write(
