@@ -152,9 +152,7 @@ describe('hasBlockedCapacitorScripts', () => {
   it('is true when a Capacitor package is among the blocked ones', () => {
     expect(hasBlockedCapacitorScripts(parseBlockedInstallScripts(TWO_BLOCKED))).toBe(true);
     expect(hasBlockedCapacitorScripts(parseBlockedInstallScripts(ONE_DENIED))).toBe(true);
-    expect(
-      hasBlockedCapacitorScripts([{ name: '@capacitor-plus/core', version: '8.6.0' }]),
-    ).toBe(true);
+    expect(hasBlockedCapacitorScripts([{ name: '@capacitor-plus/core', version: '8.6.0' }])).toBe(true);
   });
 
   it('is false when only unrelated packages are blocked', () => {

@@ -39,3 +39,15 @@
   public <methods>;
   public <fields>;
 }
+
+# CapacitorHttp loads these via reflection when an SSL pinning plugin is present.
+-keep class io.ionic.sslpinning.SSLPinning {
+  <init>();
+  public javax.net.ssl.SSLSocketFactory getSSLSocketFactory(com.getcapacitor.Bridge);
+  public boolean isDomainExcluded(com.getcapacitor.Bridge, java.net.URL);
+}
+-keep class com.getcapacitor.community.sslpinning.SSLPinning {
+  <init>();
+  public javax.net.ssl.SSLSocketFactory getSSLSocketFactory(com.getcapacitor.Bridge);
+  public boolean isDomainExcluded(com.getcapacitor.Bridge, java.net.URL);
+}

@@ -393,20 +393,19 @@ public class Bridge {
         return 0;
     }
 
+    public static boolean shouldBlockHttpInterceptorNavigation(Uri url, Uri appOrigin) {
+        String path = url.getPath();
+        if (path == null || !path.startsWith(CAPACITOR_HTTP_INTERCEPTOR_START)) {
+            return false;
+        }
+        return appOrigin.getHost().equals(url.getHost()) && url.getScheme().equals(appOrigin.getScheme());
+    }
+
     public boolean launchIntent(Uri url) {
         // The proxy returns a remote body at the app origin, so block it before plugins can allow it.
-        String path = url.getPath();
-        if (path != null && path.startsWith(CAPACITOR_HTTP_INTERCEPTOR_START)) {
-            Uri appUri = Uri.parse(appUrl);
-            if (
-                url.getHost() != null &&
-                appUri.getHost() != null &&
-                url.getHost().equals(appUri.getHost()) &&
-                url.getScheme() != null &&
-                url.getScheme().equals(appUri.getScheme())
-            ) {
-                return true;
-            }
+        Uri appUri = Uri.parse(appUrl);
+        if (shouldBlockHttpInterceptorNavigation(url, appUri)) {
+            return true;
         }
 
         /*
@@ -426,7 +425,6 @@ public class Bridge {
             return false;
         }
 
-        Uri appUri = Uri.parse(appUrl);
         if (
             !(appUri.getHost().equals(url.getHost()) && url.getScheme().equals(appUri.getScheme())) &&
             !appAllowNavigationMask.matches(url.getHost())

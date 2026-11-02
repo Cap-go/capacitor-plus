@@ -21,7 +21,7 @@ public class SystemBarsTest {
 
     @Test
     public void showWithEmptyBarShowsSystemBars() throws Exception {
-        WindowInsetsControllerCompat controller = invokeSetHidden("");
+        WindowInsetsControllerCompat controller = invokeShow("");
 
         verify(controller).show(WindowInsetsCompat.Type.systemBars());
         verify(controller, never()).show(WindowInsetsCompat.Type.statusBars());
@@ -30,7 +30,7 @@ public class SystemBarsTest {
 
     @Test
     public void showWithStatusBarShowsOnlyStatusBars() throws Exception {
-        WindowInsetsControllerCompat controller = invokeSetHidden("StatusBar");
+        WindowInsetsControllerCompat controller = invokeShow("StatusBar");
 
         verify(controller).show(WindowInsetsCompat.Type.statusBars());
         verify(controller, never()).show(WindowInsetsCompat.Type.systemBars());
@@ -39,14 +39,14 @@ public class SystemBarsTest {
 
     @Test
     public void showWithNavigationBarShowsOnlyNavigationBars() throws Exception {
-        WindowInsetsControllerCompat controller = invokeSetHidden("NavigationBar");
+        WindowInsetsControllerCompat controller = invokeShow("NavigationBar");
 
         verify(controller).show(WindowInsetsCompat.Type.navigationBars());
         verify(controller, never()).show(WindowInsetsCompat.Type.systemBars());
         verify(controller, never()).show(WindowInsetsCompat.Type.statusBars());
     }
 
-    private WindowInsetsControllerCompat invokeSetHidden(String bar) throws Exception {
+    private WindowInsetsControllerCompat invokeShow(String bar) throws Exception {
         SystemBars plugin = new SystemBars();
         Bridge bridge = mock(Bridge.class);
         AppCompatActivity activity = mock(AppCompatActivity.class);

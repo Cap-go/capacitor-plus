@@ -58,7 +58,6 @@ public class SystemBars extends Plugin {
 
     private String insetsHandling = INSETS_HANDLING_CSS;
     private boolean hasViewportCover = false;
-    private boolean navBarVisible = true;
 
     private String currentStatusBarStyle = STYLE_DEFAULT;
     private String currentGestureBarStyle = STYLE_DEFAULT;
@@ -203,7 +202,7 @@ public class SystemBars extends Plugin {
             return;
         }
 
-        View view = (View) getBridge().getWebView().getParent();
+        View view = getActivity().getWindow().getDecorView();
 
         ViewCompat.setOnApplyWindowInsetsListener(view, (v, insets) -> {
             boolean shouldPassthroughInsets = getWebViewMajorVersion() >= WEBVIEW_VERSION_WITH_SAFE_AREA_FIX && hasViewportCover;
@@ -327,7 +326,6 @@ public class SystemBars extends Plugin {
                 windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.statusBars());
             } else if (bar.equals(BAR_GESTURE_BAR)) {
                 windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.navigationBars());
-                navBarVisible = false;
             }
             return;
         }
@@ -338,7 +336,6 @@ public class SystemBars extends Plugin {
             windowInsetsControllerCompat.show(WindowInsetsCompat.Type.statusBars());
         } else if (bar.equals(BAR_GESTURE_BAR)) {
             windowInsetsControllerCompat.show(WindowInsetsCompat.Type.navigationBars());
-            navBarVisible = true;
         }
     }
 

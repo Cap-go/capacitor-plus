@@ -39,15 +39,10 @@ export async function isNpmProject(rootDir: string): Promise<boolean> {
     // no package.json, or an unreadable one: fall through to the lockfiles
   }
 
-  const managers = new Set<string>();
   for (const [lockfile, manager] of LOCKFILE_MANAGERS) {
     if (existsSync(join(rootDir, lockfile))) {
-      managers.add(manager);
+      return manager === 'npm';
     }
-  }
-
-  if (managers.size === 1) {
-    return managers.has('npm');
   }
 
   return false;
@@ -122,7 +117,7 @@ export function parseBlockedInstallScripts(commandOutput: string | null): Blocke
  * scripts say anything about whether the migration finished.
  */
 export function hasBlockedCapacitorScripts(blocked: BlockedInstallScript[]): boolean {
-  return blocked.some(({ name }) => name.startsWith('@capacitor/') || name.startsWith('@capacitor-plus/'));
+  return blocked.some(({ name }) => name.startsWith('@capacitor-plus/') || name.startsWith('@capacitor/'));
 }
 
 export function logBlockedInstallScripts(blocked: BlockedInstallScript[]): void {

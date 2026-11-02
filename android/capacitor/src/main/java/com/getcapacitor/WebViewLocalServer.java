@@ -782,9 +782,7 @@ public class WebViewLocalServer {
         }
     }
 
-    /**
-     * An InputStream wrapper that limits the number of bytes that can be read.
-     */
+    // For L and above.
     static class BoundedInputStream extends InputStream {
 
         private final InputStream in;
