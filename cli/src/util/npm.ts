@@ -1,4 +1,4 @@
-import { existsSync, readJSON } from 'fs-extra';
+import { existsSync, readJSON, readJSONSync } from 'fs-extra';
 import { join } from 'path';
 
 import c from '../colors';
@@ -20,6 +20,38 @@ const LOCKFILE_MANAGERS: readonly [string, string][] = [
   ['bun.lockb', 'bun'],
 ];
 
+function detectLockfileManagers(rootDir: string): Set<string> {
+  const managers = new Set<string>();
+  for (const [lockfile, manager] of LOCKFILE_MANAGERS) {
+    if (existsSync(join(rootDir, lockfile))) {
+      managers.add(manager);
+    }
+  }
+  return managers;
+}
+
+export function logAmbiguousLockfiles(rootDir: string): void {
+  const managers = detectLockfileManagers(rootDir);
+  if (managers.size <= 1) {
+    return;
+  }
+
+  try {
+    const { packageManager } = readJSONSync(join(rootDir, 'package.json'));
+    if (typeof packageManager === 'string') {
+      return;
+    }
+  } catch (e) {
+    // fall through
+  }
+
+  output.write(
+    `${c.strong('Ambiguous package manager:')}\n\n` +
+      `  Multiple lockfiles are present (${[...managers].join(', ')}), so blocked install scripts cannot be checked reliably.\n` +
+      `  Remove stale lockfiles or set ${c.input('packageManager')} in package.json.\n\n`,
+  );
+}
+
 /**
  * `npm install-scripts ls` compares the tree against npm's own `allowScripts` map, which yarn and
  * pnpm never write. It therefore reports every install script in a yarn or pnpm project as
@@ -39,13 +71,7 @@ export async function isNpmProject(rootDir: string): Promise<boolean> {
     // no package.json, or an unreadable one: fall through to the lockfiles
   }
 
-  const managers = new Set<string>();
-  for (const [lockfile, manager] of LOCKFILE_MANAGERS) {
-    if (existsSync(join(rootDir, lockfile))) {
-      managers.add(manager);
-    }
-  }
-
+  const managers = detectLockfileManagers(rootDir);
   if (managers.size === 1) {
     return managers.has('npm');
   }
@@ -66,6 +92,10 @@ export async function getBlockedInstallScripts(
   rootDir: string,
   packageManager?: string,
 ): Promise<BlockedInstallScript[]> {
+  if (packageManager === undefined) {
+    logAmbiguousLockfiles(rootDir);
+  }
+
   const isNpm = packageManager === undefined ? await isNpmProject(rootDir) : packageManager.toLowerCase() === 'npm';
 
   if (!isNpm) {

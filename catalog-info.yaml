@@ -7,8 +7,10 @@ metadata:
   annotations:
     github.com/project-slug: Cap-go/capacitor-plus
   links:
+    - url: https://github.com/Cap-go/capacitor-plus/blob/plus/README.md/
+      title: Capacitor+ installation
     - url: https://capacitorjs.com/docs/
-      title: Documentation
+      title: Upstream Capacitor documentation
   tags: [capacitor, mobile, typescript, swift, java]
 spec:
   owner: group:default/mobile-ecosystem
@@ -21,7 +23,7 @@ metadata:
   description: JavaScript runtime and plugin bridge.
   annotations:
     github.com/project-slug: Cap-go/capacitor-plus
-    backstage.io/source-location: url:https://github.com/Cap-go/capacitor-plus/tree/plus/core
+    backstage.io/source-location: url:https://github.com/Cap-go/capacitor-plus/tree/plus/core/
   tags: [typescript, npm-package]
 spec:
   type: library
@@ -37,7 +39,7 @@ metadata:
   description: CLI for creating, syncing, building, and running Capacitor apps.
   annotations:
     github.com/project-slug: Cap-go/capacitor-plus
-    backstage.io/source-location: url:https://github.com/Cap-go/capacitor-plus/tree/plus/cli
+    backstage.io/source-location: url:https://github.com/Cap-go/capacitor-plus/tree/plus/cli/
   tags: [typescript, cli, npm-package]
 spec:
   type: tool
@@ -53,7 +55,7 @@ metadata:
   description: Android native runtime for Capacitor.
   annotations:
     github.com/project-slug: Cap-go/capacitor-plus
-    backstage.io/source-location: url:https://github.com/Cap-go/capacitor-plus/tree/plus/android
+    backstage.io/source-location: url:https://github.com/Cap-go/capacitor-plus/tree/plus/android/
   tags: [java, android, npm-package]
 spec:
   type: library
@@ -70,7 +72,7 @@ metadata:
   description: iOS native runtime for Capacitor.
   annotations:
     github.com/project-slug: Cap-go/capacitor-plus
-    backstage.io/source-location: url:https://github.com/Cap-go/capacitor-plus/tree/plus/ios
+    backstage.io/source-location: url:https://github.com/Cap-go/capacitor-plus/tree/plus/ios/
   tags: [swift, ios, npm-package]
 spec:
   type: library

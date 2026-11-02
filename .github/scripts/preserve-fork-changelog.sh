@@ -7,7 +7,8 @@ if [ ! -f CHANGELOG.md ]; then
 fi
 
 git show plus:CHANGELOG.md > /tmp/plus-changelog.md
-node scripts/preserve-fork-changelog.mjs CHANGELOG.md /tmp/plus-changelog.md
+git show plus:scripts/preserve-fork-changelog.mjs > /tmp/preserve-fork-changelog.mjs
+node /tmp/preserve-fork-changelog.mjs CHANGELOG.md /tmp/plus-changelog.md
 
 if ! git diff --quiet CHANGELOG.md; then
   git add CHANGELOG.md
