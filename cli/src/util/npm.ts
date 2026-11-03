@@ -102,6 +102,12 @@ export async function getBlockedInstallScripts(
     return [];
   }
 
+  const npmVersionOutput = await getCommandOutput('npm', ['--version'], { cwd: rootDir });
+  const npmMajor = npmVersionOutput ? parseInt(npmVersionOutput.split('.')[0], 10) : NaN;
+  if (!Number.isFinite(npmMajor) || npmMajor < 12) {
+    return [];
+  }
+
   const commandOutput = await getCommandOutput('npm', ['install-scripts', 'ls', '--json', '--all=false'], {
     cwd: rootDir,
   });

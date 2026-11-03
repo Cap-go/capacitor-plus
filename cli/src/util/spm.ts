@@ -310,13 +310,8 @@ function syncSceneStoryboardInManifest(entries: MutablePlistObject, nativeTarget
   let changed = false;
 
   for (const role of roleArray) {
-    if (storyboard) {
-      if (role['UISceneStoryboardFile'] !== storyboard) {
-        role['UISceneStoryboardFile'] = storyboard;
-        changed = true;
-      }
-    } else if (role['UISceneStoryboardFile'] !== undefined) {
-      delete role['UISceneStoryboardFile'];
+    if (storyboard && role['UISceneStoryboardFile'] === undefined) {
+      role['UISceneStoryboardFile'] = storyboard;
       changed = true;
     }
   }

@@ -46,6 +46,23 @@ public class HttpInterceptorNavigationTest {
         );
     }
 
+    @Test
+    public void interceptorBlockRequiresMatchingPort() {
+        Uri appOrigin = Uri.parse("https://localhost:8100");
+        assertFalse(
+            Bridge.shouldBlockHttpInterceptorNavigation(
+                Uri.parse("https://localhost:3000" + Bridge.CAPACITOR_HTTP_INTERCEPTOR_START + "/page"),
+                appOrigin
+            )
+        );
+        assertTrue(
+            Bridge.shouldBlockHttpInterceptorNavigation(
+                Uri.parse("https://localhost:8100" + Bridge.CAPACITOR_HTTP_INTERCEPTOR_START + "/page"),
+                appOrigin
+            )
+        );
+    }
+
     /** A plugin registered by the test host returns "allow" for the proxy path; it must not win. */
     @Test
     public void blocksNavigationToInterceptorPath() {

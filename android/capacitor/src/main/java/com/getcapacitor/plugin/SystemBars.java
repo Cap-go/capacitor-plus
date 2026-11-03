@@ -99,7 +99,7 @@ public class SystemBars extends Plugin {
                     bridge
                         .getWebView()
                         .evaluateJavascript(viewportMetaJSFunction, (res) -> {
-                            hasViewportCover = res.equals("true");
+                            hasViewportCover = "true".equals(res);
 
                             // Request new execution tree of `setOnApplyWindowInsetsListener`
                             bridge.getWebView().requestApplyInsets();

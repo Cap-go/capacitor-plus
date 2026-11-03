@@ -180,6 +180,25 @@ describe('addSceneManifestIfNeeded', () => {
     expect(roleArray[0]['UISceneStoryboardFile']).toBeUndefined();
   });
 
+  it('preserves an existing scene-specific storyboard file', async () => {
+    const customScenePlist = POST_UISCENE_INFO_PLIST.replace(
+      '<string>Existing Configuration</string>',
+      `<string>Existing Configuration</string>
+          <key>UISceneStoryboardFile</key>
+          <string>CustomScene</string>`,
+    );
+    writeFileSync(plistPath, customScenePlist);
+    writeFileSync(join(tmpDir.path, 'Main.storyboard'), '<?xml version="1.0" encoding="UTF-8"?>\n');
+
+    await addSceneManifestIfNeeded(config);
+
+    const parsed = parse(readFileSync(plistPath, 'utf-8')) as PlistObject;
+    const manifest = parsed['UIApplicationSceneManifest'] as PlistObject;
+    const configs = manifest['UISceneConfigurations'] as PlistObject;
+    const roleArray = configs['UIWindowSceneSessionRoleApplication'] as PlistObject[];
+    expect(roleArray[0]['UISceneStoryboardFile']).toBe('CustomScene');
+  });
+
   it('is idempotent across repeated runs', async () => {
     writeFileSync(plistPath, PRE_UISCENE_INFO_PLIST);
     writeFileSync(join(tmpDir.path, 'Main.storyboard'), '<?xml version="1.0" encoding="UTF-8"?>\n');
