@@ -51,7 +51,10 @@ const VERSION_HEADER = /^#{1,2} \[([^\]]+)\]/;
 const RELEASE_DATE_SUFFIX = /\((\d{4}-\d{2}-\d{2})\)\s*$/;
 
 function parseVersionParts(versionLabel) {
-  return versionLabel.replace(/^v/i, '').split('.').map((part) => parseInt(part, 10) || 0);
+  return versionLabel
+    .replace(/^v/i, '')
+    .split('.')
+    .map((part) => parseInt(part, 10) || 0);
 }
 
 function sectionSortKey(section) {
