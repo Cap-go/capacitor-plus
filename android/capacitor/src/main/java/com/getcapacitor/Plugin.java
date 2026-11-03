@@ -486,10 +486,7 @@ public class Plugin {
         }
 
         if (handle.getPluginAnnotation() == null) {
-            String error = String.format(
-                "Cannot request permissions for plugin %s without a @CapacitorPlugin annotation",
-                handle.getId()
-            );
+            String error = String.format("Cannot request permissions for plugin %s without a @CapacitorPlugin annotation", handle.getId());
             Logger.error(error);
             call.reject(error);
             return;
