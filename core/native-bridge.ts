@@ -438,13 +438,6 @@ const initBridge = (w: any): void => {
 
     const platform = getPlatformId(win);
 
-    if (platform == 'android' && typeof win.CapacitorSystemBarsAndroidInterface !== 'undefined') {
-      // add DOM ready listener for System Bars
-      document.addEventListener('DOMContentLoaded', function () {
-        win.CapacitorSystemBarsAndroidInterface.onDOMReady();
-      });
-    }
-
     if (platform == 'android' || platform == 'ios') {
       // patch document.cookie on Android/iOS
       win.CapacitorCookiesDescriptor =
@@ -455,15 +448,7 @@ const initBridge = (w: any): void => {
 
       // check if capacitor cookies is disabled before patching
       if (platform === 'ios') {
-        // Use prompt to synchronously get capacitor cookies config.
-        // https://stackoverflow.com/questions/29249132/wkwebview-complex-communication-between-javascript-native-code/49474323#49474323
-
-        const payload = {
-          type: 'CapacitorCookies.isEnabled',
-        };
-
-        const isCookiesEnabled = prompt(JSON.stringify(payload));
-        if (isCookiesEnabled === 'true') {
+        if (win.CapacitorNativeConfig?.cookiesEnabled === true) {
           doPatchCookies = true;
         }
       } else if (typeof win.CapacitorCookiesAndroidInterface !== 'undefined') {
@@ -536,15 +521,7 @@ const initBridge = (w: any): void => {
 
       // check if capacitor http is disabled before patching
       if (platform === 'ios') {
-        // Use prompt to synchronously get capacitor http config.
-        // https://stackoverflow.com/questions/29249132/wkwebview-complex-communication-between-javascript-native-code/49474323#49474323
-
-        const payload = {
-          type: 'CapacitorHttp',
-        };
-
-        const isHttpEnabled = prompt(JSON.stringify(payload));
-        if (isHttpEnabled === 'true') {
+        if (win.CapacitorNativeConfig?.httpEnabled === true) {
           doPatchHttp = true;
         }
       } else if (typeof win.CapacitorHttpAndroidInterface !== 'undefined') {
