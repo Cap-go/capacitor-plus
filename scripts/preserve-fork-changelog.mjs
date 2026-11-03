@@ -47,6 +47,46 @@ function isForkSection(section) {
   return FORK_SECTION_HEADER.test(section.header);
 }
 
+const VERSION_HEADER = /^#{1,2} \[([^\]]+)\]/;
+const RELEASE_DATE_SUFFIX = /\((\d{4}-\d{2}-\d{2})\)\s*$/;
+
+function parseVersionParts(versionLabel) {
+  return versionLabel.replace(/^v/i, '').split('.').map((part) => parseInt(part, 10) || 0);
+}
+
+function sectionSortKey(section) {
+  const versionMatch = section.header.match(VERSION_HEADER);
+  if (!versionMatch) {
+    return { version: [0], date: '0000-00-00' };
+  }
+
+  const dateMatch = section.header.match(RELEASE_DATE_SUFFIX);
+  return {
+    version: parseVersionParts(versionMatch[1]),
+    date: dateMatch ? dateMatch[1] : '0000-00-00',
+  };
+}
+
+function compareReleaseSections(a, b) {
+  const left = sectionSortKey(a);
+  const right = sectionSortKey(b);
+  const maxLength = Math.max(left.version.length, right.version.length);
+
+  for (let index = 0; index < maxLength; index += 1) {
+    const leftPart = left.version[index] ?? 0;
+    const rightPart = right.version[index] ?? 0;
+    if (leftPart !== rightPart) {
+      return rightPart - leftPart;
+    }
+  }
+
+  if (left.date !== right.date) {
+    return right.date.localeCompare(left.date);
+  }
+
+  return 0;
+}
+
 function preserveForkChangelog(syncedPath, forkPath) {
   const synced = readFileSync(syncedPath, 'utf8');
   const fork = readFileSync(forkPath, 'utf8');
@@ -54,16 +94,24 @@ function preserveForkChangelog(syncedPath, forkPath) {
   const forkParsed = splitSections(fork);
   const syncedParsed = splitSections(synced);
 
-  const forkSections = forkParsed.sections.filter(isForkSection).map(sectionText);
-  const upstreamSections = syncedParsed.sections.filter((section) => !isForkSection(section)).map(sectionText);
+  const sectionsByHeader = new Map();
+  for (const section of syncedParsed.sections) {
+    sectionsByHeader.set(section.header, section);
+  }
 
-  if (forkSections.length === 0) {
+  for (const section of forkParsed.sections.filter(isForkSection)) {
+    if (!sectionsByHeader.has(section.header)) {
+      sectionsByHeader.set(section.header, section);
+    }
+  }
+
+  const mergedSections = [...sectionsByHeader.values()].sort(compareReleaseSections).map(sectionText);
+
+  if (mergedSections.length === 0) {
     return synced;
   }
 
-  const blocks = [syncedParsed.header.trimEnd(), ...forkSections, ...upstreamSections].filter(
-    (block) => block.length > 0,
-  );
+  const blocks = [syncedParsed.header.trimEnd(), ...mergedSections].filter((block) => block.length > 0);
 
   return `${blocks.join('\n\n')}\n`;
 }
