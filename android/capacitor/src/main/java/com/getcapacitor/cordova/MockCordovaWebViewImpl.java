@@ -70,14 +70,12 @@ public class MockCordovaWebViewImpl implements CordovaWebView {
 
         @Override
         public void onNativeToJsMessageAvailable(final NativeToJsMessageQueue queue) {
-            cordova
-                .getActivity()
-                .runOnUiThread(() -> {
-                    String js = queue.popAndEncodeAsJs();
-                    if (js != null) {
-                        webView.evaluateJavascript(js, null);
-                    }
-                });
+            cordova.getActivity().runOnUiThread(() -> {
+                String js = queue.popAndEncodeAsJs();
+                if (js != null) {
+                    webView.evaluateJavascript(js, null);
+                }
+            });
         }
     }
 
@@ -192,7 +190,14 @@ public class MockCordovaWebViewImpl implements CordovaWebView {
     }
 
     public void triggerDocumentEvent(final String eventName) {
-        eval("window.Capacitor.triggerEvent('" + eventName + "', 'document');", (s) -> {});
+        // Pages served without the bridge (e.g. server.errorPath) have no window.Capacitor; drop the event rather than throw
+        eval(
+            "if (typeof window.Capacitor !== 'undefined' && typeof window.Capacitor.triggerEvent === 'function') {" +
+                "window.Capacitor.triggerEvent('" +
+                eventName +
+                "', 'document'); }",
+            (s) -> {}
+        );
     }
 
     @Override

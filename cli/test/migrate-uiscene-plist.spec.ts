@@ -81,7 +81,7 @@ describe('addSceneManifestIfNeeded', () => {
     expect(roleArray).toHaveLength(1);
     expect(roleArray[0]['UISceneConfigurationName']).toBe('Default Configuration');
     expect(roleArray[0]['UISceneDelegateClassName']).toBe('$(PRODUCT_MODULE_NAME).SceneDelegate');
-    expect(roleArray[0]['UISceneStoryboardFile']).toBeUndefined();
+    expect(roleArray[0]['UISceneStoryboardFile']).toBe('Main');
   });
 
   it('preserves sibling keys', async () => {
