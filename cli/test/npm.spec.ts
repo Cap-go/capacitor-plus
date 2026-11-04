@@ -157,6 +157,14 @@ describe('isNpmProject', () => {
   it('is not npm for a workspace package, which carries no lockfile of its own', async () => {
     expect(await isNpmProject(project({ 'package.json': '{"name":"myapp"}' }))).toBe(false);
   });
+
+  it('treats package-lock=false in .npmrc as an npm project', async () => {
+    const dir = project({
+      'package.json': '{"name":"myapp"}',
+      '.npmrc': 'package-lock=false\n',
+    });
+    expect(await isNpmProject(dir)).toBe(true);
+  });
 });
 
 describe('getBlockedInstallScripts', () => {

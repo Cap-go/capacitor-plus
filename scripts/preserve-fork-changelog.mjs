@@ -97,7 +97,7 @@ function compareReleaseSections(a, b) {
     if (right.prerelease === null) {
       return 1;
     }
-    return right.prerelease.localeCompare(left.prerelease);
+    return right.prerelease.localeCompare(left.prerelease, undefined, { numeric: true });
   }
 
   if (left.date !== right.date) {

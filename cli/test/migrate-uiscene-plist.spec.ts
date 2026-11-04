@@ -197,6 +197,11 @@ describe('addSceneManifestIfNeeded', () => {
 
   it('preserves an existing scene-specific storyboard file', async () => {
     const customScenePlist = POST_UISCENE_INFO_PLIST.replace(
+      '  <key>UIApplicationSceneManifest</key>',
+      `  <key>UIMainStoryboardFile</key>
+  <string>Main</string>
+  <key>UIApplicationSceneManifest</key>`,
+    ).replace(
       '<string>Existing Configuration</string>',
       `<string>Existing Configuration</string>
           <key>UISceneStoryboardFile</key>

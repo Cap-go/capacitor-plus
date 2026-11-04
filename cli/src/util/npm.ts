@@ -1,4 +1,4 @@
-import { existsSync, readJSON, readJSONSync } from 'fs-extra';
+import { existsSync, readFileSync, readJSON, readJSONSync } from 'fs-extra';
 import { join } from 'path';
 
 import c from '../colors';
@@ -28,6 +28,30 @@ function detectLockfileManagers(rootDir: string): Set<string> {
     }
   }
   return managers;
+}
+
+function hasNpmLockfileDisabled(rootDir: string): boolean {
+  const npmrcPath = join(rootDir, '.npmrc');
+  if (!existsSync(npmrcPath)) {
+    return false;
+  }
+
+  try {
+    for (const line of readFileSync(npmrcPath, 'utf-8').split('\n')) {
+      const trimmed = line.trim();
+      if (trimmed === '' || trimmed.startsWith('#') || trimmed.startsWith(';')) {
+        continue;
+      }
+      const match = trimmed.match(/^package-lock\s*=\s*(false|0)\s*$/i);
+      if (match) {
+        return true;
+      }
+    }
+  } catch (e) {
+    return false;
+  }
+
+  return false;
 }
 
 export function logAmbiguousLockfiles(rootDir: string): void {
@@ -74,6 +98,13 @@ export async function isNpmProject(rootDir: string): Promise<boolean> {
   const managers = detectLockfileManagers(rootDir);
   if (managers.size === 1) {
     return managers.has('npm');
+  }
+  if (managers.size > 1) {
+    return false;
+  }
+
+  if (existsSync(join(rootDir, 'package.json')) && hasNpmLockfileDisabled(rootDir)) {
+    return true;
   }
 
   return false;
