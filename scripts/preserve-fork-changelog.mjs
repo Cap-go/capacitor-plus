@@ -50,22 +50,29 @@ function isForkSection(section) {
 const VERSION_HEADER = /^#{1,2} \[([^\]]+)\]/;
 const RELEASE_DATE_SUFFIX = /\((\d{4}-\d{2}-\d{2})\)\s*$/;
 
-function parseVersionParts(versionLabel) {
-  return versionLabel
-    .replace(/^v/i, '')
-    .split('.')
-    .map((part) => parseInt(part, 10) || 0);
+function parseVersionLabel(versionLabel) {
+  const cleaned = versionLabel.replace(/^v/i, '');
+  const hyphenIndex = cleaned.indexOf('-');
+  const base = hyphenIndex === -1 ? cleaned : cleaned.slice(0, hyphenIndex);
+  const prerelease = hyphenIndex === -1 ? null : cleaned.slice(hyphenIndex + 1);
+
+  return {
+    version: base.split('.').map((part) => parseInt(part, 10) || 0),
+    prerelease,
+  };
 }
 
 function sectionSortKey(section) {
   const versionMatch = section.header.match(VERSION_HEADER);
   if (!versionMatch) {
-    return { version: [0], date: '0000-00-00' };
+    return { version: [0], prerelease: null, date: '0000-00-00' };
   }
 
   const dateMatch = section.header.match(RELEASE_DATE_SUFFIX);
+  const { version, prerelease } = parseVersionLabel(versionMatch[1]);
   return {
-    version: parseVersionParts(versionMatch[1]),
+    version,
+    prerelease,
     date: dateMatch ? dateMatch[1] : '0000-00-00',
   };
 }
@@ -81,6 +88,16 @@ function compareReleaseSections(a, b) {
     if (leftPart !== rightPart) {
       return rightPart - leftPart;
     }
+  }
+
+  if (left.prerelease !== right.prerelease) {
+    if (left.prerelease === null) {
+      return -1;
+    }
+    if (right.prerelease === null) {
+      return 1;
+    }
+    return right.prerelease.localeCompare(left.prerelease);
   }
 
   if (left.date !== right.date) {

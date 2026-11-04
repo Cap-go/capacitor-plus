@@ -262,19 +262,20 @@ export function hasSceneManifest(config: Config): boolean {
 }
 
 function storyboardResourceExists(nativeTargetDirAbs: string, storyboardName: string): boolean {
-  const directPath = resolve(nativeTargetDirAbs, `${storyboardName}.storyboard`);
-  if (existsSync(directPath)) {
-    return true;
-  }
+  const fileName = `${storyboardName}.storyboard`;
+  const stack = [nativeTargetDirAbs];
 
-  for (const entry of readdirSync(nativeTargetDirAbs, { withFileTypes: true })) {
-    if (!entry.isDirectory() || !entry.name.endsWith('.lproj')) {
-      continue;
-    }
+  while (stack.length > 0) {
+    const dir = stack.pop() as string;
 
-    const localizedPath = resolve(nativeTargetDirAbs, entry.name, `${storyboardName}.storyboard`);
-    if (existsSync(localizedPath)) {
-      return true;
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isFile() && entry.name === fileName) {
+        return true;
+      }
+
+      if (entry.isDirectory()) {
+        stack.push(resolve(dir, entry.name));
+      }
     }
   }
 

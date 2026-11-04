@@ -103,7 +103,15 @@ export async function getBlockedInstallScripts(
   }
 
   const npmVersionOutput = await getCommandOutput('npm', ['--version'], { cwd: rootDir });
-  const npmMajor = npmVersionOutput ? parseInt(npmVersionOutput.split('.')[0], 10) : NaN;
+  if (npmVersionOutput === null) {
+    output.write(
+      `${c.strong('Blocked install scripts:')}\n\n` +
+        `  Could not determine the npm version, so blocked install scripts were not checked.\n\n`,
+    );
+    return null;
+  }
+
+  const npmMajor = parseInt(npmVersionOutput.split('.')[0], 10);
   if (!Number.isFinite(npmMajor) || npmMajor < 12) {
     return [];
   }
