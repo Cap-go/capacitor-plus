@@ -1,20 +1,29 @@
 package com.getcapacitor.plugin;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import android.content.res.Resources;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.Window;
+import android.webkit.WebView;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.Bridge;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
 public class SystemBarsTest {
@@ -44,6 +53,53 @@ public class SystemBarsTest {
         verify(controller).show(WindowInsetsCompat.Type.navigationBars());
         verify(controller, never()).show(WindowInsetsCompat.Type.systemBars());
         verify(controller, never()).show(WindowInsetsCompat.Type.statusBars());
+    }
+
+    @Test
+    public void injectSafeAreaCSSUsesOriginalSystemBarInsets() throws Exception {
+        SystemBars plugin = new SystemBars();
+        Bridge bridge = mock(Bridge.class);
+        AppCompatActivity activity = mock(AppCompatActivity.class);
+        Resources resources = mock(Resources.class);
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        displayMetrics.density = 2.0f;
+        WebView webView = mock(WebView.class);
+
+        when(bridge.getActivity()).thenReturn(activity);
+        when(activity.getResources()).thenReturn(resources);
+        when(resources.getDisplayMetrics()).thenReturn(displayMetrics);
+        when(bridge.getWebView()).thenReturn(webView);
+        doAnswer(invocation -> {
+            ((Runnable) invocation.getArgument(0)).run();
+            return null;
+        })
+            .when(bridge)
+            .executeOnMainThread(any(Runnable.class));
+
+        plugin.setBridge(bridge);
+
+        Field insetsHandlingField = SystemBars.class.getDeclaredField("insetsHandling");
+        insetsHandlingField.setAccessible(true);
+        insetsHandlingField.set(plugin, "css");
+
+        WindowInsetsCompat insets = new WindowInsetsCompat.Builder()
+            .setInsets(
+                WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(),
+                Insets.of(20, 40, 10, 30)
+            )
+            .build();
+
+        Method injectSafeAreaCSS = SystemBars.class.getDeclaredMethod("injectSafeAreaCSS", WindowInsetsCompat.class);
+        injectSafeAreaCSS.setAccessible(true);
+        injectSafeAreaCSS.invoke(plugin, insets);
+
+        ArgumentCaptor<String> scriptCaptor = ArgumentCaptor.forClass(String.class);
+        verify(webView).evaluateJavascript(scriptCaptor.capture(), any());
+        String script = scriptCaptor.getValue();
+        Assert.assertTrue(script.contains("\"--safe-area-inset-top\", \"20px\""));
+        Assert.assertTrue(script.contains("\"--safe-area-inset-left\", \"10px\""));
+        Assert.assertTrue(script.contains("\"--safe-area-inset-bottom\", \"15px\""));
+        Assert.assertTrue(script.contains("\"--safe-area-inset-right\", \"5px\""));
     }
 
     private WindowInsetsControllerCompat invokeShow(String bar) throws Exception {

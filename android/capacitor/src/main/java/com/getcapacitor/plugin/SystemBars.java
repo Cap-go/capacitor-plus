@@ -247,7 +247,7 @@ public class SystemBars extends Plugin {
                 .setInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(), Insets.of(0, 0, 0, 0))
                 .build();
 
-            injectSafeAreaCSS(newInsets);
+            injectSafeAreaCSS(insets);
 
             return newInsets;
         });
