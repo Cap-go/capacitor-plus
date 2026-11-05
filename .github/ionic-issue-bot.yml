@@ -12,11 +12,11 @@ lockClosed:
 
 comment:
   labels:
-    - label: "type: bug"
+    - label: 'type: bug'
       message: >
         This issue has been labeled as `type: bug`. This label is added to issues
         that have been reproduced and are being tracked in our internal issue tracker.
-    - label: "needs reproduction"
+    - label: 'needs reproduction'
       message: >
         This issue needs more information before it can be addressed.
         In particular, the reporter needs to provide a minimal sample app that demonstrates the issue.
@@ -30,7 +30,7 @@ comment:
 
 closeAndLock:
   labels:
-    - label: "support request"
+    - label: 'support request'
       message: >
         Thanks for the issue! This issue appears to be a support request. We use this issue tracker exclusively for
         bug reports and feature requests. Please use our [forum](https://forum.ionicframework.com) or our community [Discord](https://ionic.link/discord) for questions about Capacitor.
