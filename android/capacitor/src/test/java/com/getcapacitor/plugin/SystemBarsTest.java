@@ -69,7 +69,7 @@ public class SystemBarsTest {
         when(activity.getResources()).thenReturn(resources);
         when(resources.getDisplayMetrics()).thenReturn(displayMetrics);
         when(bridge.getWebView()).thenReturn(webView);
-        doAnswer(invocation -> {
+        doAnswer((invocation) -> {
             ((Runnable) invocation.getArgument(0)).run();
             return null;
         })
@@ -83,10 +83,7 @@ public class SystemBarsTest {
         insetsHandlingField.set(plugin, "css");
 
         WindowInsetsCompat insets = new WindowInsetsCompat.Builder()
-            .setInsets(
-                WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(),
-                Insets.of(20, 40, 10, 30)
-            )
+            .setInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(), Insets.of(20, 40, 10, 30))
             .build();
 
         Method injectSafeAreaCSS = SystemBars.class.getDeclaredMethod("injectSafeAreaCSS", WindowInsetsCompat.class);
