@@ -224,7 +224,7 @@ open class HttpRequestHandler {
         let urlRequest = request.getUrlRequest()
         let urlSession = request.getUrlSession(call)
         CapacitorCookieManager.copyWebViewCookies(for: urlRequest.url) {
-            send(urlRequest, urlSession, call, responseType)
+            send(urlRequest, urlSession, call, responseType, config)
         }
     }
 
@@ -232,9 +232,9 @@ open class HttpRequestHandler {
         _ urlRequest: URLRequest,
         _ urlSession: URLSession,
         _ call: CAPPluginCall,
-        _ responseType: String
+        _ responseType: String,
+        _ config: InstanceConfiguration?
     ) {
-        let redirectCookies = CapacitorRedirectCookies()
         let task = urlSession.dataTask(with: urlRequest) { (data, response, error) in
             urlSession.invalidateAndCancel()
 
@@ -244,9 +244,11 @@ open class HttpRequestHandler {
             }
 
             let httpResponse = response as! HTTPURLResponse
+            setCookiesFromResponse(httpResponse, config)
+
             let type = ResponseType(rawValue: responseType) ?? .default
             let result = self.buildResponse(data, httpResponse, responseType: type)
-            CapacitorCookieManager.setCookiesInWebView(redirectCookies.cookies + responseCookies(httpResponse)) {
+            CapacitorCookieManager.setCookiesInWebView(responseCookies(httpResponse)) {
                 call.resolve(result)
             }
         }
