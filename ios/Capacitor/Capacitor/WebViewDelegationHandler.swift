@@ -74,6 +74,12 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
             return
         }
 
+        // The proxy returns a remote body at the app origin, so block it before plugins can allow it.
+        if navURL.path.starts(with: CapacitorBridge.httpInterceptorStartIdentifier) {
+            decisionHandler(.cancel)
+            return
+        }
+
         // first, give plugins the chance to handle the decision
         for pluginObject in bridge.plugins {
             let plugin = pluginObject.value
@@ -283,16 +289,6 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
                         CapacitorCookieManager(bridge!.config).setCookie(domain, action)
                         completionHandler("")
                         // swiftlint:enable force_cast
-                        // Don't present prompt
-                        return
-                    } else if type == "CapacitorCookies.isEnabled" {
-                        let pluginConfig = bridge!.config.getPluginConfig("CapacitorCookies")
-                        completionHandler(String(pluginConfig.getBoolean("enabled", false)))
-                        // Don't present prompt
-                        return
-                    } else if type == "CapacitorHttp" {
-                        let pluginConfig = bridge!.config.getPluginConfig("CapacitorHttp")
-                        completionHandler(String(pluginConfig.getBoolean("enabled", false)))
                         // Don't present prompt
                         return
                     }
