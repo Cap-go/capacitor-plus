@@ -20,6 +20,8 @@ private class StubNavigationAction: WKNavigationAction {
 }
 
 // The proxy path shares the app's origin, so the origin guard alone would allow it.
+// WKWebView navigation delegate callbacks are main-thread; keep tests on the main actor to match.
+@MainActor
 class HttpInterceptorNavigationTests: XCTestCase {
     private var bridge: MockBridge!
     private var handler: WebViewDelegationHandler!
