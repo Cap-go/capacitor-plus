@@ -64,7 +64,9 @@ export async function doctorCore(config: Config): Promise<void> {
 
   output.write('\n');
 
-  logBlockedInstallScripts(blockedInstallScripts);
+  if (blockedInstallScripts !== null) {
+    logBlockedInstallScripts(blockedInstallScripts);
+  }
 }
 
 async function printInstalledPackages(config: Config) {

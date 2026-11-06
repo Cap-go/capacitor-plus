@@ -64,14 +64,33 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
         decisionHandler(.grant)
     }
 
+    private static func effectivePort(for url: URL) -> Int? {
+        if let port = url.port {
+            return port
+        }
+        switch url.scheme?.lowercased() {
+        case "https":
+            return 443
+        case "http":
+            return 80
+        default:
+            return nil
+        }
+    }
+
+    private static func matchesOrigin(_ url: URL, _ origin: URL) -> Bool {
+        guard url.scheme == origin.scheme, url.host == origin.host else {
+            return false
+        }
+        return effectivePort(for: url) == effectivePort(for: origin)
+    }
+
     /// Test seam: avoids subclassing `WKNavigationAction` in unit tests.
     static func shouldBlockHttpInterceptorNavigation(for url: URL, serverURL: URL, localURL: URL) -> Bool {
         guard url.path.starts(with: CapacitorBridge.httpInterceptorStartIdentifier) else {
             return false
         }
-        let matchesServer = url.scheme == serverURL.scheme && url.host == serverURL.host
-        let matchesLocal = url.scheme == localURL.scheme && url.host == localURL.host
-        return matchesServer || matchesLocal
+        return matchesOrigin(url, serverURL) || matchesOrigin(url, localURL)
     }
 
     open func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {

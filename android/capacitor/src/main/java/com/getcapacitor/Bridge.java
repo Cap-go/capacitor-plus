@@ -393,12 +393,30 @@ public class Bridge {
         return 0;
     }
 
+    private static int effectivePort(Uri uri) {
+        int port = uri.getPort();
+        if (port != -1) {
+            return port;
+        }
+        if ("https".equals(uri.getScheme())) {
+            return 443;
+        }
+        if ("http".equals(uri.getScheme())) {
+            return 80;
+        }
+        return -1;
+    }
+
     public static boolean shouldBlockHttpInterceptorNavigation(Uri url, Uri appOrigin) {
         String path = url.getPath();
         if (path == null || !path.startsWith(CAPACITOR_HTTP_INTERCEPTOR_START)) {
             return false;
         }
-        return appOrigin.getHost().equals(url.getHost()) && url.getScheme().equals(appOrigin.getScheme());
+        return (
+            appOrigin.getHost().equals(url.getHost()) &&
+            url.getScheme().equals(appOrigin.getScheme()) &&
+            effectivePort(appOrigin) == effectivePort(url)
+        );
     }
 
     public boolean launchIntent(Uri url) {

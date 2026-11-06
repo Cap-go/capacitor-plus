@@ -1,4 +1,14 @@
-import { ensureSymlink, pathExists, existsSync, readFileSync, writeFileSync, remove, move, mkdtemp } from 'fs-extra';
+import {
+  ensureSymlink,
+  pathExists,
+  existsSync,
+  readFileSync,
+  writeFileSync,
+  remove,
+  move,
+  mkdtemp,
+  readdirSync,
+} from 'fs-extra';
 import { tmpdir } from 'os';
 import { join, relative, resolve } from 'path';
 import type { PlistObject } from 'plist';
@@ -251,9 +261,66 @@ export function hasSceneManifest(config: Config): boolean {
   return entries['UIApplicationSceneManifest'] !== undefined;
 }
 
-export async function addSceneManifestIfNeeded(config: Config): Promise<void> {
-  type Mutable<T> = { -readonly [P in keyof T]: T[P] };
+function storyboardResourceExists(nativeTargetDirAbs: string, storyboardName: string): boolean {
+  const fileName = `${storyboardName}.storyboard`;
+  const stack = [nativeTargetDirAbs];
 
+  while (stack.length > 0) {
+    const dir = stack.pop() as string;
+
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (entry.isFile() && entry.name === fileName) {
+        return true;
+      }
+
+      if (entry.isDirectory()) {
+        stack.push(resolve(dir, entry.name));
+      }
+    }
+  }
+
+  return false;
+}
+
+function resolvedSceneStoryboardFile(entries: PlistObject, nativeTargetDirAbs: string): string | undefined {
+  const mainStoryboard = entries['UIMainStoryboardFile'];
+  if (typeof mainStoryboard === 'string' && mainStoryboard.trim() !== '') {
+    if (storyboardResourceExists(nativeTargetDirAbs, mainStoryboard)) {
+      return mainStoryboard;
+    }
+  }
+
+  return undefined;
+}
+
+type MutablePlistObject = { -readonly [P in keyof PlistObject]: PlistObject[P] };
+
+function syncSceneStoryboardInManifest(entries: MutablePlistObject, nativeTargetDirAbs: string): boolean {
+  const manifest = entries['UIApplicationSceneManifest'] as MutablePlistObject | undefined;
+  if (!manifest) {
+    return false;
+  }
+
+  const configs = manifest['UISceneConfigurations'] as MutablePlistObject | undefined;
+  const roleArray = configs?.['UIWindowSceneSessionRoleApplication'] as MutablePlistObject[] | undefined;
+  if (!roleArray?.length) {
+    return false;
+  }
+
+  const storyboard = resolvedSceneStoryboardFile(entries, nativeTargetDirAbs);
+  let changed = false;
+
+  for (const role of roleArray) {
+    if (storyboard && role['UISceneStoryboardFile'] === undefined) {
+      role['UISceneStoryboardFile'] = storyboard;
+      changed = true;
+    }
+  }
+
+  return changed;
+}
+
+export async function addSceneManifestIfNeeded(config: Config): Promise<void> {
   const infoPlist = resolve(config.ios.nativeTargetDirAbs, 'Info.plist');
 
   if (!existsSync(infoPlist)) {
@@ -261,25 +328,31 @@ export async function addSceneManifestIfNeeded(config: Config): Promise<void> {
     return;
   }
 
-  const entries = parse(readFileSync(infoPlist, 'utf-8')) as Mutable<PlistObject>;
+  const entries = parse(readFileSync(infoPlist, 'utf-8')) as MutablePlistObject;
 
   if (entries['UIApplicationSceneManifest'] !== undefined) {
-    logger.warn('Found UIApplicationSceneManifest in ' + infoPlist + ', skipping.');
+    if (syncSceneStoryboardInManifest(entries, config.ios.nativeTargetDirAbs)) {
+      writeFileSync(infoPlist, build(entries));
+    } else {
+      logger.warn('Found UIApplicationSceneManifest in ' + infoPlist + ', skipping.');
+    }
     return;
+  }
+
+  const sceneConfiguration: MutablePlistObject = {
+    UISceneConfigurationName: 'Default Configuration',
+    UISceneDelegateClassName: '$(PRODUCT_MODULE_NAME).SceneDelegate',
+  };
+
+  const storyboard = resolvedSceneStoryboardFile(entries, config.ios.nativeTargetDirAbs);
+  if (storyboard) {
+    sceneConfiguration['UISceneStoryboardFile'] = storyboard;
   }
 
   entries['UIApplicationSceneManifest'] = {
     UIApplicationSupportsMultipleScenes: false,
     UISceneConfigurations: {
-      UIWindowSceneSessionRoleApplication: [
-        {
-          UISceneConfigurationName: 'Default Configuration',
-          UISceneDelegateClassName: '$(PRODUCT_MODULE_NAME).SceneDelegate',
-          ...(typeof entries['UIMainStoryboardFile'] === 'string' && entries['UIMainStoryboardFile'].length > 0
-            ? { UISceneStoryboardFile: entries['UIMainStoryboardFile'] }
-            : {}),
-        },
-      ],
+      UIWindowSceneSessionRoleApplication: [sceneConfiguration],
     },
   };
 

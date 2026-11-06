@@ -2,13 +2,15 @@ apiVersion: backstage.io/v1alpha1
 kind: System
 metadata:
   name: capacitor-plus
-  title: Capacitor Plus
-  description: Enhanced Capacitor fork with automated upstream sync for iOS, Android, and the web.
+  title: Capacitor+
+  description: Cross-platform native runtime for building web apps that run on iOS, Android, and the web.
   annotations:
     github.com/project-slug: Cap-go/capacitor-plus
   links:
     - url: https://capgo.app/docs/plugins/capacitor-plus/
-      title: Documentation
+      title: Capacitor+ installation
+    - url: https://capacitorjs.com/docs/
+      title: Upstream Capacitor documentation
   tags: [capacitor, mobile, typescript, swift, java]
 spec:
   owner: group:default/mobile-ecosystem
@@ -50,7 +52,7 @@ kind: Component
 metadata:
   name: capacitor-plus-android
   title: '@capacitor-plus/android'
-  description: Android native runtime for Capacitor Plus.
+  description: Android native runtime for Capacitor.
   annotations:
     github.com/project-slug: Cap-go/capacitor-plus
     backstage.io/source-location: url:https://github.com/Cap-go/capacitor-plus/tree/plus/android/
@@ -67,7 +69,7 @@ kind: Component
 metadata:
   name: capacitor-plus-ios
   title: '@capacitor-plus/ios'
-  description: iOS native runtime for Capacitor Plus.
+  description: iOS native runtime for Capacitor.
   annotations:
     github.com/project-slug: Cap-go/capacitor-plus
     backstage.io/source-location: url:https://github.com/Cap-go/capacitor-plus/tree/plus/ios/

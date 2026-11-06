@@ -672,7 +672,7 @@ async function copyPluginsNativeFiles(config: Config, cordovaPlugins: Plugin[]) 
             await writeFile(fileDest, fileContent, { encoding: 'utf-8' });
           }
           if (isSPM && !pluginSuppliesAppDelegate && fileContent.includes(`#import "AppDelegate.h"`)) {
-            fileContent = fileContent.replace(`#import "AppDelegate.h"`, `#import <Cordova/AppDelegate.h>`);
+            fileContent = fileContent.replaceAll(`#import "AppDelegate.h"`, `#import <Cordova/AppDelegate.h>`);
             await writeFile(fileDest, fileContent, { encoding: 'utf-8' });
           }
         }
