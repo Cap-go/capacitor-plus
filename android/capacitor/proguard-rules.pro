@@ -18,6 +18,7 @@
 # The annotation types are read at runtime via reflection. If they are not kept, R8 full mode
 # treats them as never instantiated and optimizes the annotation cached in PluginHandle to null,
 # even with -keepattributes *Annotation*.
+-keepattributes *Annotation*
 -keep @interface com.getcapacitor.annotation.** { *; }
 -keep @interface com.getcapacitor.PluginMethod { *; }
 
