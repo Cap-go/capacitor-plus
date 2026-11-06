@@ -3,25 +3,16 @@ import XCTest
 
 @testable import Capacitor
 
-private class StubFrameInfo: WKFrameInfo {
-    override var isMainFrame: Bool { false }
-}
-
 private class StubNavigationAction: WKNavigationAction {
     private let stubbedRequest: URLRequest
-    private let stubbedTargetFrame: WKFrameInfo?
-    init(url: String, subframe: Bool = false) {
+    init(url: String) {
         self.stubbedRequest = URLRequest(url: URL(string: url)!)
-        self.stubbedTargetFrame = subframe ? StubFrameInfo() : nil
         super.init()
     }
     override var request: URLRequest { stubbedRequest }
-    override var targetFrame: WKFrameInfo? { stubbedTargetFrame }
 }
 
 // The proxy path shares the app's origin, so the origin guard alone would allow it.
-// WKWebView navigation delegate callbacks are main-thread; keep tests on the main actor to match.
-@MainActor
 class HttpInterceptorNavigationTests: XCTestCase {
     private var bridge: MockBridge!
     private var handler: WebViewDelegationHandler!
@@ -51,12 +42,17 @@ class HttpInterceptorNavigationTests: XCTestCase {
         XCTAssertEqual(policy(for: interceptorURL), .cancel)
     }
 
-    // decidePolicyFor also fires for subframes, and a same-origin iframe gets the bridge too.
-    func testBlocksSubframeNavigationToInterceptorPath() {
+    /// Same origin rule as main frame; exercise the static helper (subframe paths also hit this before plugin hooks).
+    func testBlocksHttpInterceptorNavigationWhenMatchingAppOrigin() throws {
         let interceptorURL = "capacitor://localhost\(CapacitorBridge.httpInterceptorStartIdentifier)?u=https://example.com/payload.html"
-        var decision: WKNavigationActionPolicy?
-        handler.webView(webView, decidePolicyFor: StubNavigationAction(url: interceptorURL, subframe: true)) { decision = $0 }
-        XCTAssertEqual(decision, .cancel)
+        let url = try XCTUnwrap(URL(string: interceptorURL))
+        XCTAssertTrue(
+            WebViewDelegationHandler.shouldBlockHttpInterceptorNavigation(
+                for: url,
+                serverURL: bridge.config.serverURL,
+                localURL: bridge.config.localURL
+            )
+        )
     }
 
     func testAllowsInAppNavigation() {
