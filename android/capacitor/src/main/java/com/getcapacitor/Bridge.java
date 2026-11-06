@@ -52,6 +52,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -118,6 +119,8 @@ public class Bridge {
     private String localUrl;
     private String appUrl;
     private String appUrlConfig;
+    /** Origin only, path cleared, for comparing external navigations to the app load URL */
+    private Uri appOriginUri;
     private HostMask appAllowNavigationMask;
     private Set<String> allowedOriginRules = new HashSet<String>();
     private ArrayList<String> authorities = new ArrayList<>();
@@ -444,7 +447,8 @@ public class Bridge {
         }
 
         if (
-            !(appUri.getHost().equals(url.getHost()) && url.getScheme().equals(appUri.getScheme())) &&
+            !(Objects.equals(appOriginUri != null ? appOriginUri.getHost() : null, url.getHost()) &&
+                Objects.equals(url.getScheme(), appOriginUri != null ? appOriginUri.getScheme() : null)) &&
             !appAllowNavigationMask.matches(url.getHost())
         ) {
             try {
@@ -684,6 +688,8 @@ public class Bridge {
         if (appUrlPath != null && !appUrlPath.trim().isEmpty()) {
             appUrl += appUrlPath;
         }
+
+        appOriginUri = Uri.parse(appUrl).buildUpon().path(null).fragment(null).clearQuery().build();
     }
 
     /**
