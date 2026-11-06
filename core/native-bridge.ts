@@ -448,7 +448,15 @@ const initBridge = (w: any): void => {
 
       // check if capacitor cookies is disabled before patching
       if (platform === 'ios') {
-        if (win.CapacitorNativeConfig?.cookiesEnabled === true) {
+        // Use prompt to synchronously get capacitor cookies config.
+        // https://stackoverflow.com/questions/29249132/wkwebview-complex-communication-between-javascript-native-code/49474323#49474323
+
+        const payload = {
+          type: 'CapacitorCookies.isEnabled',
+        };
+
+        const isCookiesEnabled = prompt(JSON.stringify(payload));
+        if (isCookiesEnabled === 'true') {
           doPatchCookies = true;
         }
       } else if (typeof win.CapacitorCookiesAndroidInterface !== 'undefined') {
@@ -521,7 +529,15 @@ const initBridge = (w: any): void => {
 
       // check if capacitor http is disabled before patching
       if (platform === 'ios') {
-        if (win.CapacitorNativeConfig?.httpEnabled === true) {
+        // Use prompt to synchronously get capacitor http config.
+        // https://stackoverflow.com/questions/29249132/wkwebview-complex-communication-between-javascript-native-code/49474323#49474323
+
+        const payload = {
+          type: 'CapacitorHttp',
+        };
+
+        const isHttpEnabled = prompt(JSON.stringify(payload));
+        if (isHttpEnabled === 'true') {
           doPatchHttp = true;
         }
       } else if (typeof win.CapacitorHttpAndroidInterface !== 'undefined') {
