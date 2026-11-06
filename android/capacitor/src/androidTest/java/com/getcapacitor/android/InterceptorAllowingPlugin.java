@@ -13,16 +13,7 @@ public class InterceptorAllowingPlugin extends Plugin {
     public Boolean shouldOverrideLoad(Uri url) {
         String path = url.getPath();
         if (path != null && path.startsWith(Bridge.CAPACITOR_HTTP_INTERCEPTOR_START)) {
-            Uri appUri = Uri.parse(getBridge().getAppUrl());
-            if (
-                url.getHost() != null &&
-                appUri.getHost() != null &&
-                url.getHost().equals(appUri.getHost()) &&
-                url.getScheme() != null &&
-                url.getScheme().equals(appUri.getScheme())
-            ) {
-                return false; // "allow this navigation"
-            }
+            return false; // "allow this navigation"
         }
         return null;
     }
