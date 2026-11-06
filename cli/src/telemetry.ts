@@ -80,66 +80,6 @@ const TELEMETRY_ARGUMENT_ALLOWLIST = new Set(['android', 'ios', 'web']);
  */
 const TELEMETRY_ERROR_MAX_LENGTH = 500;
 
-const TELEMETRY_COMMAND_FAILED = 'command_failed';
-
-/**
- * Lines from a failed subprocess that are safe to report. Build-setting dumps,
- * environment echoes, and arbitrary log lines can still carry secrets after
- * value redaction, so only tool error summaries are kept.
- */
-function pickAllowlistedTelemetryErrorLines(redacted: string): string {
-  const lines = redacted.split('\n').filter((line) => {
-    const trimmed = line.trim();
-    if (!trimmed) {
-      return false;
-    }
-
-    if (/^Build settings from command line:/i.test(trimmed)) {
-      return false;
-    }
-
-    if (/^\S+\s=/.test(trimmed)) {
-      return false;
-    }
-
-    if (/^Error:/i.test(trimmed)) {
-      return true;
-    }
-
-    if (/^FAILURE:/i.test(trimmed)) {
-      return true;
-    }
-
-    if (/platform has not been added/i.test(trimmed)) {
-      return true;
-    }
-
-    if (/no device matched target/i.test(trimmed)) {
-      return true;
-    }
-
-    if (/keystore password was not accepted/i.test(trimmed)) {
-      return true;
-    }
-
-    if (/^[\w.-]+: error:/i.test(trimmed)) {
-      return true;
-    }
-
-    if (/^jarsigner:/i.test(trimmed)) {
-      return true;
-    }
-
-    if (/^xcodebuild:/i.test(trimmed)) {
-      return true;
-    }
-
-    return false;
-  });
-
-  return lines.join('\n');
-}
-
 /**
  * Shortest value worth scrubbing out of a reported error. An empty string would
  * match between every character, and a one- or two-character option value--a
@@ -190,7 +130,7 @@ export function telemetryAction(config: Config, action: CommanderAction): Comman
     const capacitorPackages = packages.filter(([k]) => k.startsWith('@capacitor-plus/'));
 
     const versions = capacitorPackages.map(([k, v]): [string, string] => [
-      `${k.replace(/^@capacitor-plus\//, '').replace(/-/g, '_')}_version`,
+      `${k.replace(/^@capacitor\//, '').replace(/-/g, '_')}_version`,
       getTelemetryVersion(v),
     ]);
 
@@ -301,18 +241,12 @@ export function getTelemetryError(
     .filter((value): value is string => typeof value === 'string' && value.length >= TELEMETRY_REDACTION_MIN_LENGTH)
     .sort((a, b) => b.length - a.length);
 
-  const scrubbed = redacted.reduce<string>(
+  const message = redacted.reduce<string>(
     (message, value) => message.replaceAll(value, '<redacted>'),
     error.message ? error.message : String(error),
   );
 
-  const allowlisted = pickAllowlistedTelemetryErrorLines(scrubbed);
-
-  if (!allowlisted) {
-    return TELEMETRY_COMMAND_FAILED;
-  }
-
-  return allowlisted.slice(0, TELEMETRY_ERROR_MAX_LENGTH);
+  return message.slice(0, TELEMETRY_ERROR_MAX_LENGTH);
 }
 
 /**

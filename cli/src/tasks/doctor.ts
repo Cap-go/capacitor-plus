@@ -25,21 +25,7 @@ export async function doctorCommand(config: Config, selectedPlatformName: string
 }
 
 export async function doctorCore(config: Config): Promise<void> {
-  const [
-    cliVersionPlus,
-    coreVersionPlus,
-    androidVersionPlus,
-    iosVersionPlus,
-    cliVersion,
-    coreVersion,
-    androidVersion,
-    iosVersion,
-    blockedInstallScripts,
-  ] = await Promise.all([
-    getCommandOutput('npm', ['info', '@capacitor-plus/cli', 'version']),
-    getCommandOutput('npm', ['info', '@capacitor-plus/core', 'version']),
-    getCommandOutput('npm', ['info', '@capacitor-plus/android', 'version']),
-    getCommandOutput('npm', ['info', '@capacitor-plus/ios', 'version']),
+  const [cliVersion, coreVersion, androidVersion, iosVersion, blockedInstallScripts] = await Promise.all([
     getCommandOutput('npm', ['info', '@capacitor/cli', 'version']),
     getCommandOutput('npm', ['info', '@capacitor/core', 'version']),
     getCommandOutput('npm', ['info', '@capacitor/android', 'version']),
@@ -64,9 +50,7 @@ export async function doctorCore(config: Config): Promise<void> {
 
   output.write('\n');
 
-  if (blockedInstallScripts !== null) {
-    logBlockedInstallScripts(blockedInstallScripts);
-  }
+  logBlockedInstallScripts(blockedInstallScripts);
 }
 
 async function printInstalledPackages(config: Config) {
