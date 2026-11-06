@@ -17,9 +17,8 @@ describe('extractConfigurationForConnecting', () => {
     expect(snippet).toContain('configurationForConnecting connectingSceneSession: UISceneSession');
     expect(snippet).toContain('UISceneConfiguration(name: "Default Configuration"');
     expect(snippet).toContain('config.delegateClass = SceneDelegate.self');
-    const spmSnippet = snippet as string;
-    expect(spmSnippet.startsWith('\n')).toBe(true);
-    expect(spmSnippet.endsWith('\n')).toBe(true);
+    expect(snippet!.startsWith('\n')).toBe(true);
+    expect(snippet!.endsWith('\n')).toBe(true);
   });
 
   it('slices the method out of the shipped Pods AppDelegate', () => {
@@ -43,7 +42,7 @@ describe('insertBeforeAppDelegateClassEnd', () => {
     expect(snippet).not.toBeNull();
     const pre = stripConfigurationForConnecting(shipped);
 
-    const patched = insertBeforeAppDelegateClassEnd(pre, snippet as string);
+    const patched = insertBeforeAppDelegateClassEnd(pre, snippet!);
 
     expect(patched).toBe(shipped);
   });

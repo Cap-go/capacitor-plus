@@ -79,6 +79,7 @@ const TELEMETRY_ARGUMENT_ALLOWLIST = new Set(['android', 'ios', 'web']);
  * ship its entire log as a metric.
  */
 const TELEMETRY_ERROR_MAX_LENGTH = 500;
+
 const TELEMETRY_COMMAND_FAILED = 'command_failed';
 
 /**
@@ -91,10 +92,6 @@ function pickAllowlistedTelemetryErrorLines(redacted: string): string {
     const trimmed = line.trim();
     if (!trimmed) {
       return false;
-    }
-
-    if (trimmed.includes('<redacted>')) {
-      return true;
     }
 
     if (/^Build settings from command line:/i.test(trimmed)) {
@@ -143,6 +140,12 @@ function pickAllowlistedTelemetryErrorLines(redacted: string): string {
   return lines.join('\n');
 }
 
+/**
+ * Shortest value worth scrubbing out of a reported error. An empty string would
+ * match between every character, and a one- or two-character option value--a
+ * port, a target index--appears throughout unrelated output, so redacting
+ * either destroys the error instead of sanitizing it.
+ */
 const TELEMETRY_REDACTION_MIN_LENGTH = 3;
 
 /**
@@ -182,9 +185,9 @@ export function telemetryAction(config: Config, action: CommanderAction): Comman
       ...config.app.package.dependencies,
     });
 
-    // Only collect packages in the capacitor org:
-    // https://www.npmjs.com/org/capacitor
-    const capacitorPackages = packages.filter(([k]) => k.startsWith('@capacitor/'));
+    // Only collect packages in the capacitor-plus org:
+    // https://www.npmjs.com/org/capacitor-plus
+    const capacitorPackages = packages.filter(([k]) => k.startsWith('@capacitor-plus/'));
 
     const versions = capacitorPackages.map(([k, v]): [string, string] => [
       `${k.replace(/^@capacitor-plus\//, '').replace(/-/g, '_')}_version`,
