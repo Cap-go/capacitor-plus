@@ -93,6 +93,10 @@ function pickAllowlistedTelemetryErrorLines(redacted: string): string {
       return false;
     }
 
+    if (trimmed.includes('<redacted>')) {
+      return true;
+    }
+
     if (/^Build settings from command line:/i.test(trimmed)) {
       return false;
     }

@@ -148,7 +148,9 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
         if !isApplicationNavigation, toplevelNavigation {
             // disallow and let the system handle it
             if webView.window?.windowScene?.activationState == .foregroundActive {
-                UIApplication.shared.open(navURL, options: [:], completionHandler: nil)
+                DispatchQueue.main.async {
+                    UIApplication.shared.open(navURL, options: [:], completionHandler: nil)
+                }
             }
             decisionHandler(.cancel)
             return

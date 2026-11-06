@@ -356,7 +356,11 @@ describe('getTelemetryError', () => {
   });
 
   it('truncates long output so a failed build cannot ship its whole log', () => {
-    const error = getTelemetryError(captureBuild(['build', 'android']), 'x'.repeat(10_000), makeBuildConfig());
+    const error = getTelemetryError(
+      captureBuild(['build', 'android']),
+      `FAILURE: ${'x'.repeat(10_000)}`,
+      makeBuildConfig(),
+    );
 
     expect(error).toHaveLength(500);
   });

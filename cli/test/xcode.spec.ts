@@ -79,7 +79,7 @@ describe('addSwiftFileToAppTarget', () => {
     expect(appGroupUuid).not.toBeNull();
     const appGroup = project.getPBXGroupByKey(appGroupUuid as string);
     expect(appGroup).toBeDefined();
-    expect(appGroup.children.some((c: any) => c.comment === 'SceneDelegate.swift')).toBe(true);
+    expect(appGroup?.children.some((c: any) => c.comment === 'SceneDelegate.swift')).toBe(true);
 
     expect(objects.PBXSourcesBuildPhase).toBeDefined();
     const sourcesPhase = objects.PBXSourcesBuildPhase as NonNullable<typeof objects.PBXSourcesBuildPhase>;
