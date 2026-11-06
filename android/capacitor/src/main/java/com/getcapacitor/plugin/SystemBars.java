@@ -95,12 +95,14 @@ public class SystemBars extends Plugin {
                 @Override
                 public void onPageCommitVisible(WebView view, String url) {
                     super.onPageCommitVisible(view, url);
-                    bridge.getWebView().evaluateJavascript(viewportMetaJSFunction, (res) -> {
-                        hasViewportCover = res.equals("true");
+                    bridge
+                        .getWebView()
+                        .evaluateJavascript(viewportMetaJSFunction, (res) -> {
+                            hasViewportCover = "true".equals(res);
 
-                        // Request new execution tree of `setOnApplyWindowInsetsListener`
-                        bridge.getWebView().requestApplyInsets();
-                    });
+                            // Request new execution tree of `setOnApplyWindowInsetsListener`
+                            bridge.getWebView().requestApplyInsets();
+                        });
                 }
             };
             this.getBridge().addWebViewListener(webViewListener);
@@ -224,7 +226,7 @@ public class SystemBars extends Plugin {
                     )
                     .build();
 
-                injectSafeAreaCSS(newInsets, keyboardVisible);
+                injectSafeAreaCSS(newInsets);
 
                 return newInsets;
             }
@@ -244,20 +246,19 @@ public class SystemBars extends Plugin {
                 .setInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(), Insets.of(0, 0, 0, 0))
                 .build();
 
-            injectSafeAreaCSS(newInsets, keyboardVisible);
+            injectSafeAreaCSS(insets);
 
             return newInsets;
         });
     }
 
-    // Take keyboardVisible from the listener's original insets. Below API 30, rebuilt insets
-    // mistake the navigation bar for an open keyboard, so the bottom inset would become 0.
-    private void injectSafeAreaCSS(WindowInsetsCompat insets, boolean keyboardVisible) {
+    private void injectSafeAreaCSS(WindowInsetsCompat insets) {
         if (!INSETS_HANDLING_CSS.equals(insetsHandling)) {
             return;
         }
 
         Insets systemBarsInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+        boolean keyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime());
 
         // Convert pixels to density-independent pixels
         float density = getActivity().getResources().getDisplayMetrics().density;
@@ -324,7 +325,6 @@ public class SystemBars extends Plugin {
                 windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.statusBars());
             } else if (bar.equals(BAR_GESTURE_BAR)) {
                 windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.navigationBars());
-                navBarVisible = false;
             }
             return;
         }
@@ -335,7 +335,6 @@ public class SystemBars extends Plugin {
             windowInsetsControllerCompat.show(WindowInsetsCompat.Type.statusBars());
         } else if (bar.equals(BAR_GESTURE_BAR)) {
             windowInsetsControllerCompat.show(WindowInsetsCompat.Type.navigationBars());
-            navBarVisible = true;
         }
     }
 
