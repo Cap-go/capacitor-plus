@@ -7,7 +7,7 @@ concurrency:
 on:
   push:
     tags:
-      - "*"
+      - '*'
 
 jobs:
   # Tests already passed before tag was created, so just build and deploy
@@ -15,7 +15,7 @@ jobs:
     # Keep this job capped at 10 minutes; never raise it unless explicitly asked.
     timeout-minutes: 10
     runs-on: ubuntu-latest
-    name: "Build and publish to npm"
+    name: 'Build and publish to npm'
     permissions:
       contents: write
       id-token: write
