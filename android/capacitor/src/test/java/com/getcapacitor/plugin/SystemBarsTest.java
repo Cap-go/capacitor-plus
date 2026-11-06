@@ -19,6 +19,7 @@ import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.Bridge;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import org.junit.Assert;
 import org.junit.Test;

@@ -30,27 +30,7 @@ const dynamicImport: (specifier: string) => Promise<any> = new Function('specifi
 /**
  * @see https://github.com/ionic-team/stencil/blob/HEAD/src/compiler/sys/node-require.ts
  */
-export const requireTS = async (ts: typeof typescript, p: string): Promise<unknown> => {
-  const id = resolve(p);
-
-  if (!hasClassicCompilerAPI(ts)) {
-    // Node has its own built-in TypeScript syntax stripping (stable since Node 23.6, and
-    // available behind --experimental-strip-types since Node 22.6), so we can load the file
-    // directly via the native ESM loader instead of transpiling it ourselves.
-    try {
-      return await dynamicImport(pathToFileURL(id).href);
-    } catch (e: any) {
-      if (e?.code === 'ERR_UNKNOWN_FILE_EXTENSION') {
-        throw new Error(
-          `Your installed version of TypeScript (${ts.version}) no longer provides the compiler API Capacitor previously used to load .ts config files, ` +
-            `and your Node.js runtime (${process.version}) doesn't support loading them natively either.\n` +
-            'Upgrade to Node.js 22.6+ (running with --experimental-strip-types), or Node.js 23.6+, to continue using capacitor.config.ts.',
-        );
-      }
-      throw e;
-    }
-  }
-
+function loadWithClassicCompiler(ts: typeof typescript, id: string): unknown {
   delete require.cache[id];
 
   require.extensions['.ts'] = (module: NodeModuleWithCompile, fileName: string) => {
@@ -83,7 +63,7 @@ export const requireTS = async (ts: typeof typescript, p: string): Promise<unkno
   delete require.extensions['.ts'];
 
   return m;
-};
+}
 
 function loadWithCliBundledCompiler(id: string): unknown | null {
   const cliRoot = resolve(__dirname, '..', '..');
