@@ -11,8 +11,10 @@ import {
   PluginType,
   getAllElements,
   getFilePath,
+  getPackageReferencePath,
   getPlatformElement,
   getPluginPlatform,
+  getPluginReferencePath,
   getPluginType,
   getPlugins,
   printPlugins,
@@ -136,13 +138,12 @@ export async function installGradlePlugins(
   capacitorPlugins: Plugin[],
   cordovaPlugins: Plugin[],
 ): Promise<void> {
-  // Try @capacitor-plus/android first, then fall back to @capacitor/android
-  let capacitorAndroidPackagePath = resolveNode(config.app.rootDir, '@capacitor-plus/android', 'package.json');
-
+  let capacitorAndroidPackageId = '@capacitor-plus/android';
+  let capacitorAndroidPackagePath = resolveNode(config.app.rootDir, capacitorAndroidPackageId, 'package.json');
   if (!capacitorAndroidPackagePath) {
-    capacitorAndroidPackagePath = resolveNode(config.app.rootDir, '@capacitor/android', 'package.json');
+    capacitorAndroidPackageId = '@capacitor/android';
+    capacitorAndroidPackagePath = resolveNode(config.app.rootDir, capacitorAndroidPackageId, 'package.json');
   }
-
   if (!capacitorAndroidPackagePath) {
     fatal(
       `Unable to find ${c.strong('node_modules/@capacitor/android')}.\n` +
@@ -150,7 +151,10 @@ export async function installGradlePlugins(
     );
   }
 
-  const capacitorAndroidPath = resolve(dirname(capacitorAndroidPackagePath), 'capacitor');
+  const capacitorAndroidPath = resolve(
+    getPackageReferencePath(config, capacitorAndroidPackageId, dirname(capacitorAndroidPackagePath)),
+    'capacitor',
+  );
 
   const settingsPath = config.android.platformDirAbs;
   const dependencyPath = config.android.appDirAbs;
@@ -164,7 +168,7 @@ ${capacitorPlugins
       return '';
     }
 
-    const relativePluginPath = convertToUnixPath(relative(settingsPath, p.rootPath));
+    const relativePluginPath = convertToUnixPath(relative(settingsPath, getPluginReferencePath(config, p)));
 
     return `
 include ':${getGradlePackageName(p.id)}'
@@ -177,7 +181,7 @@ project(':${getGradlePackageName(p.id)}').projectDir = new File('${relativePlugi
   const frameworksArray: any[] = [];
   let prefsArray: any[] = [];
   cordovaPlugins.map((p) => {
-    const relativePluginPath = convertToUnixPath(relative(dependencyPath, p.rootPath));
+    const relativePluginPath = convertToUnixPath(relative(dependencyPath, getPluginReferencePath(config, p)));
     const frameworks = getPlatformElement(p, platform, 'framework');
     frameworks.map((framework: any) => {
       if (
@@ -237,7 +241,9 @@ export async function handleCordovaPluginsGradle(config: Config, cordovaPlugins:
   const applyArray: any[] = [];
   applyArray.push(`apply from: "cordova.variables.gradle"`);
   cordovaPlugins.map((p) => {
-    const relativePluginPath = convertToUnixPath(relative(config.android.cordovaPluginsDirAbs, p.rootPath));
+    const relativePluginPath = convertToUnixPath(
+      relative(config.android.cordovaPluginsDirAbs, getPluginReferencePath(config, p)),
+    );
     const frameworks = getPlatformElement(p, platform, 'framework');
     frameworks.map((framework: any) => {
       if (!framework.$.type && !framework.$.custom) {
