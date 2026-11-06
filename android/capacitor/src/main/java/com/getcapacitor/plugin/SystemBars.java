@@ -95,12 +95,14 @@ public class SystemBars extends Plugin {
                 @Override
                 public void onPageCommitVisible(WebView view, String url) {
                     super.onPageCommitVisible(view, url);
-                    bridge.getWebView().evaluateJavascript(viewportMetaJSFunction, (res) -> {
-                        hasViewportCover = res.equals("true");
+                    bridge
+                        .getWebView()
+                        .evaluateJavascript(viewportMetaJSFunction, (res) -> {
+                            hasViewportCover = "true".equals(res);
 
-                        // Request new execution tree of `setOnApplyWindowInsetsListener`
-                        bridge.getWebView().requestApplyInsets();
-                    });
+                            // Request new execution tree of `setOnApplyWindowInsetsListener`
+                            bridge.getWebView().requestApplyInsets();
+                        });
                 }
             };
             this.getBridge().addWebViewListener(webViewListener);
@@ -244,7 +246,7 @@ public class SystemBars extends Plugin {
                 .setInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(), Insets.of(0, 0, 0, 0))
                 .build();
 
-            injectSafeAreaCSS(newInsets);
+            injectSafeAreaCSS(insets);
 
             return newInsets;
         });
@@ -323,7 +325,6 @@ public class SystemBars extends Plugin {
                 windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.statusBars());
             } else if (bar.equals(BAR_GESTURE_BAR)) {
                 windowInsetsControllerCompat.hide(WindowInsetsCompat.Type.navigationBars());
-                navBarVisible = false;
             }
             return;
         }
@@ -334,7 +335,6 @@ public class SystemBars extends Plugin {
             windowInsetsControllerCompat.show(WindowInsetsCompat.Type.statusBars());
         } else if (bar.equals(BAR_GESTURE_BAR)) {
             windowInsetsControllerCompat.show(WindowInsetsCompat.Type.navigationBars());
-            navBarVisible = true;
         }
     }
 

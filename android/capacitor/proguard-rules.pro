@@ -21,6 +21,12 @@
 -keep @interface com.getcapacitor.annotation.** { *; }
 -keep @interface com.getcapacitor.PluginMethod { *; }
 
+# Callback methods are found by reflection, including on non-public base classes.
+-keepclassmembers class * extends com.getcapacitor.Plugin {
+    @com.getcapacitor.annotation.ActivityCallback <methods>;
+    @com.getcapacitor.annotation.PermissionCallback <methods>;
+}
+
 # Rules for Capacitor v2 plugins and annotations
 # These are deprecated but can still be used with Capacitor for now
 -keep @com.getcapacitor.NativePlugin public class * {
@@ -32,4 +38,16 @@
 -keep public class * extends org.apache.cordova.* {
   public <methods>;
   public <fields>;
+}
+
+# CapacitorHttp loads these via reflection when an SSL pinning plugin is present.
+-keep class io.ionic.sslpinning.SSLPinning {
+  <init>();
+  public javax.net.ssl.SSLSocketFactory getSSLSocketFactory(com.getcapacitor.Bridge);
+  public boolean isDomainExcluded(com.getcapacitor.Bridge, java.net.URL);
+}
+-keep class com.getcapacitor.community.sslpinning.SSLPinning {
+  <init>();
+  public javax.net.ssl.SSLSocketFactory getSSLSocketFactory(com.getcapacitor.Bridge);
+  public boolean isDomainExcluded(com.getcapacitor.Bridge, java.net.URL);
 }
