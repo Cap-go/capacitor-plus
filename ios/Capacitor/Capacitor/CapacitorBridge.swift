@@ -238,14 +238,10 @@ open class CapacitorBridge: NSObject, CAPBridgeProtocol {
      */
     func exportCoreJS(localUrl: String) {
         do {
-            let cookiesEnabled = config.getPluginConfig("CapacitorCookies").getBoolean("enabled", false)
-            let httpEnabled = config.getPluginConfig("CapacitorHttp").getBoolean("enabled", false)
             try JSExport.exportCapacitorGlobalJS(userContentController: webViewDelegationHandler.contentController,
                                                  isDebug: isDevEnvironment,
                                                  loggingEnabled: config.loggingEnabled,
-                                                 localUrl: localUrl,
-                                                 cookiesEnabled: cookiesEnabled,
-                                                 httpEnabled: httpEnabled)
+                                                 localUrl: localUrl)
             try JSExport.exportBridgeJS(userContentController: webViewDelegationHandler.contentController)
         } catch {
             type(of: self).fatalError(error, error)
@@ -268,11 +264,13 @@ open class CapacitorBridge: NSObject, CAPBridgeProtocol {
             exportCordovaJS()
             registerCordovaPlugins()
         } else {
-            observers.append(NotificationCenter.default.addObserver(forName: UIScene.willEnterForegroundNotification, object: nil, queue: OperationQueue.main) { [weak self] notification in
-                self?.triggerSceneLifecycleJSEvent("resume", for: notification)
+            observers.append(NotificationCenter.default.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: OperationQueue.main) { [weak self] _ in
+                guard self?.viewController?.view.window?.windowScene == nil else { return }
+                self?.triggerDocumentJSEvent(eventName: "resume")
             })
-            observers.append(NotificationCenter.default.addObserver(forName: UIScene.didEnterBackgroundNotification, object: nil, queue: OperationQueue.main) { [weak self] notification in
-                self?.triggerSceneLifecycleJSEvent("pause", for: notification)
+            observers.append(NotificationCenter.default.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: OperationQueue.main) { [weak self] _ in
+                guard self?.viewController?.view.window?.windowScene == nil else { return }
+                self?.triggerDocumentJSEvent(eventName: "pause")
             })
             observers.append(NotificationCenter.default.addObserver(forName: UIScene.willEnterForegroundNotification, object: nil, queue: OperationQueue.main) { [weak self] notification in
                 self?.triggerSceneLifecycleJSEvent("resume", for: notification)
