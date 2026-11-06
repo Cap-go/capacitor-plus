@@ -187,6 +187,9 @@ export const createCapacitor = (win: WindowCapacitor): CapacitorInstance => {
             // https://github.com/facebook/react/issues/20030
             case '$$typeof':
               return undefined;
+            // Plugins must not be thenable: Promise/adoption uses a callable `then` property.
+            case 'then':
+              return undefined;
             case 'toJSON':
               return () => ({});
             case 'addListener':

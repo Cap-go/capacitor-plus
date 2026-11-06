@@ -66,6 +66,18 @@ describe('plugin', () => {
     expect(results1).toBe(88);
   });
 
+  it('plugin proxy is not thenable (Promise.resolve does not hang)', async () => {
+    mockAndroidBridge();
+    initBridge(win);
+    mockAndroidPlugin('Awesome', 'mph');
+
+    cap = initCapacitorGlobal(win);
+
+    const Awesome = cap.registerPlugin<AwesomePlugin>('Awesome');
+
+    await expect(Promise.resolve(Awesome)).resolves.toBe(Awesome);
+  });
+
   it('error from missing native implementation', async (done) => {
     // mock the global with the android bridge
     mockAndroidBridge();
