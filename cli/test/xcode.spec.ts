@@ -24,7 +24,8 @@ describe('findGroupUuidByComment', () => {
     const uuid = findGroupUuidByComment(project, 'App');
 
     expect(uuid).toMatch(/^[A-F0-9]{24}$/);
-    const group = project.getPBXGroupByKey(uuid!);
+    expect(uuid).not.toBeNull();
+    const group = project.getPBXGroupByKey(uuid as string);
     expect(group).toBeDefined();
     expect(group?.path).toBe('App');
   });
@@ -74,11 +75,14 @@ describe('addSwiftFileToAppTarget', () => {
       buildFiles.some(([k]) => (objects.PBXBuildFile as any)[`${k}_comment`]?.includes('SceneDelegate.swift')),
     ).toBe(true);
 
-    const appGroupUuid = findGroupUuidByComment(project, 'App')!;
-    const appGroup = project.getPBXGroupByKey(appGroupUuid)!;
+    const appGroupUuid = findGroupUuidByComment(project, 'App');
+    expect(appGroupUuid).not.toBeNull();
+    const appGroup = project.getPBXGroupByKey(appGroupUuid as string);
+    expect(appGroup).toBeDefined();
     expect(appGroup.children.some((c: any) => c.comment === 'SceneDelegate.swift')).toBe(true);
 
-    const sourcesPhase = objects.PBXSourcesBuildPhase!;
+    expect(objects.PBXSourcesBuildPhase).toBeDefined();
+    const sourcesPhase = objects.PBXSourcesBuildPhase as NonNullable<typeof objects.PBXSourcesBuildPhase>;
     const sourcesEntries = Object.entries(sourcesPhase).filter(([k]) => !k.endsWith('_comment'));
     const [, sourcesObj] = sourcesEntries[0];
     expect((sourcesObj as any).files.some((f: any) => f.comment?.includes('SceneDelegate.swift'))).toBe(true);
