@@ -20,6 +20,6 @@ jobs:
         uses: SethCohen/github-releases-to-discord@v1
         with:
           webhook_url: ${{ secrets.WEBHOOK_DISCORD_RELEASE_URL }}
-          color: "2105893"
-          footer_title: "Release @${{ github.repository }}"
+          color: '2105893'
+          footer_title: 'Release @${{ github.repository }}'
           reduce_headings: true

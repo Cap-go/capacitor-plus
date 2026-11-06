@@ -271,15 +271,10 @@ open class CapacitorBridge: NSObject, CAPBridgeProtocol {
                 self?.triggerSceneLifecycleJSEvent("pause", for: notification)
             })
             observers.append(NotificationCenter.default.addObserver(forName: UIScene.willEnterForegroundNotification, object: nil, queue: OperationQueue.main) { [weak self] notification in
-                if let scene = notification.object as? UIWindowScene, scene === self?.viewController?.view.window?.windowScene {
-                    self?.triggerDocumentJSEvent(eventName: "resume")
-                }
-
+                self?.triggerSceneLifecycleJSEvent("resume", for: notification)
             })
             observers.append(NotificationCenter.default.addObserver(forName: UIScene.didEnterBackgroundNotification, object: nil, queue: OperationQueue.main) { [weak self] notification in
-                if let scene = notification.object as? UIWindowScene, scene === self?.viewController?.view.window?.windowScene {
-                    self?.triggerDocumentJSEvent(eventName: "pause")
-                }
+                self?.triggerSceneLifecycleJSEvent("pause", for: notification)
             })
         }
     }
@@ -302,10 +297,7 @@ open class CapacitorBridge: NSObject, CAPBridgeProtocol {
               scene === viewController?.view.window?.windowScene else {
             return
         }
-        guard case .subsequentLoad = webViewDelegationHandler.webViewLoadingState, webView?.isLoading == false else {
-            return
-        }
-        triggerDocumentJSEvent(eventName: eventName)
+        eval(js: "window.Capacitor?.triggerEvent && window.Capacitor.triggerEvent('\(eventName)', 'document')")
     }
 
     /**

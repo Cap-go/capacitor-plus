@@ -1,4 +1,4 @@
-import { existsSync, readJSON } from 'fs-extra';
+import { existsSync, readFileSync, readJSON, readJSONSync } from 'fs-extra';
 import { join } from 'path';
 
 import c from '../colors';
@@ -20,6 +20,62 @@ const LOCKFILE_MANAGERS: readonly [string, string][] = [
   ['bun.lockb', 'bun'],
 ];
 
+function detectLockfileManagers(rootDir: string): Set<string> {
+  const managers = new Set<string>();
+  for (const [lockfile, manager] of LOCKFILE_MANAGERS) {
+    if (existsSync(join(rootDir, lockfile))) {
+      managers.add(manager);
+    }
+  }
+  return managers;
+}
+
+function hasNpmLockfileDisabled(rootDir: string): boolean {
+  const npmrcPath = join(rootDir, '.npmrc');
+  if (!existsSync(npmrcPath)) {
+    return false;
+  }
+
+  try {
+    for (const line of readFileSync(npmrcPath, 'utf-8').split('\n')) {
+      const trimmed = line.trim();
+      if (trimmed === '' || trimmed.startsWith('#') || trimmed.startsWith(';')) {
+        continue;
+      }
+      const match = trimmed.match(/^package-lock\s*=\s*(false|0)\s*$/i);
+      if (match) {
+        return true;
+      }
+    }
+  } catch (e) {
+    return false;
+  }
+
+  return false;
+}
+
+export function logAmbiguousLockfiles(rootDir: string): void {
+  const managers = detectLockfileManagers(rootDir);
+  if (managers.size <= 1) {
+    return;
+  }
+
+  try {
+    const { packageManager } = readJSONSync(join(rootDir, 'package.json'));
+    if (typeof packageManager === 'string') {
+      return;
+    }
+  } catch (e) {
+    // fall through
+  }
+
+  output.write(
+    `${c.strong('Ambiguous package manager:')}\n\n` +
+      `  Multiple lockfiles are present (${[...managers].join(', ')}), so blocked install scripts cannot be checked reliably.\n` +
+      `  Remove stale lockfiles or set ${c.input('packageManager')} in package.json.\n\n`,
+  );
+}
+
 /**
  * `npm install-scripts ls` compares the tree against npm's own `allowScripts` map, which yarn and
  * pnpm never write. It therefore reports every install script in a yarn or pnpm project as
@@ -39,10 +95,16 @@ export async function isNpmProject(rootDir: string): Promise<boolean> {
     // no package.json, or an unreadable one: fall through to the lockfiles
   }
 
-  for (const [lockfile, manager] of LOCKFILE_MANAGERS) {
-    if (existsSync(join(rootDir, lockfile))) {
-      return manager === 'npm';
-    }
+  const managers = detectLockfileManagers(rootDir);
+  if (managers.size === 1) {
+    return managers.has('npm');
+  }
+  if (managers.size > 1) {
+    return false;
+  }
+
+  if (existsSync(join(rootDir, 'package.json')) && hasNpmLockfileDisabled(rootDir)) {
+    return true;
   }
 
   return false;
@@ -60,16 +122,45 @@ export async function isNpmProject(rootDir: string): Promise<boolean> {
 export async function getBlockedInstallScripts(
   rootDir: string,
   packageManager?: string,
-): Promise<BlockedInstallScript[]> {
+): Promise<BlockedInstallScript[] | null> {
+  if (packageManager === undefined) {
+    logAmbiguousLockfiles(rootDir);
+  }
+
   const isNpm = packageManager === undefined ? await isNpmProject(rootDir) : packageManager.toLowerCase() === 'npm';
 
   if (!isNpm) {
     return [];
   }
 
-  return parseBlockedInstallScripts(
-    await getCommandOutput('npm', ['install-scripts', 'ls', '--json'], { cwd: rootDir }),
-  );
+  const npmVersionOutput = await getCommandOutput('npm', ['--version'], { cwd: rootDir });
+  if (npmVersionOutput === null) {
+    output.write(
+      `${c.strong('Blocked install scripts:')}\n\n` +
+        `  Could not determine the npm version, so blocked install scripts were not checked.\n\n`,
+    );
+    return null;
+  }
+
+  const npmMajor = parseInt(npmVersionOutput.split('.')[0], 10);
+  if (!Number.isFinite(npmMajor) || npmMajor < 12) {
+    return [];
+  }
+
+  const commandOutput = await getCommandOutput('npm', ['install-scripts', 'ls', '--json', '--all=false'], {
+    cwd: rootDir,
+  });
+
+  if (commandOutput === null) {
+    output.write(
+      `${c.strong('Blocked install scripts:')}\n\n` +
+        `  Could not query npm for blocked install scripts. ` +
+        `If ${c.input('all=true')} is set in ${c.input('.npmrc')}, run ${c.input('npm install-scripts ls --all=false')} manually.\n\n`,
+    );
+    return null;
+  }
+
+  return parseBlockedInstallScripts(commandOutput);
 }
 
 export function parseBlockedInstallScripts(commandOutput: string | null): BlockedInstallScript[] {
@@ -117,7 +208,7 @@ export function parseBlockedInstallScripts(commandOutput: string | null): Blocke
  * scripts say anything about whether the migration finished.
  */
 export function hasBlockedCapacitorScripts(blocked: BlockedInstallScript[]): boolean {
-  return blocked.some(({ name }) => name.startsWith('@capacitor/'));
+  return blocked.some(({ name }) => name.startsWith('@capacitor-plus/') || name.startsWith('@capacitor/'));
 }
 
 export function logBlockedInstallScripts(blocked: BlockedInstallScript[]): void {

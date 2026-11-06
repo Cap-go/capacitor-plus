@@ -29,6 +29,9 @@ env:
   UPSTREAM_REPO: ionic-team/capacitor
   UPSTREAM_BRANCH: main
 
+permissions:
+  contents: read
+
 jobs:
   # Job 1: Fetch all open PRs from upstream and create corresponding PRs
   sync-open-prs:
@@ -187,6 +190,8 @@ jobs:
             if git merge upstream-pr-$PR_NUMBER --no-edit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR"; then
               echo "Merge successful!"
 
+              git show plus:.github/scripts/preserve-fork-changelog.sh | TRUSTED_PLUS_REF=plus bash -s
+
               # Run formatter to ensure lint passes
               echo "Running formatter..."
               bun run fmt || echo "Formatter had some issues, continuing..."
@@ -250,6 +255,8 @@ jobs:
                 git branch -D upstream-pr-$PR_NUMBER 2>/dev/null || true
                 continue
               fi
+
+              git show plus:.github/scripts/preserve-fork-changelog.sh | TRUSTED_PLUS_REF=plus bash -s
 
               git push origin "$SYNC_BRANCH" --force
 
@@ -353,6 +360,8 @@ jobs:
 
           # Merge upstream changes
           if git merge upstream/main --no-edit -m "chore: sync with upstream main branch"; then
+            git show plus:.github/scripts/preserve-fork-changelog.sh | TRUSTED_PLUS_REF=plus bash -s
+
             # Run formatter to ensure lint passes
             echo "Running formatter..."
             bun run fmt || echo "Formatter had some issues, continuing..."
@@ -396,6 +405,8 @@ jobs:
                 "The scheduled sync of upstream main could not be resolved with Git's upstream-preferred strategy. Manual resolution is required." || true
               exit 1
             fi
+
+            git show plus:.github/scripts/preserve-fork-changelog.sh | TRUSTED_PLUS_REF=plus bash -s
 
             git push origin "$SYNC_BRANCH" --force
 
@@ -491,6 +502,8 @@ jobs:
 
           # Merge the PR commits
           if git merge upstream-pr-$PR_NUMBER --no-edit -m "chore: sync upstream PR #$PR_NUMBER from @$PR_AUTHOR"; then
+            git show plus:.github/scripts/preserve-fork-changelog.sh | TRUSTED_PLUS_REF=plus bash -s
+
             # Run formatter to ensure lint passes
             echo "Running formatter..."
             bun run fmt || echo "Formatter had some issues, continuing..."
@@ -541,6 +554,8 @@ jobs:
                 "The sync of upstream PR #$PR_NUMBER could not be resolved with Git's upstream-preferred strategy. Manual resolution is required." || true
               exit 1
             fi
+
+            git show plus:.github/scripts/preserve-fork-changelog.sh | TRUSTED_PLUS_REF=plus bash -s
 
             git push origin "$SYNC_BRANCH" --force
 
