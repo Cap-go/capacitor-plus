@@ -5,15 +5,11 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 ## [8.6.1](https://github.com/Cap-go/capacitor-plus/compare/8.5.3...8.6.1) (2026-11-05)
 
-**Note:** Version bump only for package @capacitor/core
+**Note:** Version bump only for package @capacitor-plus/core
 
-## [8.5.3](https://github.com/ionic-team/capacitor/compare/8.5.2...8.5.3) (2026-10-07)
 
-**Note:** Version bump only for package @capacitor/core
 
-## [8.5.2](https://github.com/ionic-team/capacitor/compare/8.5.1...8.5.2) (2026-09-11)
 
-### Bug Fixes
 
 # [8.6.0](https://github.com/ionic-team/capacitor/compare/8.5.3...8.6.0) (2026-10-28)
 
