@@ -146,10 +146,6 @@ export interface WindowCapacitor {
   CapacitorCookiesAndroidInterface?: any;
   CapacitorCookiesDescriptor?: PropertyDescriptor;
   CapacitorHttpAndroidInterface?: any;
-  CapacitorNativeConfig?: {
-    cookiesEnabled?: boolean;
-    httpEnabled?: boolean;
-  };
   CapacitorWebFetch?: any;
   CapacitorWebXMLHttpRequest?: any;
   CapacitorCustomPlatform?: CapacitorCustomPlatformInstance;
