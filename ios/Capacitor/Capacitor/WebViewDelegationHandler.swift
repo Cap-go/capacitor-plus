@@ -64,6 +64,35 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
         decisionHandler(.grant)
     }
 
+    private static func effectivePort(for url: URL) -> Int? {
+        if let port = url.port {
+            return port
+        }
+        switch url.scheme?.lowercased() {
+        case "https":
+            return 443
+        case "http":
+            return 80
+        default:
+            return nil
+        }
+    }
+
+    private static func matchesOrigin(_ url: URL, _ origin: URL) -> Bool {
+        guard url.scheme == origin.scheme, url.host == origin.host else {
+            return false
+        }
+        return effectivePort(for: url) == effectivePort(for: origin)
+    }
+
+    /// Test seam: avoids subclassing `WKNavigationAction` in unit tests.
+    static func shouldBlockHttpInterceptorNavigation(for url: URL, serverURL: URL, localURL: URL) -> Bool {
+        guard url.path.starts(with: CapacitorBridge.httpInterceptorStartIdentifier) else {
+            return false
+        }
+        return matchesOrigin(url, serverURL) || matchesOrigin(url, localURL)
+    }
+
     open func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         // post a notification for any listeners
         NotificationCenter.default.post(name: .capacitorDecidePolicyForNavigationAction, object: navigationAction)
@@ -74,10 +103,21 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
             return
         }
 
+        // The proxy returns a remote body at the app origin, so block it before plugins can allow it.
+        if Self.shouldBlockHttpInterceptorNavigation(
+            for: navURL,
+            serverURL: bridge.config.serverURL,
+            localURL: bridge.config.localURL
+        ) {
+            decisionHandler(.cancel)
+            return
+        }
+
         // first, give plugins the chance to handle the decision
         for pluginObject in bridge.plugins {
             let plugin = pluginObject.value
-            let selector = NSSelectorFromString("shouldOverrideLoad:")
+            let selector = CAPAppStorePrivateAPI.shouldOverrideLoadSelector
+            // appstore-2.5.2-allow: optional plugin navigation override hook
             if plugin.responds(to: selector) {
                 let shouldOverrideLoad = plugin.shouldOverrideLoad(navigationAction)
                 if shouldOverrideLoad != nil {
@@ -169,7 +209,8 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
 
         for pluginObject in bridge.plugins {
             let plugin = pluginObject.value
-            let selector = NSSelectorFromString("handleWKWebViewURLAuthenticationChallenge:completionHandler:")
+            let selector = CAPAppStorePrivateAPI.handleWKWebViewURLAuthenticationChallengeSelector
+            // appstore-2.5.2-allow: optional plugin TLS authentication hook
             if plugin.responds(to: selector) {
                 if plugin.handleWKWebViewURLAuthenticationChallenge(challenge, completionHandler: completionHandler) {
                     return

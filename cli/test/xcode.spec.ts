@@ -23,10 +23,10 @@ describe('findGroupUuidByComment', () => {
 
     const uuid = findGroupUuidByComment(project, 'App');
 
-    if (!uuid) {
-      throw new Error('Expected App group UUID');
-    }
     expect(uuid).toMatch(/^[A-F0-9]{24}$/);
+    if (!uuid) {
+      throw new Error('Expected App group UUID in shipped pbxproj');
+    }
     const group = project.getPBXGroupByKey(uuid);
     expect(group).toBeDefined();
     expect(group?.path).toBe('App');
@@ -41,7 +41,7 @@ describe('findGroupUuidByComment', () => {
 });
 
 describe('addSwiftFileToAppTarget', () => {
-  let tmpDir: Awaited<ReturnType<typeof mktmp>> | undefined;
+  let tmpDir: any;
   let pbxprojPath: string;
 
   beforeEach(async () => {
@@ -50,8 +50,7 @@ describe('addSwiftFileToAppTarget', () => {
   });
 
   afterEach(() => {
-    const cleanup = tmpDir?.cleanupCallback as unknown as (() => void) | undefined;
-    cleanup?.();
+    tmpDir.cleanupCallback();
   });
 
   it('registers a new Swift file in all four pbxproj sections', () => {
@@ -79,13 +78,22 @@ describe('addSwiftFileToAppTarget', () => {
     ).toBe(true);
 
     const appGroupUuid = findGroupUuidByComment(project, 'App');
+    expect(appGroupUuid).toBeTruthy();
     if (!appGroupUuid) {
-      throw new Error('Expected App group UUID');
+      throw new Error('Expected App group UUID after adding SceneDelegate');
     }
     const appGroup = project.getPBXGroupByKey(appGroupUuid);
-    expect(appGroup?.children.some((c: any) => c.comment === 'SceneDelegate.swift')).toBe(true);
+    expect(appGroup).toBeDefined();
+    if (!appGroup) {
+      throw new Error('Expected App PBXGroup');
+    }
+    expect(appGroup.children.some((c: any) => c.comment === 'SceneDelegate.swift')).toBe(true);
 
-    const sourcesPhase = objects.PBXSourcesBuildPhase ?? {};
+    const sourcesPhase = objects.PBXSourcesBuildPhase;
+    expect(sourcesPhase).toBeDefined();
+    if (!sourcesPhase) {
+      throw new Error('Expected PBXSourcesBuildPhase');
+    }
     const sourcesEntries = Object.entries(sourcesPhase).filter(([k]) => !k.endsWith('_comment'));
     const [, sourcesObj] = sourcesEntries[0];
     expect((sourcesObj as any).files.some((f: any) => f.comment?.includes('SceneDelegate.swift'))).toBe(true);
