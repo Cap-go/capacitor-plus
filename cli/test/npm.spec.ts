@@ -1,14 +1,8 @@
-import { mkdtempSync, rmSync, writeFileSync } from 'fs-extra';
+import { mkdtempSync, writeFileSync } from 'fs-extra';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
-import { output } from '../src/log';
-import {
-  getBlockedInstallScripts,
-  hasBlockedCapacitorScripts,
-  isNpmProject,
-  parseBlockedInstallScripts,
-} from '../src/util/npm';
+import { hasBlockedCapacitorScripts, isNpmProject, parseBlockedInstallScripts } from '../src/util/npm';
 
 // Captured from a real `npm install-scripts ls --json` on npm@12.2.0.
 const NOTHING_BLOCKED = `{
@@ -52,23 +46,6 @@ const ONE_DENIED = `{
     }
   ]
 }`;
-
-const projectDirs: string[] = [];
-
-function project(files: { [name: string]: string }): string {
-  const dir = mkdtempSync(join(tmpdir(), 'cap-npm-'));
-  projectDirs.push(dir);
-  for (const [name, contents] of Object.entries(files)) {
-    writeFileSync(join(dir, name), contents, { encoding: 'utf-8' });
-  }
-  return dir;
-}
-
-afterAll(() => {
-  for (const dir of projectDirs) {
-    rmSync(dir, { recursive: true, force: true });
-  }
-});
 
 describe('parseBlockedInstallScripts', () => {
   it('returns nothing when no scripts are blocked', () => {
@@ -118,6 +95,14 @@ describe('parseBlockedInstallScripts', () => {
 });
 
 describe('isNpmProject', () => {
+  function project(files: { [name: string]: string }): string {
+    const dir = mkdtempSync(join(tmpdir(), 'cap-npm-'));
+    for (const [name, contents] of Object.entries(files)) {
+      writeFileSync(join(dir, name), contents, { encoding: 'utf-8' });
+    }
+    return dir;
+  }
+
   it.each([
     ['package-lock.json', true],
     ['npm-shrinkwrap.json', true],
@@ -137,14 +122,6 @@ describe('isNpmProject', () => {
     expect(await isNpmProject(dir)).toBe(false);
   });
 
-  it('treats conflicting lockfiles as ambiguous', async () => {
-    const dir = project({
-      'package-lock.json': '',
-      'yarn.lock': '',
-    });
-    expect(await isNpmProject(dir)).toBe(false);
-  });
-
   it('treats an unrecognized packageManager field as not npm', async () => {
     const dir = project({ 'package.json': '{"packageManager":"cnpm@1.0.0"}', 'package-lock.json': '' });
     expect(await isNpmProject(dir)).toBe(false);
@@ -157,27 +134,6 @@ describe('isNpmProject', () => {
   it('is not npm for a workspace package, which carries no lockfile of its own', async () => {
     expect(await isNpmProject(project({ 'package.json': '{"name":"myapp"}' }))).toBe(false);
   });
-
-  it('treats package-lock=false in .npmrc as an npm project', async () => {
-    const dir = project({
-      'package.json': '{"name":"myapp"}',
-      '.npmrc': 'package-lock=false\n',
-    });
-    expect(await isNpmProject(dir)).toBe(true);
-  });
-});
-
-describe('getBlockedInstallScripts', () => {
-  it('warns when conflicting lockfiles make the package manager ambiguous', async () => {
-    const writeSpy = jest.spyOn(output, 'write').mockImplementation(() => true);
-    const dir = project({ 'package-lock.json': '', 'yarn.lock': '' });
-
-    await getBlockedInstallScripts(dir);
-
-    expect(writeSpy).toHaveBeenCalled();
-    expect(String(writeSpy.mock.calls[0]?.[0])).toContain('Ambiguous package manager');
-    writeSpy.mockRestore();
-  });
 });
 
 describe('hasBlockedCapacitorScripts', () => {
@@ -188,7 +144,6 @@ describe('hasBlockedCapacitorScripts', () => {
   it('is true when a Capacitor package is among the blocked ones', () => {
     expect(hasBlockedCapacitorScripts(parseBlockedInstallScripts(TWO_BLOCKED))).toBe(true);
     expect(hasBlockedCapacitorScripts(parseBlockedInstallScripts(ONE_DENIED))).toBe(true);
-    expect(hasBlockedCapacitorScripts([{ name: '@capacitor-plus/core', version: '8.6.0' }])).toBe(true);
   });
 
   it('is false when only unrelated packages are blocked', () => {

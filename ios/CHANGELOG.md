@@ -3,24 +3,9 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [8.6.1](https://github.com/Cap-go/capacitor-plus/compare/8.5.3...8.6.1) (2026-11-05)
-
-**Note:** Version bump only for package @capacitor-plus/ios
-
-
-
-
-
 # [8.6.0](https://github.com/ionic-team/capacitor/compare/8.5.3...8.6.0) (2026-10-28)
 
 **Note:** Version bump only for package @capacitor/ios
-
-## [8.5.3](https://github.com/Cap-go/capacitor-plus/compare/8.5.2...8.5.3) (2026-10-12)
-
-
-### Bug Fixes
-
-* **ios:** make private API calls static for App Store 2.5.2 ([#187](https://github.com/Cap-go/capacitor-plus/issues/187)) ([07910b7](https://github.com/Cap-go/capacitor-plus/commit/07910b705f24840c0fe0827eb7b77b4bf7125ed1))
 
 ## [8.5.3](https://github.com/ionic-team/capacitor/compare/8.5.2...8.5.3) (2026-10-07)
 
@@ -33,19 +18,11 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - **ios:** do not forward scene lifecycle events to the page before it has loaded ([#8595](https://github.com/ionic-team/capacitor/issues/8595)) ([c567328](https://github.com/ionic-team/capacitor/commit/c567328d0feb90c306ea824edc5a799bdfe26542))
 - resolve issues with safe area / systembars plugin ([#8535](https://github.com/ionic-team/capacitor/issues/8535)) ([e37d9c6](https://github.com/ionic-team/capacitor/commit/e37d9c60785368acf2a83cfd4c20f47076672bdd))
 
-## [8.5.2](https://github.com/Cap-go/capacitor-plus/compare/8.5.1...8.5.2) (2026-08-26)
-
-**Note:** Version bump only for package @capacitor-plus/ios
-
 ## [8.5.1](https://github.com/ionic-team/capacitor/compare/8.5.0...8.5.1) (2026-08-31)
 
 ### Bug Fixes
 
 - block navigation to the internal HTTP proxy path ([ee586ae](https://github.com/ionic-team/capacitor/commit/ee586ae680887ba99d066616f976db149542d922))
-
-## [8.5.1](https://github.com/Cap-go/capacitor-plus/compare/8.3.12...8.5.1) (2026-08-25)
-
-**Note:** Version bump only for package @capacitor-plus/ios
 
 # [8.5.0](https://github.com/ionic-team/capacitor/compare/8.4.2...8.5.0) (2026-07-31)
 
@@ -67,74 +44,17 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 - add method getDouble to plugin config ([#7638](https://github.com/ionic-team/capacitor/issues/7638)) ([93c72de](https://github.com/ionic-team/capacitor/commit/93c72de40a2ec4c78b33659250cb08340083088e))
 
-## [8.3.12](https://github.com/Cap-go/capacitor-plus/compare/8.3.11...8.3.12) (2026-08-13)
-
-**Note:** Version bump only for package @capacitor-plus/ios
-
-## [8.3.11](https://github.com/Cap-go/capacitor-plus/compare/8.3.9...8.3.11) (2026-08-13)
-
-**Note:** Version bump only for package @capacitor-plus/ios
-
-## [8.3.10](https://github.com/Cap-go/capacitor-plus/compare/8.3.9...8.3.10) (2026-08-13)
-
-**Note:** Version bump only for package @capacitor-plus/ios
-
-## [8.3.9](https://github.com/Cap-go/capacitor-plus/compare/8.3.8...8.3.9) (2026-08-13)
-
-**Note:** Version bump only for package @capacitor-plus/ios
-
-## [8.3.8](https://github.com/Cap-go/capacitor-plus/compare/8.3.7...8.3.8) (2026-08-13)
-
-**Note:** Version bump only for package @capacitor-plus/ios
-
-## [8.3.7](https://github.com/Cap-go/capacitor-plus/compare/8.3.6...8.3.7) (2026-08-13)
-
-**Note:** Version bump only for package @capacitor-plus/ios
-
-## [8.3.6](https://github.com/Cap-go/capacitor-plus/compare/8.3.5...8.3.6) (2026-08-13)
-
-**Note:** Version bump only for package @capacitor-plus/ios
-
-## [8.3.5](https://github.com/Cap-go/capacitor-plus/compare/8.3.4...8.3.5) (2026-08-13)
-
-**Note:** Version bump only for package @capacitor-plus/ios
-
 ## [8.3.4](https://github.com/ionic-team/capacitor/compare/8.3.3...8.3.4) (2026-05-12)
 
 **Note:** Version bump only for package @capacitor/ios
-
-## [8.3.4](https://github.com/Cap-go/capacitor-plus/compare/8.3.3...8.3.4) (2026-05-07)
-
-**Note:** Version bump only for package @capacitor-plus/ios
 
 ## [8.3.3](https://github.com/ionic-team/capacitor/compare/8.3.2...8.3.3) (2026-05-08)
 
 **Note:** Version bump only for package @capacitor/ios
 
-## [8.3.3](https://github.com/Cap-go/capacitor-plus/compare/8.3.2...8.3.3) (2026-05-06)
-
-**Note:** Version bump only for package @capacitor-plus/ios
-
 ## [8.3.2](https://github.com/ionic-team/capacitor/compare/8.3.1...8.3.2) (2026-05-07)
 
 **Note:** Version bump only for package @capacitor/ios
-
-## [8.3.2](https://github.com/Cap-go/capacitor-plus/compare/8.0.8...8.3.2) (2026-05-05)
-
-
-### Bug Fixes
-
-* address follow-up review comments ([8bee786](https://github.com/Cap-go/capacitor-plus/commit/8bee786e2c68ca6c351e88f104b518291c1f81e3))
-* boundary value extraction for form-data requests ([#7518](https://github.com/Cap-go/capacitor-plus/issues/7518)) ([64ab854](https://github.com/Cap-go/capacitor-plus/commit/64ab854c12330804c24275d88d3a9f7c8e52a73d))
-* **http:** handle URL objects on fetch ([#8386](https://github.com/Cap-go/capacitor-plus/issues/8386)) ([003099a](https://github.com/Cap-go/capacitor-plus/commit/003099aef246adfd76d890074d46b1484951824b))
-* **ios:** make getArray accesible on Objective-C plugins ([#8392](https://github.com/Cap-go/capacitor-plus/issues/8392)) ([afb80f2](https://github.com/Cap-go/capacitor-plus/commit/afb80f2fecb4bf85dbebe25e815de2a5564264d6))
-* **ios:** remove tmpWindow usages on presentVC/dismissVC ([#8338](https://github.com/Cap-go/capacitor-plus/issues/8338)) ([fc9647f](https://github.com/Cap-go/capacitor-plus/commit/fc9647f26f08ff64f53b32c79fb19f153e3b0a24))
-* resolve upstream sync conflicts ([75cbb30](https://github.com/Cap-go/capacitor-plus/commit/75cbb3097a7068bcb37313cbe6301628079101ca))
-
-
-### Reverts
-
-* revert version bump from [#8319](https://github.com/Cap-go/capacitor-plus/issues/8319) and [#8320](https://github.com/Cap-go/capacitor-plus/issues/8320) ([a48ebb6](https://github.com/Cap-go/capacitor-plus/commit/a48ebb622ea4ebe92927bf1756a4d8ac6012884b))
 
 ## [8.3.1](https://github.com/ionic-team/capacitor/compare/8.3.0...8.3.1) (2026-04-16)
 
