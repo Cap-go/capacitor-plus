@@ -1,6 +1,6 @@
 import { copy, remove, pathExists, readFile, realpath, writeFile } from 'fs-extra';
 import { basename, dirname, join, relative } from 'path';
-import { major, prerelease, valid } from 'semver';
+import { major, prerelease } from 'semver';
 
 import c from '../colors';
 import { checkPlatformVersions, getCapacitorPackageVersion, runTask } from '../common';
@@ -59,48 +59,32 @@ async function updatePluginFiles(config: Config, plugins: Plugin[], deployment: 
     await generateCordovaPackageFiles(cordovaPlugins, config);
 
     const validSPMPackages = await checkPluginsForPackageSwift(config, plugins);
+    await Promise.all(
+      validSPMPackages.map(async (plugin) => {
+        const iosPlatformVersion = await getCapacitorPackageVersion(config, config.ios.name);
+        const packageSwiftPath = join(plugin.rootPath, 'Package.swift');
+        let content = await readFile(packageSwiftPath, { encoding: 'utf-8' });
+        const regex = new RegExp(
+          'url:\\s*"https://github.com/ionic-team/capacitor-swift-pm\\.git",\\s*from:\\s*"([^"]+)"',
+        );
+        const version = content.match(regex)?.[1];
+        const majorCapVersion = major(iosPlatformVersion);
+        if (version && major(version) != majorCapVersion) {
+          const preCapVersion = prerelease(iosPlatformVersion);
+          const forceVersion = preCapVersion ? iosPlatformVersion : `${majorCapVersion}.0.0`;
+          content = setAllStringIn(
+            content,
+            `url: "https://github.com/ionic-team/capacitor-swift-pm.git",`,
+            `)`,
+            ` from: "${forceVersion}"`,
+          );
+          await writeFile(packageSwiftPath, content);
+          logger.warn(`${plugin.id} is built for Capacitor ${major(version)}, it might cause issues`);
+        }
+      }),
+    );
 
     await generatePackageFile(config, validSPMPackages.concat(cordovaPlugins));
-
-    if (validSPMPackages.length > 0) {
-      let platformVersion: string | undefined;
-      try {
-        platformVersion = await getCapacitorPackageVersion(config, config.ios.name);
-      } catch (err) {
-        logger.warn(`Skipping plugin Package.swift Capacitor version patching: ${err}`);
-      }
-
-      if (platformVersion) {
-        const resolvedPlatformVersion = platformVersion;
-        await Promise.all(
-          validSPMPackages.map(async (plugin) => {
-            const packageSwiftPath = join(plugin.rootPath, 'Package.swift');
-            let content = await readFile(packageSwiftPath, { encoding: 'utf-8' });
-            const regex = new RegExp(
-              'url:\\s*"https://github.com/ionic-team/capacitor-swift-pm\\.git",\\s*(?:from|exact):\\s*"([^"]+)"',
-            );
-            const version = content.match(regex)?.[1];
-            if (!version || !valid(version)) {
-              logger.warn(`${plugin.id}: skipping Package.swift version check for invalid version "${version ?? ''}"`);
-              return;
-            }
-            const majorCapVersion = major(resolvedPlatformVersion);
-            if (major(version) != majorCapVersion) {
-              const preCapVersion = prerelease(resolvedPlatformVersion);
-              const forceVersion = preCapVersion ? resolvedPlatformVersion : `${majorCapVersion}.0.0`;
-              content = setAllStringIn(
-                content,
-                `url: "https://github.com/ionic-team/capacitor-swift-pm.git",`,
-                `)`,
-                ` from: "${forceVersion}"`,
-              );
-              await writeFile(packageSwiftPath, content);
-              logger.warn(`${plugin.id} is built for Capacitor ${major(version)}, it might cause issues`);
-            }
-          }),
-        );
-      }
-    }
   } else {
     await generateCordovaPodspecs(cordovaPlugins, config);
     await installCocoaPodsPlugins(config, plugins, deployment);
@@ -112,11 +96,9 @@ async function updatePluginFiles(config: Config, plugins: Plugin[], deployment: 
 }
 
 async function generateCordovaPackageFiles(cordovaPlugins: Plugin[], config: Config) {
-  await Promise.all(
-    cordovaPlugins.map((plugin: any) => {
-      return generateCordovaPackageFile(plugin, config);
-    }),
-  );
+  cordovaPlugins.map((plugin: any) => {
+    generateCordovaPackageFile(plugin, config);
+  });
 }
 
 async function generateCordovaPackageFile(p: Plugin, config: Config) {
@@ -372,17 +354,12 @@ async function updatePodfile(config: Config, plugins: Plugin[], deployment: bool
 }
 
 async function getRelativeCapacitoriOSPath(config: Config) {
-  // Try @capacitor-plus/ios first, then fall back to @capacitor/ios
-  let capacitoriOSPath = resolveNode(config.app.rootDir, '@capacitor-plus/ios', 'package.json');
-
-  if (!capacitoriOSPath) {
-    capacitoriOSPath = resolveNode(config.app.rootDir, '@capacitor/ios', 'package.json');
-  }
+  const capacitoriOSPath = resolveNode(config.app.rootDir, '@capacitor/ios', 'package.json');
 
   if (!capacitoriOSPath) {
     fatal(
-      `Unable to find ${c.strong('node_modules/@capacitor-plus/ios')} or ${c.strong('node_modules/@capacitor/ios')}.\n` +
-        `Are you sure ${c.strong('@capacitor-plus/ios')} or ${c.strong('@capacitor/ios')} is installed?`,
+      `Unable to find ${c.strong('node_modules/@capacitor/ios')}.\n` +
+        `Are you sure ${c.strong('@capacitor/ios')} is installed?`,
     );
   }
 
@@ -460,8 +437,8 @@ function isFramework(framework: any) {
 async function generateCordovaPodspecs(cordovaPlugins: Plugin[], config: Config) {
   const staticPlugins = cordovaPlugins.filter((p) => needsStaticPod(p));
   const noStaticPlugins = cordovaPlugins.filter((el) => !staticPlugins.includes(el));
-  await generateCordovaPodspec(noStaticPlugins, config, false);
-  await generateCordovaPodspec(staticPlugins, config, true);
+  generateCordovaPodspec(noStaticPlugins, config, false);
+  generateCordovaPodspec(staticPlugins, config, true);
 }
 
 async function generateCordovaPodspec(cordovaPlugins: Plugin[], config: Config, isStatic: boolean) {
@@ -666,6 +643,10 @@ async function copyPluginsNativeFiles(config: Config, cordovaPlugins: Plugin[]) 
           if (fileContent.includes('[self.webView superview]') || fileContent.includes('self.webView.superview')) {
             fileContent = fileContent.replace(/\[self.webView superview\]/g, 'self.viewController.view');
             fileContent = fileContent.replace(/self.webView.superview/g, 'self.viewController.view');
+            await writeFile(fileDest, fileContent, { encoding: 'utf-8' });
+          }
+          if (isSPM && fileContent.includes(`#import "AppDelegate.h"`)) {
+            fileContent = fileContent.replace(`#import "AppDelegate.h"`, `#import <Cordova/AppDelegate.h>`);
             await writeFile(fileDest, fileContent, { encoding: 'utf-8' });
           }
         }

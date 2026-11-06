@@ -53,7 +53,6 @@ export async function receive(msg: IPCMessage): Promise<void> {
         port: 443,
         path: '/metrics',
         method: 'POST',
-        timeout: 5000,
         headers: {
           'Content-Type': 'application/json',
         },
@@ -68,11 +67,6 @@ export async function receive(msg: IPCMessage): Promise<void> {
         }
       },
     );
-
-    req.on('timeout', () => req.destroy());
-    req.on('error', (err) => {
-      debug('Failed to send metric to events service: %O', err);
-    });
 
     const body = {
       metrics: [data],

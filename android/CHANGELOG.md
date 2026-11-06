@@ -3,21 +3,33 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
-## [8.5.2](https://github.com/Cap-go/capacitor-plus/compare/8.5.1...8.5.2) (2026-08-26)
+# [8.6.0](https://github.com/ionic-team/capacitor/compare/8.5.3...8.6.0) (2026-10-28)
 
-**Note:** Version bump only for package @capacitor-plus/android
+### Bug Fixes
 
+- **android:** keep callbacks on non-public base classes from R8 ([02e43f8](https://github.com/ionic-team/capacitor/commit/02e43f83f7e101f1773e9d33cd12e3c52e7d2c4b))
+- **android:** keep plugin annotation types from R8 full mode ([#8646](https://github.com/ionic-team/capacitor/issues/8646)) ([9dc5aeb](https://github.com/ionic-team/capacitor/commit/9dc5aebd0335e0553827d81b4ce0f79e8a1c51aa))
 
+### Features
 
+- **android:** recognize @capacitor-community/ssl-pinning for cert pinning ([#8669](https://github.com/ionic-team/capacitor/issues/8669)) ([19d2a40](https://github.com/ionic-team/capacitor/commit/19d2a40b920120ac97a118ec56105b202ee99d0a))
 
+## [8.5.3](https://github.com/ionic-team/capacitor/compare/8.5.2...8.5.3) (2026-10-07)
 
-## [8.5.1](https://github.com/Cap-go/capacitor-plus/compare/8.3.12...8.5.1) (2026-08-25)
+**Note:** Version bump only for package @capacitor/android
 
-**Note:** Version bump only for package @capacitor-plus/android
+## [8.5.2](https://github.com/ionic-team/capacitor/compare/8.5.1...8.5.2) (2026-09-11)
 
+### Bug Fixes
 
+- **android:** add null checks for plugin annotation when retrieving permissions ([#8400](https://github.com/ionic-team/capacitor/issues/8400)) ([035b16a](https://github.com/ionic-team/capacitor/commit/035b16aca15eab136efc49eaec64b45987cfefeb))
+- resolve issues with safe area / systembars plugin ([#8535](https://github.com/ionic-team/capacitor/issues/8535)) ([e37d9c6](https://github.com/ionic-team/capacitor/commit/e37d9c60785368acf2a83cfd4c20f47076672bdd))
 
+## [8.5.1](https://github.com/ionic-team/capacitor/compare/8.5.0...8.5.1) (2026-08-31)
 
+### Bug Fixes
+
+- block navigation to the internal HTTP proxy path ([ee586ae](https://github.com/ionic-team/capacitor/commit/ee586ae680887ba99d066616f976db149542d922))
 
 # [8.5.0](https://github.com/ionic-team/capacitor/compare/8.4.2...8.5.0) (2026-07-31)
 
@@ -67,7 +79,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - boundary value extraction for form-data requests ([#7518](https://github.com/ionic-team/capacitor/issues/7518)) ([64ab854](https://github.com/ionic-team/capacitor/commit/64ab854c12330804c24275d88d3a9f7c8e52a73d))
 - **system-bars:** use separate current styles ([#8409](https://github.com/ionic-team/capacitor/issues/8409)) ([3d1f8d1](https://github.com/ionic-team/capacitor/commit/3d1f8d1b61480187375f5cd4de7ba999db007542))
 
-## [8.3.0](https://github.com/ionic-team/capacitor/compare/8.2.0...8.3.0) (2026-03-25)
+# [8.3.0](https://github.com/ionic-team/capacitor/compare/8.2.0...8.3.0) (2026-03-25)
 
 ### Bug Fixes
 
@@ -75,7 +87,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - **http:** handle URL objects on fetch ([#8386](https://github.com/ionic-team/capacitor/issues/8386)) ([003099a](https://github.com/ionic-team/capacitor/commit/003099aef246adfd76d890074d46b1484951824b))
 - **SystemBars:** use native safe area insets on Android ([#8384](https://github.com/ionic-team/capacitor/issues/8384)) ([4e99598](https://github.com/ionic-team/capacitor/commit/4e99598a2a57ee97e82be1aaa09492744622fa60))
 
-## [8.2.0](https://github.com/ionic-team/capacitor/compare/8.1.0...8.2.0) (2026-03-06)
+# [8.2.0](https://github.com/ionic-team/capacitor/compare/8.1.0...8.2.0) (2026-03-06)
 
 ### Bug Fixes
 
@@ -84,7 +96,7 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 - **android:** handle lowercase range header ([#8368](https://github.com/ionic-team/capacitor/issues/8368)) ([ae0e2dd](https://github.com/ionic-team/capacitor/commit/ae0e2ddccb2904ee4b3d47d4be1f7556ac7000a1))
 - **android:** invalid http range seeking ([#8369](https://github.com/ionic-team/capacitor/issues/8369)) ([3109d22](https://github.com/ionic-team/capacitor/commit/3109d22547253ed44293777c60652f14cf83e416))
 
-## [8.1.0](https://github.com/ionic-team/capacitor/compare/8.0.2...8.1.0) (2026-02-11)
+# [8.1.0](https://github.com/ionic-team/capacitor/compare/8.0.2...8.1.0) (2026-02-11)
 
 ### Reverts
 

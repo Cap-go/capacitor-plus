@@ -30,10 +30,7 @@ function execBundler() {
 export async function getCommonChecks(config: Config): Promise<CheckFunction[]> {
   const checks: CheckFunction[] = [];
   if ((await config.ios.packageManager) === 'bundler') {
-    const bundlerCheck = await checkBundler(config);
-    if (bundlerCheck) {
-      checks.push(() => Promise.resolve(bundlerCheck));
-    }
+    checks.push(() => checkBundler(config));
   } else if ((await config.ios.packageManager) === 'Cocoapods') {
     checks.push(() => checkCocoaPods(config));
   } else if ((await config.ios.packageManager) === 'SPM') {
@@ -132,32 +129,5 @@ export function getMajoriOSVersion(config: Config): string {
     pbx.indexOf(searchString) + searchString.length,
     pbx.indexOf(searchString) + searchString.length + 2,
   );
-  return iosVersion;
-}
-
-export function getMajorMinoriOSVersion(config: Config): string {
-  const pbx = readFileSync(join(config.ios.nativeXcodeProjDirAbs, 'project.pbxproj'), 'utf-8');
-  const searchString = 'IPHONEOS_DEPLOYMENT_TARGET = ';
-  const startIndex = pbx.indexOf(searchString);
-  if (startIndex === -1) {
-    return '';
-  }
-  const valueStart = startIndex + searchString.length;
-  // Extract until semicolon or newline (typical end of value in pbxproj)
-  const endIndex = pbx.indexOf(';', valueStart);
-  const newlineIndex = pbx.indexOf('\n', valueStart);
-  const actualEnd =
-    endIndex !== -1 && newlineIndex !== -1
-      ? Math.min(endIndex, newlineIndex)
-      : endIndex !== -1
-        ? endIndex
-        : newlineIndex !== -1
-          ? newlineIndex
-          : pbx.length;
-  let iosVersion = pbx.substring(valueStart, actualEnd).trim();
-  // Remove trailing .0 if present
-  if (iosVersion.endsWith('.0')) {
-    iosVersion = iosVersion.slice(0, -2);
-  }
   return iosVersion;
 }

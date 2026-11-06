@@ -8,6 +8,7 @@ import { doctorIOS } from '../ios/doctor';
 import { output } from '../log';
 import { emoji as _e } from '../util/emoji';
 import { resolveNode } from '../util/node';
+import { getBlockedInstallScripts, logBlockedInstallScripts } from '../util/npm';
 import { getCommandOutput } from '../util/subprocess';
 
 export async function doctorCommand(config: Config, selectedPlatformName: string): Promise<void> {
@@ -24,32 +25,16 @@ export async function doctorCommand(config: Config, selectedPlatformName: string
 }
 
 export async function doctorCore(config: Config): Promise<void> {
-  const [
-    cliVersionPlus,
-    coreVersionPlus,
-    androidVersionPlus,
-    iosVersionPlus,
-    cliVersion,
-    coreVersion,
-    androidVersion,
-    iosVersion,
-  ] = await Promise.all([
-    getCommandOutput('npm', ['info', '@capacitor-plus/cli', 'version']),
-    getCommandOutput('npm', ['info', '@capacitor-plus/core', 'version']),
-    getCommandOutput('npm', ['info', '@capacitor-plus/android', 'version']),
-    getCommandOutput('npm', ['info', '@capacitor-plus/ios', 'version']),
+  const [cliVersion, coreVersion, androidVersion, iosVersion, blockedInstallScripts] = await Promise.all([
     getCommandOutput('npm', ['info', '@capacitor/cli', 'version']),
     getCommandOutput('npm', ['info', '@capacitor/core', 'version']),
     getCommandOutput('npm', ['info', '@capacitor/android', 'version']),
     getCommandOutput('npm', ['info', '@capacitor/ios', 'version']),
+    getBlockedInstallScripts(config.app.rootDir),
   ]);
 
   output.write(
     `${c.strong('Latest Dependencies:')}\n\n` +
-      `  @capacitor-plus/cli: ${c.weak(cliVersionPlus ?? 'unknown')}\n` +
-      `  @capacitor-plus/core: ${c.weak(coreVersionPlus ?? 'unknown')}\n` +
-      `  @capacitor-plus/android: ${c.weak(androidVersionPlus ?? 'unknown')}\n` +
-      `  @capacitor-plus/ios: ${c.weak(iosVersionPlus ?? 'unknown')}\n\n` +
       `  @capacitor/cli: ${c.weak(cliVersion ?? 'unknown')}\n` +
       `  @capacitor/core: ${c.weak(coreVersion ?? 'unknown')}\n` +
       `  @capacitor/android: ${c.weak(androidVersion ?? 'unknown')}\n` +
@@ -60,19 +45,12 @@ export async function doctorCore(config: Config): Promise<void> {
   await printInstalledPackages(config);
 
   output.write('\n');
+
+  logBlockedInstallScripts(blockedInstallScripts);
 }
 
 async function printInstalledPackages(config: Config) {
-  const packageNames = [
-    '@capacitor-plus/cli',
-    '@capacitor-plus/core',
-    '@capacitor-plus/android',
-    '@capacitor-plus/ios',
-    '@capacitor/cli',
-    '@capacitor/core',
-    '@capacitor/android',
-    '@capacitor/ios',
-  ];
+  const packageNames = ['@capacitor/cli', '@capacitor/core', '@capacitor/android', '@capacitor/ios'];
   await Promise.all(
     packageNames.map(async (packageName) => {
       const packagePath = resolveNode(config.app.rootDir, packageName, 'package.json');

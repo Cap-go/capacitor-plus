@@ -265,15 +265,8 @@ public class Bridge {
         JSInjector injector = getJSInjector();
         if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
             String allowedOrigin = Uri.parse(appUrl).buildUpon().path(null).fragment(null).clearQuery().build().toString();
-            final String finalAllowedOrigin = allowedOrigin;
-            Set<String> allowedOrigins = new HashSet<String>() {
-                {
-                    add(finalAllowedOrigin);
-                    addAll(allowedOriginRules);
-                }
-            };
             try {
-                WebViewCompat.addDocumentStartJavaScript(webView, injector.getScriptString(), allowedOrigins);
+                WebViewCompat.addDocumentStartJavaScript(webView, injector.getScriptString(), Collections.singleton(allowedOrigin));
                 injector = null;
             } catch (IllegalArgumentException ex) {
                 Logger.warn("Invalid url, using fallback");
@@ -394,6 +387,12 @@ public class Bridge {
     }
 
     public boolean launchIntent(Uri url) {
+        // The proxy returns a remote body at the app origin, so block it before plugins can allow it.
+        String path = url.getPath();
+        if (path != null && path.startsWith(CAPACITOR_HTTP_INTERCEPTOR_START)) {
+            return true;
+        }
+
         /*
          * Give plugins the chance to handle the url
          */
@@ -1262,6 +1261,10 @@ public class Bridge {
                     }
                 }
             }
+        } else {
+            Logger.warn(
+                String.format("getPermissionStates: missing @CapacitorPlugin annotation for plugin %s", plugin.getPluginHandle().getId())
+            );
         }
 
         return permissionsResults;

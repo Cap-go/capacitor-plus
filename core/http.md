@@ -44,11 +44,7 @@ export default config;
 ## Example
 
 ```typescript
-import { CapacitorHttp, type HttpResponse } from '@capacitor/core';
-
-interface MyResponse {
-  foo: string;
-}
+import { CapacitorHttp } from '@capacitor/core';
 
 // Example of a GET request
 const doGet = () => {
@@ -58,7 +54,7 @@ const doGet = () => {
     params: { size: 'XL' },
   };
 
-  const response: HttpResponse<MyResponse> = await CapacitorHttp.get(options);
+  const response: HttpResponse = await CapacitorHttp.get(options);
 
   // or...
   // const response = await CapacitorHttp.request({ ...options, method: 'GET' })
@@ -73,7 +69,7 @@ const doPost = () => {
     data: { foo: 'bar' },
   };
 
-  const response: HttpResponse<MyResponse> = await CapacitorHttp.post(options);
+  const response: HttpResponse = await CapacitorHttp.post(options);
 
   // or...
   // const response = await CapacitorHttp.request({ ...options, method: 'POST' })
@@ -116,7 +112,7 @@ Make a Http Request to a server using native libraries.
 | ------------- | --------------------------------------------------- |
 | **`options`** | <code><a href="#httpoptions">HttpOptions</a></code> |
 
-**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&lt;any&gt;&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&gt;</code>
 
 --------------------
 
@@ -133,7 +129,7 @@ Make a Http GET Request to a server using native libraries.
 | ------------- | --------------------------------------------------- |
 | **`options`** | <code><a href="#httpoptions">HttpOptions</a></code> |
 
-**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&lt;any&gt;&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&gt;</code>
 
 --------------------
 
@@ -150,7 +146,7 @@ Make a Http POST Request to a server using native libraries.
 | ------------- | --------------------------------------------------- |
 | **`options`** | <code><a href="#httpoptions">HttpOptions</a></code> |
 
-**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&lt;any&gt;&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&gt;</code>
 
 --------------------
 
@@ -167,7 +163,7 @@ Make a Http PUT Request to a server using native libraries.
 | ------------- | --------------------------------------------------- |
 | **`options`** | <code><a href="#httpoptions">HttpOptions</a></code> |
 
-**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&lt;any&gt;&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&gt;</code>
 
 --------------------
 
@@ -184,7 +180,7 @@ Make a Http PATCH Request to a server using native libraries.
 | ------------- | --------------------------------------------------- |
 | **`options`** | <code><a href="#httpoptions">HttpOptions</a></code> |
 
-**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&lt;any&gt;&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&gt;</code>
 
 --------------------
 
@@ -201,7 +197,7 @@ Make a Http DELETE Request to a server using native libraries.
 | ------------- | --------------------------------------------------- |
 | **`options`** | <code><a href="#httpoptions">HttpOptions</a></code> |
 
-**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&lt;any&gt;&gt;</code>
+**Returns:** <code>Promise&lt;<a href="#httpresponse">HttpResponse</a>&gt;</code>
 
 --------------------
 
@@ -213,7 +209,7 @@ Make a Http DELETE Request to a server using native libraries.
 
 | Prop          | Type                                                | Description                                       |
 | ------------- | --------------------------------------------------- | ------------------------------------------------- |
-| **`data`**    | <code>T</code>                                      | Additional data received with the Http response.  |
+| **`data`**    | <code>any</code>                                    | Additional data received with the Http response.  |
 | **`status`**  | <code>number</code>                                 | The status code received from the Http response.  |
 | **`headers`** | <code><a href="#httpheaders">HttpHeaders</a></code> | The headers received from the Http response.      |
 | **`url`**     | <code>string</code>                                 | The response URL received from the Http response. |
@@ -237,7 +233,7 @@ Make a Http DELETE Request to a server using native libraries.
 | **`webFetchExtra`**         | <code><a href="#requestinit">RequestInit</a></code>           | Extra arguments for fetch when running on the web                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | **`responseType`**          | <code><a href="#httpresponsetype">HttpResponseType</a></code> | This is used to parse the response appropriately before returning it to the requestee. If the response content-type is "json", this value is ignored.                                                                                                                                                                                                                                                                                                                      |
 | **`shouldEncodeUrlParams`** | <code>boolean</code>                                          | Use this option if you need to keep the URL unencoded in certain cases (already encoded, azure/firebase testing, etc.). The default is _true_.                                                                                                                                                                                                                                                                                                                             |
-| **`dataType`**              | <code>'file' \| 'formData' \| 'binary'</code>                 | This is used if we've had to convert the data from a JS type that needs special handling in the native layer                                                                                                                                                                                                                                                                                                                                                               |
+| **`dataType`**              | <code>'file' \| 'formData'</code>                             | This is used if we've had to convert the data from a JS type that needs special handling in the native layer                                                                                                                                                                                                                                                                                                                                                               |
 
 
 #### HttpParams
@@ -265,7 +261,7 @@ Make a Http DELETE Request to a server using native libraries.
 #### Blob
 
 A file-like object of immutable, raw data. Blobs represent data that isn't necessarily in a JavaScript-native format. The <a href="#file">File</a> interface is based on <a href="#blob">Blob</a>, inheriting blob functionality and expanding it to support files on the user's system.
-`Blob` class is a global reference for `import { <a href="#blob">Blob</a> } from 'node:buffer'`
+`Blob` class is a global reference for `require('node:buffer').Blob`
 https://nodejs.org/api/buffer.html#class-blob
 
 | Prop       | Type                |
@@ -300,8 +296,6 @@ buffer as needed.
 #### ReadableStream
 
 This Streams API interface represents a readable stream of byte data. The Fetch API offers a concrete instance of a <a href="#readablestream">ReadableStream</a> through the body property of a Response object.
-`ReadableStream` class is a global reference for `import { <a href="#readablestream">ReadableStream</a> } from 'node:stream/web'`.
-https://nodejs.org/api/globals.html#class-readablestream
 
 | Prop         | Type                 |
 | ------------ | -------------------- |
@@ -317,9 +311,6 @@ https://nodejs.org/api/globals.html#class-readablestream
 
 
 #### ReadableStreamDefaultReader
-
-<a href="#readablestreamdefaultreader">`ReadableStreamDefaultReader`</a> class is a global reference for `import { <a href="#readablestreamdefaultreader">ReadableStreamDefaultReader</a> } from 'node:stream/web'`.
-https://nodejs.org/api/globals.html#class-readablestreamdefaultreader
 
 | Method          | Signature                                                                                                       |
 | --------------- | --------------------------------------------------------------------------------------------------------------- |
@@ -354,8 +345,6 @@ https://nodejs.org/api/globals.html#class-readablestreamdefaultreader
 #### WritableStream
 
 This Streams API interface provides a standard abstraction for writing streaming data to a destination, known as a sink. This object comes with built-in backpressure and queuing.
-`WritableStream` class is a global reference for `import { <a href="#writablestream">WritableStream</a> } from 'node:stream/web'`.
-https://nodejs.org/api/globals.html#class-writablestream
 
 | Prop         | Type                 |
 | ------------ | -------------------- |
@@ -370,8 +359,6 @@ https://nodejs.org/api/globals.html#class-writablestream
 #### WritableStreamDefaultWriter
 
 This Streams API interface is the object returned by <a href="#writablestream">WritableStream.getWriter</a>() and once created locks the &lt; writer to the <a href="#writablestream">WritableStream</a> ensuring that no other streams can write to the underlying sink.
-`WritableStreamDefaultWriter` class is a global reference for `import { <a href="#writablestreamdefaultwriter">WritableStreamDefaultWriter</a> } from 'node:stream/web'`.
-https://nodejs.org/api/globals.html#class-writablestreamdefaultwriter
 
 | Prop              | Type                                  |
 | ----------------- | ------------------------------------- |
@@ -457,6 +444,8 @@ An event which takes place in the DOM.
 #### EventTarget
 
 <a href="#eventtarget">EventTarget</a> is a DOM interface implemented by objects that can receive events and may have listeners for them.
+EventTarget is a DOM interface implemented by objects that can
+receive events and may have listeners for them.
 
 | Method                  | Signature                                                                                                                                                                                                              | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -526,8 +515,6 @@ Provides a way to easily construct a set of key/value pairs representing form fi
 #### File
 
 Provides information about files and allows JavaScript in a web page to access their content.
-`File` class is a global reference for `import { <a href="#file">File</a> } from 'node:buffer'`
-https://nodejs.org/api/buffer.html#class-file
 
 | Prop               | Type                |
 | ------------------ | ------------------- |
@@ -536,6 +523,9 @@ https://nodejs.org/api/buffer.html#class-file
 
 
 #### URLSearchParams
+
+<a href="#urlsearchparams">`URLSearchParams`</a> class is a global reference for `require('url').URLSearchParams`
+https://nodejs.org/api/url.html#class-urlsearchparams
 
 | Method       | Signature                                                                                                                               | Description                                                                                                                |
 | ------------ | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -630,11 +620,6 @@ This Fetch API interface allows you to perform various actions on HTTP request a
 #### EventListenerOrEventListenerObject
 
 <code><a href="#eventlistener">EventListener</a> | <a href="#eventlistenerobject">EventListenerObject</a></code>
-
-
-#### AbortSignal
-
-<code>unknown</code>
 
 
 #### BufferSource

@@ -8,7 +8,7 @@ import { extract } from 'tar';
 import { getCapacitorPackageVersion } from '../common';
 import type { Config } from '../definitions';
 import { fatal } from '../errors';
-import { getMajorMinoriOSVersion } from '../ios/common';
+import { getMajoriOSVersion } from '../ios/common';
 import { logger } from '../log';
 import type { Plugin } from '../plugin';
 import { getPlatformElement, getPluginPlatform, getPluginType, PluginType } from '../plugin';
@@ -99,7 +99,7 @@ export async function removeCocoapodsFiles(config: Config): Promise<void> {
 
 export async function generatePackageText(config: Config, plugins: Plugin[]): Promise<string> {
   const iosPlatformVersion = await getCapacitorPackageVersion(config, config.ios.name);
-  const iosVersion = getMajorMinoriOSVersion(config);
+  const iosVersion = getMajoriOSVersion(config);
   const packageTraits = config.app.extConfig.experimental?.ios?.spm?.packageTraits ?? {};
   const packageOptions = config.app.extConfig.experimental?.ios?.spm?.packageOptions ?? {};
   const swiftToolsVersion = config.app.extConfig.experimental?.ios?.spm?.swiftToolsVersion ?? '5.9';
@@ -110,7 +110,7 @@ import PackageDescription
 // DO NOT MODIFY THIS FILE - managed by Capacitor CLI commands
 let package = Package(
     name: "CapApp-SPM",
-    platforms: [.iOS(${iosVersion.includes('.') ? `"${iosVersion}"` : `.v${iosVersion}`})],
+    platforms: [.iOS(.v${iosVersion})],
     products: [
         .library(
             name: "CapApp-SPM",
@@ -137,9 +137,9 @@ let package = Package(
       const options = packageOptions[plugin.id];
       const symlink = options?.symlink;
       const symlinkFolder = join('symlinks', plugin.name);
-      const relPath = convertToUnixPath(
-        symlink ? symlinkFolder : relative(config.ios.nativeXcodeProjDirAbs, plugin.rootPath),
-      );
+      const relPath = symlink
+        ? symlinkFolder
+        : convertToUnixPath(relative(config.ios.nativeXcodeProjDirAbs, plugin.rootPath));
       if (symlink) {
         await ensureSymlink(plugin.rootPath, resolve(config.ios.nativeProjectDirAbs, 'CapApp-SPM', symlinkFolder));
       }
@@ -178,7 +178,7 @@ let package = Package(
     if (getPluginType(plugin, config.ios.name) === PluginType.Cordova) {
       const platformTag = getPluginPlatform(plugin, config.ios.name);
       if (platformTag.$?.package) {
-        pluginText = `,\n                .product(name: "${plugin.id}", package: "${plugin.id}"${aliasText})`;
+        pluginText = `,\n                .product(name: "${plugin.id}", package: "${plugin.id}")`;
       } else {
         const sourceFiles = getPlatformElement(plugin, config.ios.name, 'source-file');
         const headerFiles = getPlatformElement(plugin, config.ios.name, 'header-file');
@@ -275,6 +275,7 @@ export async function addSceneManifestIfNeeded(config: Config): Promise<void> {
         {
           UISceneConfigurationName: 'Default Configuration',
           UISceneDelegateClassName: '$(PRODUCT_MODULE_NAME).SceneDelegate',
+          UISceneStoryboardFile: 'Main',
         },
       ],
     },

@@ -245,7 +245,7 @@ export interface HttpOptions {
    * This is used if we've had to convert the data from a JS type that needs
    * special handling in the native layer
    */
-  dataType?: 'file' | 'formData' | 'binary';
+  dataType?: 'file' | 'formData';
 }
 
 export interface HttpParams {
@@ -262,11 +262,11 @@ export interface HttpHeaders {
   [key: string]: string;
 }
 
-export interface HttpResponse<T = any> {
+export interface HttpResponse {
   /**
    * Additional data received with the Http response.
    */
-  data: T;
+  data: any;
   /**
    * The status code received from the Http response.
    */
@@ -318,7 +318,7 @@ const normalizeHttpHeaders = (headers: HttpHeaders = {}): HttpHeaders => {
  * @param params A map of url parameters
  * @param shouldEncode true if you should encodeURIComponent() the values (true by default)
  */
-export const buildUrlParams = (params?: HttpParams, shouldEncode = true): string | null => {
+const buildUrlParams = (params?: HttpParams, shouldEncode = true): string | null => {
   if (!params) return null;
 
   const output = Object.entries(params).reduce((accumulator, entry) => {
@@ -333,7 +333,7 @@ export const buildUrlParams = (params?: HttpParams, shouldEncode = true): string
         item += `${key}=${encodedValue}&`;
       });
       // last character will always be "&" so slice it off
-      item = item.slice(0, -1);
+      item.slice(0, -1);
     } else {
       encodedValue = shouldEncode ? encodeURIComponent(value) : value;
       item = `${key}=${encodedValue}`;
@@ -343,7 +343,7 @@ export const buildUrlParams = (params?: HttpParams, shouldEncode = true): string
   }, '');
 
   // Remove initial "&" from the reduce
-  return output.substring(1);
+  return output.substr(1);
 };
 
 /**

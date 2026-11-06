@@ -49,8 +49,6 @@ export async function buildiOS(config: Config, buildOptions: BuildCommandOptions
 
   if (buildOptions.xcodeSigningType == 'manual') {
     buildArgs.push(`PROVISIONING_PROFILE_SPECIFIER=${buildOptions.xcodeProvisioningProfile}`);
-  } else {
-    buildArgs.push('-allowProvisioningUpdates');
   }
 
   await runTask('Building xArchive', async () =>

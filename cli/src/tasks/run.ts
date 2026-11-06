@@ -43,7 +43,7 @@ export async function runCommand(
   options: RunCommandOptions,
 ): Promise<void> {
   options.host = options.host ?? CapLiveReloadHelper.getIpAddress() ?? 'localhost';
-  if (!options.port) {
+  if (!options.https && !options.port) {
     options.port = '3000';
   }
   if (selectedPlatformName && !(await isValidPlatform(selectedPlatformName))) {
@@ -89,18 +89,15 @@ export async function runCommand(
       return;
     }
 
-    let cordovaPlugins: Awaited<ReturnType<typeof getCordovaPlugins>> | undefined;
-    let liveReloadManifestUpdated = false;
     try {
-      cordovaPlugins = await getCordovaPlugins(config, platformName);
       if (options.sync) {
         await sync(config, platformName, false, true);
       }
+      const cordovaPlugins = await getCordovaPlugins(config, platformName);
       if (options.liveReload) {
         await CapLiveReloadHelper.editCapConfigForLiveReload(config, platformName, options);
         if (platformName === config.android.name) {
-          await writeCordovaAndroidManifest(cordovaPlugins, config, platformName, true);
-          liveReloadManifestUpdated = true;
+          await await writeCordovaAndroidManifest(cordovaPlugins, config, platformName, true);
         }
       }
       await run(config, platformName, options);
@@ -108,7 +105,7 @@ export async function runCommand(
         new Promise((resolve) => process.on('SIGINT', resolve))
           .then(async () => {
             await CapLiveReloadHelper.revertCapConfigForLiveReload();
-            if (liveReloadManifestUpdated && platformName === config.android.name && cordovaPlugins) {
+            if (platformName === config.android.name) {
               await writeCordovaAndroidManifest(cordovaPlugins, config, platformName, false);
             }
           })
@@ -121,9 +118,6 @@ export async function runCommand(
     } catch (e: any) {
       if (options.liveReload) {
         await CapLiveReloadHelper.revertCapConfigForLiveReload();
-        if (liveReloadManifestUpdated && platformName === config.android.name && cordovaPlugins) {
-          await writeCordovaAndroidManifest(cordovaPlugins, config, platformName, false);
-        }
       }
       if (!isFatal(e)) {
         fatal(e.stack ?? e);

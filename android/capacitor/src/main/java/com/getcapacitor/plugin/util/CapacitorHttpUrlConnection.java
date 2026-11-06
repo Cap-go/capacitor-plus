@@ -1,5 +1,6 @@
 package com.getcapacitor.plugin.util;
 
+import android.os.Build;
 import android.os.LocaleList;
 import android.text.TextUtils;
 import com.getcapacitor.Bridge;
@@ -18,6 +19,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.net.UnknownServiceException;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -207,8 +209,13 @@ public class CapacitorHttpUrlConnection implements ICapacitorHttpUrlConnection {
                 dataString = call.getString("data");
             }
             this.writeRequestBody(dataString != null ? dataString : "");
-        } else if (bodyType != null && (bodyType.equals("file") || bodyType.equals("binary"))) {
-            this.writeRequestBody(decodeBase64RequestBody(body.toString()));
+        } else if (bodyType != null && bodyType.equals("file")) {
+            try (DataOutputStream os = new DataOutputStream(connection.getOutputStream())) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    os.write(Base64.getDecoder().decode(body.toString()));
+                }
+                os.flush();
+            }
         } else if (contentType.contains("application/x-www-form-urlencoded")) {
             try {
                 JSObject obj = body.toJSObject();
@@ -243,17 +250,6 @@ public class CapacitorHttpUrlConnection implements ICapacitorHttpUrlConnection {
             os.write(body.getBytes(StandardCharsets.UTF_8));
             os.flush();
         }
-    }
-
-    private void writeRequestBody(byte[] body) throws IOException {
-        try (DataOutputStream os = new DataOutputStream(connection.getOutputStream())) {
-            os.write(body);
-            os.flush();
-        }
-    }
-
-    static byte[] decodeBase64RequestBody(String body) {
-        return android.util.Base64.decode(body, android.util.Base64.DEFAULT);
     }
 
     private void writeObjectRequestBody(JSObject object) throws IOException, JSONException {
@@ -300,7 +296,11 @@ public class CapacitorHttpUrlConnection implements ICapacitorHttpUrlConnection {
                         os.writeBytes("Content-Transfer-Encoding: binary" + lineEnd);
                         os.writeBytes(lineEnd);
 
-                        os.write(decodeBase64RequestBody(value));
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            os.write(Base64.getDecoder().decode(value));
+                        } else {
+                            os.write(android.util.Base64.decode(value, android.util.Base64.DEFAULT));
+                        }
 
                         os.writeBytes(lineEnd);
                     }
@@ -499,9 +499,12 @@ public class CapacitorHttpUrlConnection implements ICapacitorHttpUrlConnection {
     }
 
     public void setSSLSocketFactory(Bridge bridge) {
-        // Attach SSL Certificates if Enterprise Plugin is available
+        // Attach SSL Certificates if an SSL Pinning plugin is available
         try {
-            Class<?> sslPinningImpl = Class.forName("io.ionic.sslpinning.SSLPinning");
+            Class<?> sslPinningImpl = findSSLPinningClass();
+            if (sslPinningImpl == null) {
+                return;
+            }
             Method method = sslPinningImpl.getDeclaredMethod("getSSLSocketFactory", Bridge.class);
             SSLSocketFactory sslSocketFactory = (SSLSocketFactory) method.invoke(
                 sslPinningImpl.getDeclaredConstructor().newInstance(),
@@ -511,5 +514,14 @@ public class CapacitorHttpUrlConnection implements ICapacitorHttpUrlConnection {
                 ((HttpsURLConnection) this.connection).setSSLSocketFactory(sslSocketFactory);
             }
         } catch (Exception ignored) {}
+    }
+
+    private static Class<?> findSSLPinningClass() {
+        for (String className : new String[] { "io.ionic.sslpinning.SSLPinning", "com.getcapacitor.community.sslpinning.SSLPinning" }) {
+            try {
+                return Class.forName(className);
+            } catch (ClassNotFoundException ignored) {}
+        }
+        return null;
     }
 }

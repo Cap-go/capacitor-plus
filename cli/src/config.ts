@@ -221,7 +221,7 @@ async function loadAndroidConfig(
   if (extConfig.android?.flavor) {
     apkPath = `${apkPath}/${extConfig.android?.flavor}`;
   }
-  const apkName = await parseApkNameFromFlavor(flavor, `${platformDirAbs}/${apkPath}debug`);
+  const apkName = parseApkNameFromFlavor(flavor);
   const buildOutputDir = `${apkPath}/debug`;
   const cordovaPluginsDir = 'capacitor-cordova-android-plugins';
   const studioPath = lazy(() => determineAndroidStudioPath(cliConfig.os));
@@ -427,7 +427,7 @@ async function determineCocoapodPath(): Promise<string> {
 
 async function determinePackageManager(
   rootDir: string,
-  platformDir: string,
+  platformDir: any,
   nativeProjectDirAbs: string,
 ): Promise<PackageManager> {
   if (existsSync(resolve(nativeProjectDirAbs, 'CapApp-SPM'))) {
@@ -480,7 +480,7 @@ async function determinePackageManager(
 
 function formatConfigTS(extConfig: ExternalConfig): string {
   // TODO: <reference> tags
-  return `import type { CapacitorConfig } from '@capacitor-plus/cli';
+  return `import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = ${formatJSObject(extConfig)};
 

@@ -10,6 +10,7 @@ import { fatal } from '../errors';
 import { getMajoriOSVersion } from '../ios/common';
 import { logger, logPrompt, logSuccess } from '../log';
 import { deleteFolderRecursive } from '../util/fs';
+import { getBlockedInstallScripts, hasBlockedCapacitorScripts, logBlockedInstallScripts } from '../util/npm';
 import { runCommand } from '../util/subprocess';
 import { extractTemplate } from '../util/template';
 
@@ -17,42 +18,8 @@ import { migrateToUIScene } from './migrate-uiscene';
 
 // eslint-disable-next-line prefer-const
 let allDependencies: { [key: string]: any } = {};
-const libs = [
-  '@capacitor-plus/core',
-  '@capacitor-plus/cli',
-  '@capacitor-plus/ios',
-  '@capacitor-plus/android',
-  '@capacitor/core',
-  '@capacitor/cli',
-  '@capacitor/ios',
-  '@capacitor/android',
-];
+const libs = ['@capacitor/core', '@capacitor/cli', '@capacitor/ios', '@capacitor/android'];
 const plugins = [
-  '@capacitor-plus/action-sheet',
-  '@capacitor-plus/app',
-  '@capacitor-plus/app-launcher',
-  '@capacitor-plus/browser',
-  '@capacitor-plus/camera',
-  '@capacitor-plus/clipboard',
-  '@capacitor-plus/device',
-  '@capacitor-plus/dialog',
-  '@capacitor-plus/filesystem',
-  '@capacitor-plus/geolocation',
-  '@capacitor-plus/google-maps',
-  '@capacitor-plus/haptics',
-  '@capacitor-plus/keyboard',
-  '@capacitor-plus/local-notifications',
-  '@capacitor-plus/motion',
-  '@capacitor-plus/network',
-  '@capacitor-plus/preferences',
-  '@capacitor-plus/push-notifications',
-  '@capacitor-plus/screen-orientation',
-  '@capacitor-plus/screen-reader',
-  '@capacitor-plus/share',
-  '@capacitor-plus/splash-screen',
-  '@capacitor-plus/status-bar',
-  '@capacitor-plus/text-zoom',
-  '@capacitor-plus/toast',
   '@capacitor/action-sheet',
   '@capacitor/app',
   '@capacitor/app-launcher',
@@ -85,6 +52,7 @@ const gradleVersion = '8.14.3';
 const iOSVersion = '15';
 const kotlinVersion = '2.2.20';
 let installFailed = false;
+let scriptsBlocked = false;
 
 export async function migrateCommand(config: Config, noprompt: boolean, packagemanager: string): Promise<void> {
   if (config === null) {
@@ -181,11 +149,16 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
         installFailed = true;
       }
 
+      if (runNpmInstall && !installFailed) {
+        const blocked = await getBlockedInstallScripts(config.app.rootDir, installerType);
+        if (blocked.length > 0) {
+          logBlockedInstallScripts(blocked);
+          scriptsBlocked = hasBlockedCapacitorScripts(blocked);
+        }
+      }
+
       // Update iOS Projects
-      if (
-        (allDependencies['@capacitor-plus/ios'] || allDependencies['@capacitor/ios']) &&
-        existsSync(config.ios.platformDirAbs)
-      ) {
+      if (allDependencies['@capacitor/ios'] && existsSync(config.ios.platformDirAbs)) {
         const currentiOSVersion = getMajoriOSVersion(config);
         if (parseInt(currentiOSVersion) < parseInt(iOSVersion)) {
           // ios template changes
@@ -226,10 +199,7 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
         logger.warn('Skipped Running cap sync.');
       }
 
-      if (
-        (allDependencies['@capacitor-plus/android'] || allDependencies['@capacitor/android']) &&
-        existsSync(config.android.platformDirAbs)
-      ) {
+      if (allDependencies['@capacitor/android'] && existsSync(config.android.platformDirAbs)) {
         // AndroidManifest.xml add "density"
         await runTask(`Migrating AndroidManifest.xml by adding density to Activity configChanges.`, () => {
           return updateAndroidManifest(join(config.android.srcMainDirAbs, 'AndroidManifest.xml'));
@@ -347,8 +317,14 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
         return writeBreakingChanges();
       });
 
-      if (!installFailed) {
+      if (!installFailed && !scriptsBlocked) {
         logSuccess(`Migration to Capacitor ${coreVersion} is complete. Run and test your app!`);
+      } else if (scriptsBlocked) {
+        logger.warn(
+          `Migration to Capacitor ${coreVersion} is incomplete because npm blocked install scripts. Approve them as described above, then run ${c.input(
+            'npx cap sync',
+          )}.`,
+        );
       } else {
         logger.warn(
           `Migration to Capacitor ${coreVersion} is incomplete. Check the log messages for more information.`,
@@ -397,7 +373,6 @@ async function installLatestLibs(dependencyManager: string, runInstall: boolean,
   });
 
   if (runInstall) {
-    rimraf.sync(join(config.app.rootDir, 'node_modules/@capacitor-plus/!(cli)'));
     rimraf.sync(join(config.app.rootDir, 'node_modules/@capacitor/!(cli)'));
     await runCommand(dependencyManager, ['install']);
     if (dependencyManager == 'yarn') {
@@ -406,22 +381,12 @@ async function installLatestLibs(dependencyManager: string, runInstall: boolean,
       await runCommand(dependencyManager, ['update']);
     }
   } else {
-    logger.info(`Please run an install command with your package manager of choice. (ex: yarn add)`);
+    logger.info(`Please run an install command with your package manager of choice. (ex: yarn install)`);
   }
 }
 
 async function writeBreakingChanges() {
   const breaking = [
-    '@capacitor-plus/action-sheet',
-    '@capacitor-plus/barcode-scanner',
-    '@capacitor-plus/browser',
-    '@capacitor-plus/camera',
-    '@capacitor-plus/geolocation',
-    '@capacitor-plus/google-maps',
-    '@capacitor-plus/push-notifications',
-    '@capacitor-plus/screen-orientation',
-    '@capacitor-plus/splash-screen',
-    '@capacitor-plus/status-bar',
     '@capacitor/action-sheet',
     '@capacitor/barcode-scanner',
     '@capacitor/browser',
@@ -446,7 +411,7 @@ async function writeBreakingChanges() {
       )}.`,
     );
   }
-  if (allDependencies['@capacitor/ios'] || allDependencies['@capacitor-plus/ios']) {
+  if (allDependencies['@capacitor/ios']) {
     logger.info(
       'IMPORTANT: Capacitor 8.5 adopts UIScene on iOS. ' +
         'See https://capacitorjs.com/docs/updating/8-5 for the full 8.4 → 8.5 migration guide.',

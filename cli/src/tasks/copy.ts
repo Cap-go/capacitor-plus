@@ -67,7 +67,10 @@ export async function copy(config: Config, platformName: string, inline = false)
     let usesSSLPinning = false;
     if (
       allPlugins.filter(
-        (plugin) => plugin.id === '@ionic-enterprise/ssl-pinning' || plugin.id === '@capacitor/ssl-pinning',
+        (plugin) =>
+          plugin.id === '@ionic-enterprise/ssl-pinning' ||
+          plugin.id === '@capacitor/ssl-pinning' ||
+          plugin.id === '@capacitor-community/ssl-pinning',
       ).length > 0
     ) {
       usesSSLPinning = true;
@@ -254,13 +257,13 @@ async function copySSLCert(sslCertPaths: string[], rootDir: string, targetDir: s
           `SSL Certificate does not exist at specified path.`,
       );
 
-      continue;
+      return;
     }
     validCertPaths.push(certAbsFromPath);
   }
   const certsDirAbsToPath = join(targetDir, 'certs');
   const certsDirRelToDir = relative(rootDir, targetDir);
-  await runTask(`Copying SSL Certificates to ${certsDirRelToDir}`, async () => {
+  await runTask(`Copying SSL Certificates from to ${certsDirRelToDir}`, async () => {
     const promises: Promise<void>[] = [];
     for (const certPath of validCertPaths) {
       promises.push(fsCopy(certPath, join(certsDirAbsToPath, basename(certPath))));
