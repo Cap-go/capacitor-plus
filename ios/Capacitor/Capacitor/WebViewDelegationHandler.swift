@@ -64,6 +64,35 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
         decisionHandler(.grant)
     }
 
+    private static func effectivePort(for url: URL) -> Int? {
+        if let port = url.port {
+            return port
+        }
+        switch url.scheme?.lowercased() {
+        case "https":
+            return 443
+        case "http":
+            return 80
+        default:
+            return nil
+        }
+    }
+
+    private static func matchesOrigin(_ url: URL, _ origin: URL) -> Bool {
+        guard url.scheme == origin.scheme, url.host == origin.host else {
+            return false
+        }
+        return effectivePort(for: url) == effectivePort(for: origin)
+    }
+
+    /// Test seam: avoids subclassing `WKNavigationAction` in unit tests.
+    static func shouldBlockHttpInterceptorNavigation(for url: URL, serverURL: URL, localURL: URL) -> Bool {
+        guard url.path.starts(with: CapacitorBridge.httpInterceptorStartIdentifier) else {
+            return false
+        }
+        return matchesOrigin(url, serverURL) || matchesOrigin(url, localURL)
+    }
+
     open func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         // post a notification for any listeners
         NotificationCenter.default.post(name: .capacitorDecidePolicyForNavigationAction, object: navigationAction)
@@ -71,6 +100,16 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
         // sanity check, these shouldn't ever be nil in practice
         guard let bridge = bridge, let navURL = navigationAction.request.url else {
             decisionHandler(.allow)
+            return
+        }
+
+        // The proxy returns a remote body at the app origin, so block it before plugins can allow it.
+        if Self.shouldBlockHttpInterceptorNavigation(
+            for: navURL,
+            serverURL: bridge.config.serverURL,
+            localURL: bridge.config.localURL
+        ) {
+            decisionHandler(.cancel)
             return
         }
 
