@@ -162,7 +162,7 @@ export const createCapacitor = (win: WindowCapacitor): CapacitorInstance => {
         });
       };
 
-      const p = new Promise((resolve) => call.then(() => resolve({ remove })));
+      const p = call.then(() => ({ remove }));
 
       (p as any).remove = async () => {
         console.warn(`Using addListener() without 'await' is deprecated.`);
@@ -187,8 +187,13 @@ export const createCapacitor = (win: WindowCapacitor): CapacitorInstance => {
             // https://github.com/facebook/react/issues/20030
             case '$$typeof':
               return undefined;
-            // Plugins must not be thenable: Promise/adoption uses a callable `then` property.
+            // Plugins must not be thenable: promise adoption inspects callable `then`, `catch`, and
+            // `finally` (see ionic-team/capacitor#8472). Return undefined so none run as thenables.
             case 'then':
+              return undefined;
+            case 'catch':
+              return undefined;
+            case 'finally':
               return undefined;
             case 'toJSON':
               return () => ({});

@@ -78,6 +78,52 @@ describe('plugin', () => {
     await expect(Promise.resolve(Awesome)).resolves.toBe(Awesome);
   });
 
+  it('plugin proxy has undefined then, catch, and finally (not thenable)', () => {
+    mockAndroidBridge();
+    initBridge(win);
+    mockAndroidPlugin('Awesome', 'mph');
+
+    cap = initCapacitorGlobal(win);
+
+    const Awesome = cap.registerPlugin<AwesomePlugin>('Awesome');
+    const proxy = Awesome as any;
+
+    expect(proxy.then).toBeUndefined();
+    expect(proxy.catch).toBeUndefined();
+    expect(proxy.finally).toBeUndefined();
+  });
+
+  it('addListener rejects when native addListener fails', async () => {
+    mockAndroidBridge();
+    initBridge(win);
+    const w: any = win;
+    w.Capacitor = w.Capacitor ?? {};
+    w.Capacitor.PluginHeaders = w.Capacitor.PluginHeaders ?? [];
+    w.Capacitor.PluginHeaders.push({
+      name: 'RejectingListener',
+      methods: [
+        { name: 'mph', rtype: 'promise' },
+        { name: 'addListener', rtype: 'promise' },
+        { name: 'removeListener' },
+        { name: 'removeAllListeners' },
+      ],
+    });
+
+    cap = initCapacitorGlobal(win);
+
+    const addListenerError = new Error('native addListener failed');
+    (cap as CapacitorInstance).nativePromise = (pluginName, methodName) => {
+      if (pluginName === 'RejectingListener' && methodName === 'addListener') {
+        return Promise.reject(addListenerError);
+      }
+      return Promise.resolve({} as any);
+    };
+
+    const Plg = cap.registerPlugin<RejectingListenerPlugin>('RejectingListener');
+
+    await expect(Plg.addListener('eventName', jest.fn())).rejects.toBe(addListenerError);
+  });
+
   it('error from missing native implementation', async (done) => {
     // mock the global with the android bridge
     mockAndroidBridge();
@@ -472,5 +518,9 @@ describe('plugin', () => {
 });
 
 interface AwesomePlugin extends Plugin {
+  mph(): Promise<number>;
+}
+
+interface RejectingListenerPlugin extends Plugin {
   mph(): Promise<number>;
 }
