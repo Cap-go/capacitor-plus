@@ -14,13 +14,6 @@ describe('bridge', () => {
   let originalRequest: typeof Request;
   let originalResponse: typeof Response;
 
-  function dispatchFromNative(result: PluginResult): void {
-    if (cap.fromNative === undefined) {
-      throw new Error('cap.fromNative is undefined');
-    }
-    cap.fromNative(result);
-  }
-
   beforeEach(() => {
     originalFetch = window.fetch;
     originalHeaders = globalThis.Headers;
@@ -144,7 +137,7 @@ describe('bridge', () => {
       postMessage: (m: string) => {
         callData = JSON.parse(m);
         Promise.resolve().then(() => {
-          dispatchFromNative({
+          cap.fromNative!({
             callbackId: callData.callbackId,
             methodName: callData.methodName,
             pluginId: callData.pluginId,
@@ -183,7 +176,7 @@ describe('bridge', () => {
       postMessage: (m: string) => {
         callData = JSON.parse(m);
         Promise.resolve().then(() => {
-          dispatchFromNative({
+          cap.fromNative!({
             callbackId: callData.callbackId,
             methodName: callData.methodName,
             pluginId: callData.pluginId,
@@ -222,7 +215,7 @@ describe('bridge', () => {
       postMessage: (m: string) => {
         callData = JSON.parse(m);
         Promise.resolve().then(() => {
-          dispatchFromNative({
+          cap.fromNative!({
             callbackId: callData.callbackId,
             methodName: callData.methodName,
             pluginId: callData.pluginId,
@@ -259,7 +252,7 @@ describe('bridge', () => {
         Promise.resolve().then(() => {
           pluginResult.callbackId = d.callbackId;
           pluginResult.methodName = d.methodName;
-          dispatchFromNative(pluginResult);
+          cap.fromNative!(pluginResult);
         });
       },
     };
@@ -273,7 +266,7 @@ describe('bridge', () => {
             Promise.resolve().then(() => {
               pluginResult.callbackId = m.callbackId;
               pluginResult.methodName = m.methodName;
-              dispatchFromNative(pluginResult);
+              cap.fromNative!(pluginResult);
             });
           },
         },

@@ -782,6 +782,7 @@ public class WebViewLocalServer {
         }
     }
 
+    // For L and above.
     static class BoundedInputStream extends InputStream {
 
         private final InputStream in;

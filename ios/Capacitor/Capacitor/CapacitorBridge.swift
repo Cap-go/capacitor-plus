@@ -238,14 +238,10 @@ open class CapacitorBridge: NSObject, CAPBridgeProtocol {
      */
     func exportCoreJS(localUrl: String) {
         do {
-            let cookiesEnabled = config.getPluginConfig("CapacitorCookies").getBoolean("enabled", false)
-            let httpEnabled = config.getPluginConfig("CapacitorHttp").getBoolean("enabled", false)
             try JSExport.exportCapacitorGlobalJS(userContentController: webViewDelegationHandler.contentController,
                                                  isDebug: isDevEnvironment,
                                                  loggingEnabled: config.loggingEnabled,
-                                                 localUrl: localUrl,
-                                                 cookiesEnabled: cookiesEnabled,
-                                                 httpEnabled: httpEnabled)
+                                                 localUrl: localUrl)
             try JSExport.exportBridgeJS(userContentController: webViewDelegationHandler.contentController)
         } catch {
             type(of: self).fatalError(error, error)

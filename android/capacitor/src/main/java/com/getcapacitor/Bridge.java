@@ -52,7 +52,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -119,8 +118,6 @@ public class Bridge {
     private String localUrl;
     private String appUrl;
     private String appUrlConfig;
-    /** Origin only, path cleared, for comparing external navigations to the app load URL */
-    private Uri appOriginUri;
     private HostMask appAllowNavigationMask;
     private Set<String> allowedOriginRules = new HashSet<String>();
     private ArrayList<String> authorities = new ArrayList<>();
@@ -424,8 +421,8 @@ public class Bridge {
 
     public boolean launchIntent(Uri url) {
         // The proxy returns a remote body at the app origin, so block it before plugins can allow it.
-        String path = url.getPath();
-        if (path != null && path.startsWith(CAPACITOR_HTTP_INTERCEPTOR_START)) {
+        Uri appUri = Uri.parse(appUrl);
+        if (shouldBlockHttpInterceptorNavigation(url, appUri)) {
             return true;
         }
 
@@ -447,8 +444,7 @@ public class Bridge {
         }
 
         if (
-            !(Objects.equals(appOriginUri != null ? appOriginUri.getHost() : null, url.getHost()) &&
-                Objects.equals(url.getScheme(), appOriginUri != null ? appOriginUri.getScheme() : null)) &&
+            !(appUri.getHost().equals(url.getHost()) && url.getScheme().equals(appUri.getScheme())) &&
             !appAllowNavigationMask.matches(url.getHost())
         ) {
             try {
@@ -688,8 +684,6 @@ public class Bridge {
         if (appUrlPath != null && !appUrlPath.trim().isEmpty()) {
             appUrl += appUrlPath;
         }
-
-        appOriginUri = Uri.parse(appUrl).buildUpon().path(null).fragment(null).clearQuery().build();
     }
 
     /**

@@ -99,7 +99,7 @@ public class SystemBars extends Plugin {
                     bridge
                         .getWebView()
                         .evaluateJavascript(viewportMetaJSFunction, (res) -> {
-                            hasViewportCover = res.equals("true");
+                            hasViewportCover = "true".equals(res);
 
                             // Request new execution tree of `setOnApplyWindowInsetsListener`
                             bridge.getWebView().requestApplyInsets();
@@ -247,7 +247,7 @@ public class SystemBars extends Plugin {
                 .setInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(), Insets.of(0, 0, 0, 0))
                 .build();
 
-            injectSafeAreaCSS(newInsets);
+            injectSafeAreaCSS(insets);
 
             return newInsets;
         });

@@ -1,61 +1,56 @@
-import WebKit
 import XCTest
 
 @testable import Capacitor
 
-private class StubNavigationAction: WKNavigationAction {
-    private let stubbedRequest: URLRequest
-    init(url: String) {
-        self.stubbedRequest = URLRequest(url: URL(string: url)!)
-        super.init()
-    }
-    override var request: URLRequest { stubbedRequest }
-}
-
-// The proxy path shares the app's origin, so the origin guard alone would allow it.
 class HttpInterceptorNavigationTests: XCTestCase {
-    private var bridge: MockBridge!
-    private var handler: WebViewDelegationHandler!
-    private let webView = WKWebView()
+    private let serverURL = URL(string: "capacitor://localhost")!
+    private let localURL = URL(string: "capacitor://localhost")!
 
-    override func setUp() {
-        super.setUp()
-        let descriptor = InstanceDescriptor()
-        handler = WebViewDelegationHandler()
-        bridge = MockBridge(
-            with: InstanceConfiguration(with: descriptor, isDebug: true),
-            delegate: MockBridgeViewController(),
-            cordovaConfiguration: descriptor.cordovaConfiguration,
-            assetHandler: MockAssetHandler(router: CapacitorRouter()),
-            delegationHandler: handler
+    func testDoesNotBlockDifferentPortWithInterceptorPathPrefix() {
+        let serverURL = URL(string: "https://localhost:8100")!
+        let localURL = URL(string: "https://localhost:8100")!
+        let differentPortURL = URL(string: "https://localhost:3000\(CapacitorBridge.httpInterceptorStartIdentifier)/page")!
+        XCTAssertFalse(
+            WebViewDelegationHandler.shouldBlockHttpInterceptorNavigation(
+                for: differentPortURL,
+                serverURL: serverURL,
+                localURL: localURL
+            )
         )
     }
 
-    private func policy(for url: String) -> WKNavigationActionPolicy {
-        var decision: WKNavigationActionPolicy?
-        handler.webView(webView, decidePolicyFor: StubNavigationAction(url: url)) { decision = $0 }
-        return decision!
-    }
-
-    func testBlocksNavigationToInterceptorPath() {
-        let interceptorURL = "capacitor://localhost\(CapacitorBridge.httpInterceptorStartIdentifier)?u=https://example.com/payload.html"
-        XCTAssertEqual(policy(for: interceptorURL), .cancel)
-    }
-
-    /// Same origin rule as main frame; exercise the static helper (subframe paths also hit this before plugin hooks).
-    func testBlocksHttpInterceptorNavigationWhenMatchingAppOrigin() throws {
-        let interceptorURL = "capacitor://localhost\(CapacitorBridge.httpInterceptorStartIdentifier)?u=https://example.com/payload.html"
-        let url = try XCTUnwrap(URL(string: interceptorURL))
+    func testBlocksNavigationToInterceptorPathOnAppOrigin() {
+        let interceptorURL = URL(
+            string: "capacitor://localhost\(CapacitorBridge.httpInterceptorStartIdentifier)?u=https://example.com/payload.html"
+        )!
         XCTAssertTrue(
             WebViewDelegationHandler.shouldBlockHttpInterceptorNavigation(
-                for: url,
-                serverURL: bridge.config.serverURL,
-                localURL: bridge.config.localURL
+                for: interceptorURL,
+                serverURL: serverURL,
+                localURL: localURL
+            )
+        )
+    }
+
+    func testDoesNotBlockExternalOriginWithInterceptorPathPrefix() {
+        let externalURL = URL(string: "https://example.com\(CapacitorBridge.httpInterceptorStartIdentifier)/page")!
+        XCTAssertFalse(
+            WebViewDelegationHandler.shouldBlockHttpInterceptorNavigation(
+                for: externalURL,
+                serverURL: serverURL,
+                localURL: localURL
             )
         )
     }
 
     func testAllowsInAppNavigation() {
-        XCTAssertEqual(policy(for: "capacitor://localhost/index.html"), .allow)
+        let inAppURL = URL(string: "capacitor://localhost/index.html")!
+        XCTAssertFalse(
+            WebViewDelegationHandler.shouldBlockHttpInterceptorNavigation(
+                for: inAppURL,
+                serverURL: serverURL,
+                localURL: localURL
+            )
+        )
     }
 }

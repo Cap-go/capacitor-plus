@@ -148,9 +148,7 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
         if !isApplicationNavigation, toplevelNavigation {
             // disallow and let the system handle it
             if webView.window?.windowScene?.activationState == .foregroundActive {
-                DispatchQueue.main.async {
-                    UIApplication.shared.open(navURL, options: [:], completionHandler: nil)
-                }
+                UIApplication.shared.open(navURL, options: [:], completionHandler: nil)
             }
             decisionHandler(.cancel)
             return
@@ -324,6 +322,16 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
                         CapacitorCookieManager(bridge!.config).setCookie(domain, action)
                         completionHandler("")
                         // swiftlint:enable force_cast
+                        // Don't present prompt
+                        return
+                    } else if type == "CapacitorCookies.isEnabled" {
+                        let pluginConfig = bridge!.config.getPluginConfig("CapacitorCookies")
+                        completionHandler(String(pluginConfig.getBoolean("enabled", false)))
+                        // Don't present prompt
+                        return
+                    } else if type == "CapacitorHttp" {
+                        let pluginConfig = bridge!.config.getPluginConfig("CapacitorHttp")
+                        completionHandler(String(pluginConfig.getBoolean("enabled", false)))
                         // Don't present prompt
                         return
                     }
