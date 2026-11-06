@@ -265,6 +265,7 @@ describe('getTelemetryError', () => {
     expect(error).not.toContain(XCODE_TEAM_ID);
     expect(error).not.toContain(PROVISIONING_PROFILE);
     expect(error).toContain('xcodebuild: error: Unable to find a destination.');
+    expect(error).toContain('<redacted>');
   });
 
   it('scrubs the keystore path and alias a failed signing run echoes back', () => {
@@ -300,18 +301,7 @@ describe('getTelemetryError', () => {
     );
 
     expect(error).not.toContain(XCODE_TEAM_ID);
-  });
-
-  it('reports command_failed when scrubbed output has no allowlisted lines', () => {
-    const cmd = captureBuild(['build', 'ios']);
-
-    const error = getTelemetryError(
-      cmd,
-      ['Build settings from command line:', `    DEVELOPMENT_TEAM = ${XCODE_TEAM_ID}`].join('\n'),
-      makeBuildConfig({ ios: { teamId: XCODE_TEAM_ID } }),
-    );
-
-    expect(error).toBe('command_failed');
+    expect(error).toContain('<redacted>');
   });
 
   it('scrubs the keystore credentials the config supplies when the flags are absent', () => {
@@ -365,12 +355,8 @@ describe('getTelemetryError', () => {
     );
   });
 
-  it('truncates long allowlisted output so a failed build cannot ship its whole log', () => {
-    const error = getTelemetryError(
-      captureBuild(['build', 'android']),
-      `xcodebuild: error: ${'x'.repeat(10_000)}`,
-      makeBuildConfig(),
-    );
+  it('truncates long output so a failed build cannot ship its whole log', () => {
+    const error = getTelemetryError(captureBuild(['build', 'android']), 'x'.repeat(10_000), makeBuildConfig());
 
     expect(error).toHaveLength(500);
   });

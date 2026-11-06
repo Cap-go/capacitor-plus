@@ -238,10 +238,14 @@ open class CapacitorBridge: NSObject, CAPBridgeProtocol {
      */
     func exportCoreJS(localUrl: String) {
         do {
+            let cookiesEnabled = config.getPluginConfig("CapacitorCookies").getBoolean("enabled", false)
+            let httpEnabled = config.getPluginConfig("CapacitorHttp").getBoolean("enabled", false)
             try JSExport.exportCapacitorGlobalJS(userContentController: webViewDelegationHandler.contentController,
                                                  isDebug: isDevEnvironment,
                                                  loggingEnabled: config.loggingEnabled,
-                                                 localUrl: localUrl)
+                                                 localUrl: localUrl,
+                                                 cookiesEnabled: cookiesEnabled,
+                                                 httpEnabled: httpEnabled)
             try JSExport.exportBridgeJS(userContentController: webViewDelegationHandler.contentController)
         } catch {
             type(of: self).fatalError(error, error)
@@ -299,7 +303,10 @@ open class CapacitorBridge: NSObject, CAPBridgeProtocol {
               scene === viewController?.view.window?.windowScene else {
             return
         }
-        eval(js: "window.Capacitor?.triggerEvent && window.Capacitor.triggerEvent('\(eventName)', 'document')")
+        guard case .subsequentLoad = webViewDelegationHandler.webViewLoadingState, webView?.isLoading == false else {
+            return
+        }
+        triggerDocumentJSEvent(eventName: eventName)
     }
 
     /**
