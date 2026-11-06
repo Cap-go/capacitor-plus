@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs-extra';
+import { readFileSync, writeFileSync, mkdirSync } from 'fs-extra';
 import { join } from 'path';
 import type { PlistObject } from 'plist';
 import { parse } from 'plist';
@@ -70,6 +70,7 @@ describe('addSceneManifestIfNeeded', () => {
 
   it('adds the scene manifest when absent', async () => {
     writeFileSync(plistPath, PRE_UISCENE_INFO_PLIST);
+    writeFileSync(join(tmpDir.path, 'Main.storyboard'), '<?xml version="1.0" encoding="UTF-8"?>\n');
 
     await addSceneManifestIfNeeded(config);
 
@@ -84,8 +85,69 @@ describe('addSceneManifestIfNeeded', () => {
     expect(roleArray[0]['UISceneStoryboardFile']).toBe('Main');
   });
 
+  it('uses the configured storyboard name when the resource exists in Base.lproj', async () => {
+    writeFileSync(plistPath, PRE_UISCENE_INFO_PLIST);
+    const lprojDir = join(tmpDir.path, 'Base.lproj');
+    mkdirSync(lprojDir, { recursive: true });
+    writeFileSync(join(lprojDir, 'Main.storyboard'), '<?xml version="1.0" encoding="UTF-8"?>\n');
+
+    await addSceneManifestIfNeeded(config);
+
+    const parsed = parse(readFileSync(plistPath, 'utf-8')) as PlistObject;
+    const manifest = parsed['UIApplicationSceneManifest'] as PlistObject;
+    const configs = manifest['UISceneConfigurations'] as PlistObject;
+    const roleArray = configs['UIWindowSceneSessionRoleApplication'] as PlistObject[];
+    expect(roleArray[0]['UISceneStoryboardFile']).toBe('Main');
+  });
+
+  it('uses the configured storyboard name when the resource exists under Resources', async () => {
+    writeFileSync(plistPath, PRE_UISCENE_INFO_PLIST);
+    const resourcesDir = join(tmpDir.path, 'Resources');
+    mkdirSync(resourcesDir, { recursive: true });
+    writeFileSync(join(resourcesDir, 'Main.storyboard'), '<?xml version="1.0" encoding="UTF-8"?>\n');
+
+    await addSceneManifestIfNeeded(config);
+
+    const parsed = parse(readFileSync(plistPath, 'utf-8')) as PlistObject;
+    const manifest = parsed['UIApplicationSceneManifest'] as PlistObject;
+    const configs = manifest['UISceneConfigurations'] as PlistObject;
+    const roleArray = configs['UIWindowSceneSessionRoleApplication'] as PlistObject[];
+    expect(roleArray[0]['UISceneStoryboardFile']).toBe('Main');
+  });
+
+  it('uses the configured storyboard name when the resource exists beside Info.plist', async () => {
+    const customPlist = PRE_UISCENE_INFO_PLIST.replace('<string>Main</string>', '<string>Launch</string>');
+    writeFileSync(plistPath, customPlist);
+    writeFileSync(join(tmpDir.path, 'Launch.storyboard'), '<?xml version="1.0" encoding="UTF-8"?>\n');
+
+    await addSceneManifestIfNeeded(config);
+
+    const parsed = parse(readFileSync(plistPath, 'utf-8')) as PlistObject;
+    const manifest = parsed['UIApplicationSceneManifest'] as PlistObject;
+    const configs = manifest['UISceneConfigurations'] as PlistObject;
+    const roleArray = configs['UIWindowSceneSessionRoleApplication'] as PlistObject[];
+    expect(roleArray[0]['UISceneStoryboardFile']).toBe('Launch');
+  });
+
+  it('omits UISceneStoryboardFile when the project has no storyboard resource', async () => {
+    const codeOnlyPlist = PRE_UISCENE_INFO_PLIST.replace(
+      '  <key>UIMainStoryboardFile</key>\n  <string>Main</string>\n',
+      '',
+    );
+    writeFileSync(plistPath, codeOnlyPlist);
+
+    await addSceneManifestIfNeeded(config);
+
+    const parsed = parse(readFileSync(plistPath, 'utf-8')) as PlistObject;
+    const manifest = parsed['UIApplicationSceneManifest'] as PlistObject;
+    const configs = manifest['UISceneConfigurations'] as PlistObject;
+    const roleArray = configs['UIWindowSceneSessionRoleApplication'] as PlistObject[];
+    expect(roleArray[0]['UISceneStoryboardFile']).toBeUndefined();
+  });
+
   it('preserves sibling keys', async () => {
     writeFileSync(plistPath, PRE_UISCENE_INFO_PLIST);
+    writeFileSync(join(tmpDir.path, 'Main.storyboard'), '<?xml version="1.0" encoding="UTF-8"?>\n');
 
     await addSceneManifestIfNeeded(config);
 
@@ -95,7 +157,31 @@ describe('addSceneManifestIfNeeded', () => {
     expect(parsed['UIMainStoryboardFile']).toBe('Main');
   });
 
-  it('is a no-op when the manifest already exists and does not overwrite user data', async () => {
+  it('adds UISceneStoryboardFile when a manifest exists but the scene config is missing it', async () => {
+    writeFileSync(
+      plistPath,
+      POST_UISCENE_INFO_PLIST.replace(
+        '<string>My App</string>',
+        `<string>My App</string>
+  <key>UIMainStoryboardFile</key>
+  <string>Main</string>`,
+      ),
+    );
+    const lprojDir = join(tmpDir.path, 'Base.lproj');
+    mkdirSync(lprojDir, { recursive: true });
+    writeFileSync(join(lprojDir, 'Main.storyboard'), '<?xml version="1.0" encoding="UTF-8"?>\n');
+
+    await addSceneManifestIfNeeded(config);
+
+    const parsed = parse(readFileSync(plistPath, 'utf-8')) as PlistObject;
+    const manifest = parsed['UIApplicationSceneManifest'] as PlistObject;
+    const configs = manifest['UISceneConfigurations'] as PlistObject;
+    const roleArray = configs['UIWindowSceneSessionRoleApplication'] as PlistObject[];
+    expect(roleArray[0]['UISceneConfigurationName']).toBe('Existing Configuration');
+    expect(roleArray[0]['UISceneStoryboardFile']).toBe('Main');
+  });
+
+  it('does not overwrite unrelated manifest fields when no storyboard resource exists', async () => {
     writeFileSync(plistPath, POST_UISCENE_INFO_PLIST);
 
     await addSceneManifestIfNeeded(config);
@@ -106,10 +192,36 @@ describe('addSceneManifestIfNeeded', () => {
     const roleArray = configs['UIWindowSceneSessionRoleApplication'] as PlistObject[];
     expect(roleArray[0]['UISceneConfigurationName']).toBe('Existing Configuration');
     expect(roleArray[0]['UISceneDelegateClassName']).toBe('$(PRODUCT_MODULE_NAME).CustomSceneDelegate');
+    expect(roleArray[0]['UISceneStoryboardFile']).toBeUndefined();
+  });
+
+  it('preserves an existing scene-specific storyboard file', async () => {
+    const customScenePlist = POST_UISCENE_INFO_PLIST.replace(
+      '  <key>UIApplicationSceneManifest</key>',
+      `  <key>UIMainStoryboardFile</key>
+  <string>Main</string>
+  <key>UIApplicationSceneManifest</key>`,
+    ).replace(
+      '<string>Existing Configuration</string>',
+      `<string>Existing Configuration</string>
+          <key>UISceneStoryboardFile</key>
+          <string>CustomScene</string>`,
+    );
+    writeFileSync(plistPath, customScenePlist);
+    writeFileSync(join(tmpDir.path, 'Main.storyboard'), '<?xml version="1.0" encoding="UTF-8"?>\n');
+
+    await addSceneManifestIfNeeded(config);
+
+    const parsed = parse(readFileSync(plistPath, 'utf-8')) as PlistObject;
+    const manifest = parsed['UIApplicationSceneManifest'] as PlistObject;
+    const configs = manifest['UISceneConfigurations'] as PlistObject;
+    const roleArray = configs['UIWindowSceneSessionRoleApplication'] as PlistObject[];
+    expect(roleArray[0]['UISceneStoryboardFile']).toBe('CustomScene');
   });
 
   it('is idempotent across repeated runs', async () => {
     writeFileSync(plistPath, PRE_UISCENE_INFO_PLIST);
+    writeFileSync(join(tmpDir.path, 'Main.storyboard'), '<?xml version="1.0" encoding="UTF-8"?>\n');
 
     await addSceneManifestIfNeeded(config);
     const firstOutput = readFileSync(plistPath, 'utf-8');
