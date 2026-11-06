@@ -89,6 +89,7 @@ const kotlinVersion = '2.2.20';
 export async function migrateCommand(config: Config, noprompt: boolean, packagemanager: string): Promise<void> {
   let installFailed = false;
   let scriptsBlocked = false;
+  let scriptsUnverified = false;
 
   if (config === null) {
     fatal('Config data missing');
@@ -186,7 +187,9 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
 
       if (runNpmInstall && !installFailed) {
         const blocked = await getBlockedInstallScripts(config.app.rootDir, installerType);
-        if (blocked.length > 0) {
+        if (blocked === null) {
+          scriptsUnverified = true;
+        } else if (blocked.length > 0) {
           logBlockedInstallScripts(blocked);
           scriptsBlocked = hasBlockedCapacitorScripts(blocked);
         }
@@ -358,7 +361,7 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
         return writeBreakingChanges();
       });
 
-      if (!installFailed && !scriptsBlocked) {
+      if (!installFailed && !scriptsBlocked && !scriptsUnverified) {
         logSuccess(`Migration to Capacitor ${coreVersion} is complete. Run and test your app!`);
       } else if (scriptsBlocked) {
         logger.warn(
@@ -463,7 +466,7 @@ async function writeBreakingChanges() {
       )}.`,
     );
   }
-  if (allDependencies['@capacitor/ios']) {
+  if (allDependencies['@capacitor/ios'] || allDependencies['@capacitor-plus/ios']) {
     logger.info(
       'IMPORTANT: Capacitor 8.5 adopts UIScene on iOS. ' +
         'See https://capacitorjs.com/docs/updating/8-5 for the full 8.4 → 8.5 migration guide.',
