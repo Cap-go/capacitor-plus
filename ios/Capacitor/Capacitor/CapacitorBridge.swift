@@ -299,7 +299,10 @@ open class CapacitorBridge: NSObject, CAPBridgeProtocol {
               scene === viewController?.view.window?.windowScene else {
             return
         }
-        eval(js: "window.Capacitor?.triggerEvent && window.Capacitor.triggerEvent('\(eventName)', 'document')")
+        guard case .subsequentLoad = webViewDelegationHandler.webViewLoadingState, webView?.isLoading == false else {
+            return
+        }
+        triggerDocumentJSEvent(eventName: eventName)
     }
 
     /**
