@@ -48,6 +48,61 @@ Have a PR stuck in the Capacitor repo? Here's how to get it into Capacitor+:
 
 This way, you and others can benefit from your work immediately, without waiting for the upstream release cycle.
 
+### Fixes flow back upstream
+
+> **Capacitor+ ships first. Upstream gets the same fix when we open a matching PR on [ionic-team/capacitor](https://github.com/ionic-team/capacitor/).**
+
+Not every improvement waits on Ionic's release schedule. When a fix is developed or merged in this fork, maintainers can propose the same change on upstream `main`. That path is **manual** today. There is no bot that opens upstream PRs for you.
+
+```
+┌────────────────────┐     ┌─────────────────────┐     ┌──────────────────────────────┐
+│  PR → plus         │     │  CI, review, merge, │     │  Manual PR →                 │
+│  (fork-only fix)   │────▶│  npm release        │────▶│  ionic-team/capacitor main   │
+└────────────────────┘     └─────────────────────┘     └──────────────────────────────┘
+```
+
+#### 1. How a fix lands in Capacitor+
+
+This applies to **fork-only** work (not branches named `sync/upstream-*`, which come from the daily upstream sync).
+
+| Step | What happens | Automated? |
+|------|----------------|------------|
+| Branching | Open a feature branch and a pull request against the [`plus`](https://github.com/Cap-go/capacitor-plus/tree/plus) branch | No |
+| CI | The [CI](https://github.com/Cap-go/capacitor-plus/actions/workflows/ci.yml) workflow runs lint and platform builds on the PR | Yes |
+| Review | A maintainer reviews and merges when CI is green | No (manual) |
+| Version tag | After merge to `plus`, the [Bump version](https://github.com/Cap-go/capacitor-plus/actions/workflows/bump_version.yml) workflow runs tests, bumps the patch version with Lerna, and pushes a git tag | Yes |
+| npm release | The tag triggers [Build and publish](https://github.com/Cap-go/capacitor-plus/actions/workflows/build.yml), which publishes `@capacitor-plus/*` packages | Yes |
+
+Example fork-only fix merged on `plus`: [Cap-go/capacitor-plus#187](https://github.com/Cap-go/capacitor-plus/pull/187) (`fix(ios): make private API calls static for App Store 2.5.2`).
+
+#### 2. Opening the matching upstream PR on `ionic-team/capacitor`
+
+There is **no** GitHub Actions workflow in this repository that opens or updates upstream pull requests. Maintainers (or the original author) do this by hand:
+
+1. Open a pull request on [ionic-team/capacitor](https://github.com/ionic-team/capacitor/) targeting **`main`** (or `next` when the change is breaking, per upstream branch policy).
+2. Follow upstream's [CONTRIBUTING.md](https://github.com/ionic-team/capacitor/blob/main/CONTRIBUTING.md) template (description, change type, platforms).
+3. In the PR body, link the Capacitor+ pull request or issue when the change already shipped in the fork, so reviewers can compare behavior and npm availability.
+
+The [Sync Upstream PRs](https://github.com/Cap-go/capacitor-plus/actions/workflows/sync-upstream.yml) workflow imports **other people's** open upstream PRs into `sync/upstream-pr-*` branches. It **skips** upstream PRs authored by `riderx` so maintainer-owned upstream contributions are not duplicated into the fork.
+
+Real upstream PR examples that reference Capacitor+ or originate from Capgo work:
+
+| Upstream PR | Status | Notes |
+|-------------|--------|-------|
+| [ionic-team/capacitor#8284](https://github.com/ionic-team/capacitor/pull/8284) | Open | Body includes an **Availability** section pointing at this fork and `@capacitor-plus/cli` |
+| [ionic-team/capacitor#8203](https://github.com/ionic-team/capacitor/pull/8203) | Open | Capgo-maintainer feature PR on upstream (bidirectional blob transfer) |
+
+Upstream acceptance and merge timing are decided by the Ionic team, not by Capacitor+ automation.
+
+#### 3. How we track upstream status
+
+| Direction | What we track today | Where |
+|-----------|---------------------|-------|
+| Upstream → fork (daily sync) | `upstream-sync`, `needs-attention`, and sometimes `merge-conflict` labels; PR title/body text `upstream PR #<n>`; head branch `sync/upstream-pr-<n>` or `sync/plus-upstream-*` | This repo's pull requests and [labels](https://github.com/Cap-go/capacitor-plus/labels) |
+| Fork → upstream (backport) | **No dedicated label, issue template, or tracking file** (there is no `UPSTREAM.md` in this repo) | GitHub state of the upstream PR; optional links in the Capacitor+ PR or issue; changelog entries may cite `ionic-team/capacitor` issues after merge |
+
+If you care about a specific backport, watch the upstream pull request URL or ask in the linked Capacitor+ issue. Not every fork-only fix has an open upstream PR (for example, [#187](https://github.com/Cap-go/capacitor-plus/pull/187) had no matching `ionic-team/capacitor` pull request at documentation time).
+
 ### How It Works
 
 ```
