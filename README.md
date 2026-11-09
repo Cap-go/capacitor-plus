@@ -83,7 +83,7 @@ There is **no** GitHub Actions workflow in this repository that opens or updates
 2. Follow upstream's [CONTRIBUTING.md](https://github.com/ionic-team/capacitor/blob/main/CONTRIBUTING.md) template (description, change type, platforms).
 3. In the PR body, link the Capacitor+ pull request or issue when the change already shipped in the fork, so reviewers can compare behavior and npm availability.
 
-The [Sync Upstream PRs](https://github.com/Cap-go/capacitor-plus/actions/workflows/sync-upstream.yml) workflow imports open upstream PRs into `sync/upstream-pr-*` branches (inbound only, not a backport tool). On schedule it fetches at most 100 open PRs, skips drafts and PRs authored by `riderx`, and matching PRs from other authors can still be imported. Use the workflow's `specific_pr` dispatch input to sync one upstream PR by number, including a draft.
+The [Sync Upstream PRs](https://github.com/Cap-go/capacitor-plus/actions/workflows/sync-upstream.yml) workflow imports open upstream PRs into `sync/upstream-pr-*` branches (inbound only, not a backport tool). On schedule it fetches at most 100 open PRs, skips drafts and PRs authored by `riderx`, and matching PRs from other authors can still be imported. To sync one upstream PR by number, including a draft, set `sync_mode` to `specific_pr` and enter the number in `pr_number`.
 
 Real upstream PR examples that reference Capacitor+ or originate from Capgo work:
 
