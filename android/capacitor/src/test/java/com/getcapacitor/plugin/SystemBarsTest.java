@@ -1,7 +1,6 @@
 package com.getcapacitor.plugin;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
+import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
@@ -56,52 +55,37 @@ public class SystemBarsTest {
     }
 
     @Test
-    public void injectSafeAreaCSSUsesOriginalSystemBarInsets() throws Exception {
-        SystemBars plugin = new SystemBars();
-        Bridge bridge = mock(Bridge.class);
-        AppCompatActivity activity = mock(AppCompatActivity.class);
-        Resources resources = mock(Resources.class);
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        displayMetrics.density = 2.0f;
-        WebView webView = mock(WebView.class);
-
-        when(bridge.getActivity()).thenReturn(activity);
-        when(activity.getResources()).thenReturn(resources);
-        when(resources.getDisplayMetrics()).thenReturn(displayMetrics);
-        when(bridge.getWebView()).thenReturn(webView);
-        doAnswer((invocation) -> {
-            ((Runnable) invocation.getArgument(0)).run();
-            return null;
-        })
-            .when(bridge)
-            .executeOnMainThread(any(Runnable.class));
-
-        plugin.setBridge(bridge);
-
-        Field insetsHandlingField = SystemBars.class.getDeclaredField("insetsHandling");
-        insetsHandlingField.setAccessible(true);
-        insetsHandlingField.set(plugin, "css");
-
-        WindowInsetsCompat insets = mock(WindowInsetsCompat.class);
-        when(insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout())).thenReturn(
-            Insets.of(20, 40, 10, 30)
-        );
-        when(insets.isVisible(WindowInsetsCompat.Type.ime())).thenReturn(false);
-
-        Method injectSafeAreaCSS = SystemBars.class.getDeclaredMethod("injectSafeAreaCSS", WindowInsetsCompat.class);
-        injectSafeAreaCSS.setAccessible(true);
-        injectSafeAreaCSS.invoke(plugin, insets);
-
-        ArgumentCaptor<String> scriptCaptor = ArgumentCaptor.forClass(String.class);
-        verify(webView).evaluateJavascript(scriptCaptor.capture(), any());
-        String script = scriptCaptor.getValue();
-        Assert.assertTrue(script.contains("\"--safe-area-inset-top\", \"20px\""));
-        Assert.assertTrue(script.contains("\"--safe-area-inset-left\", \"10px\""));
-        Assert.assertTrue(script.contains("\"--safe-area-inset-bottom\", \"15px\""));
-        Assert.assertTrue(script.contains("\"--safe-area-inset-right\", \"5px\""));
+    public void bottomInsetIsNavigationBarWhenKeyboardHidden() throws Exception {
+        assertEquals(126, invokeGetBottomInset(126, 0, false));
     }
 
-    private WindowInsetsControllerCompat invokeShow(String bar) throws Exception {
+    @Test
+    public void bottomInsetIsZeroWhenDockedKeyboardCoversNavigationBar() throws Exception {
+        assertEquals(0, invokeGetBottomInset(126, 883, true));
+    }
+
+    @Test
+    public void bottomInsetIsZeroWhenKeyboardInsetEqualsNavigationBar() throws Exception {
+        assertEquals(0, invokeGetBottomInset(126, 126, true));
+    }
+
+    @Test
+    public void bottomInsetIsNavigationBarWhenFloatingKeyboardCoversNothing() throws Exception {
+        assertEquals(63, invokeGetBottomInset(63, 0, true));
+    }
+
+    private int invokeGetBottomInset(int navigationBarBottom, int imeBottom, boolean keyboardVisible) throws Exception {
+        Method getBottomInset = SystemBars.class.getDeclaredMethod("getBottomInset", Insets.class, Insets.class, boolean.class);
+        getBottomInset.setAccessible(true);
+        return (int) getBottomInset.invoke(
+            new SystemBars(),
+            Insets.of(0, 0, 0, navigationBarBottom),
+            Insets.of(0, 0, 0, imeBottom),
+            keyboardVisible
+        );
+    }
+
+    private WindowInsetsControllerCompat invokeSetHidden(String bar) throws Exception {
         SystemBars plugin = new SystemBars();
         Bridge bridge = mock(Bridge.class);
         AppCompatActivity activity = mock(AppCompatActivity.class);
