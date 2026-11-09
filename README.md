@@ -50,7 +50,7 @@ This way, you and others can benefit from your work immediately, without waiting
 
 ### Fixes flow back upstream
 
-> **Capacitor+ ships first. Upstream gets the same fix when we open a matching PR on [ionic-team/capacitor](https://github.com/ionic-team/capacitor/).**
+> **Capacitor+ ships first. We can propose the same fix in a matching PR on [ionic-team/capacitor](https://github.com/ionic-team/capacitor/). The PR must be accepted, merged, and released before its changes are available in an upstream release.**
 
 Not every improvement waits on Ionic's release schedule. When a fix is developed or merged in this fork, maintainers can propose the same change on upstream `main`. That path is **manual** today. There is no bot that opens upstream PRs for you.
 
@@ -63,7 +63,7 @@ Not every improvement waits on Ionic's release schedule. When a fix is developed
 
 #### 1. How a fix lands in Capacitor+
 
-This applies to **fork-only** work (not branches named `sync/upstream-*`, which come from the daily upstream sync).
+This applies to **fork-only** work (not branches named `sync/upstream-*` or `sync/plus-upstream-*`, which come from the daily upstream sync).
 
 | Step | What happens | Automated? |
 |------|----------------|------------|
@@ -83,7 +83,7 @@ There is **no** GitHub Actions workflow in this repository that opens or updates
 2. Follow upstream's [CONTRIBUTING.md](https://github.com/ionic-team/capacitor/blob/main/CONTRIBUTING.md) template (description, change type, platforms).
 3. In the PR body, link the Capacitor+ pull request or issue when the change already shipped in the fork, so reviewers can compare behavior and npm availability.
 
-The [Sync Upstream PRs](https://github.com/Cap-go/capacitor-plus/actions/workflows/sync-upstream.yml) workflow imports **other people's** open upstream PRs into `sync/upstream-pr-*` branches. It **skips** upstream PRs authored by `riderx` so maintainer-owned upstream contributions are not duplicated into the fork.
+The [Sync Upstream PRs](https://github.com/Cap-go/capacitor-plus/actions/workflows/sync-upstream.yml) workflow imports open upstream PRs into `sync/upstream-pr-*` branches (inbound only, not a backport tool). On schedule it fetches at most 100 open PRs, skips drafts and PRs authored by `riderx`, and matching PRs from other authors can still be imported. Use the workflow's `specific_pr` dispatch input to sync one upstream PR by number, including a draft.
 
 Real upstream PR examples that reference Capacitor+ or originate from Capgo work:
 
