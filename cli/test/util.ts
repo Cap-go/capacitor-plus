@@ -38,7 +38,7 @@ export function mktmp(): Promise<{
   path: string;
 }> {
   return new Promise((resolve) => {
-    tmp.dir((err, path, cleanupCallback) => {
+    tmp.dir({ unsafeCleanup: true }, (err, path, cleanupCallback) => {
       if (err) {
         throw err;
       }

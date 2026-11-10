@@ -68,8 +68,11 @@ async function updatePluginFiles(config: Config, plugins: Plugin[], deployment: 
           'url:\\s*"https://github.com/ionic-team/capacitor-swift-pm\\.git",\\s*from:\\s*"([^"]+)"',
         );
         const version = content.match(regex)?.[1];
+        if (!version || !valid(version)) {
+          return;
+        }
         const majorCapVersion = major(iosPlatformVersion);
-        if (version && major(version) != majorCapVersion) {
+        if (major(version) != majorCapVersion) {
           const preCapVersion = prerelease(iosPlatformVersion);
           const forceVersion = preCapVersion ? iosPlatformVersion : `${majorCapVersion}.0.0`;
           content = setAllStringIn(
@@ -642,6 +645,9 @@ async function copyPluginsNativeFiles(config: Config, cordovaPlugins: Plugin[]) 
     const sourceFiles = getPlatformElement(p, platform, 'source-file');
     const headerFiles = getPlatformElement(p, platform, 'header-file');
     const codeFiles = sourceFiles.concat(headerFiles);
+    const pluginSuppliesAppDelegate = codeFiles.some(
+      (codeFile: { $: { src: string } }) => codeFile.$.src.split('/').pop() === 'AppDelegate.h',
+    );
     const frameworks = getPlatformElement(p, platform, 'framework');
     let sourcesFolderName = 'sources';
     if (!isSPM && needsStaticPod(p)) {
@@ -657,6 +663,7 @@ async function copyPluginsNativeFiles(config: Config, cordovaPlugins: Plugin[]) 
       let destFolder = sourcesFolderName;
       if (
         !isSPM &&
+        fileExt !== 'a' &&
         codeFile.$.framework !== 'true' &&
         codeFile.$['compiler-flags'] &&
         codeFile.$['compiler-flags'] === '-fno-objc-arc'
@@ -697,8 +704,8 @@ async function copyPluginsNativeFiles(config: Config, cordovaPlugins: Plugin[]) 
             fileContent = fileContent.replace(/self.webView.superview/g, 'self.viewController.view');
             await writeFile(fileDest, fileContent, { encoding: 'utf-8' });
           }
-          if (isSPM && fileContent.includes(`#import "AppDelegate.h"`)) {
-            fileContent = fileContent.replace(`#import "AppDelegate.h"`, `#import <Cordova/AppDelegate.h>`);
+          if (isSPM && !pluginSuppliesAppDelegate && fileContent.includes(`#import "AppDelegate.h"`)) {
+            fileContent = fileContent.replaceAll(`#import "AppDelegate.h"`, `#import <Cordova/AppDelegate.h>`);
             await writeFile(fileDest, fileContent, { encoding: 'utf-8' });
           }
         }

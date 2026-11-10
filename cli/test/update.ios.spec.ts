@@ -74,3 +74,41 @@ describe('Update: iOS CocoaPods with a -fno-objc-arc library', () => {
     expect(podspec).not.toContain(`s.subspec 'noarc'`);
   });
 });
+
+describe('Update: iOS CocoaPods with a -fno-objc-arc static library without framework="true"', () => {
+  let appDirObj: any;
+  let appDir: string;
+  let FS: MappedFS;
+
+  beforeAll(async () => {
+    jest.setTimeout(150000);
+    appDirObj = await makeAppDir();
+    appDir = appDirObj.appDir;
+    const pluginDir = join(appDir, 'node_modules', CORDOVA_PLUGIN_ID);
+    const pluginXml = await readFile(join(pluginDir, 'plugin.xml'), { encoding: 'utf-8' });
+    await writeFile(
+      join(pluginDir, 'plugin.xml'),
+      pluginXml.replace(
+        '<source-file src="src/ios/CoolPlugin.m" />',
+        '<source-file src="src/ios/CoolPlugin.m" />\n<source-file src="src/ios/libCoolSDK.a" compiler-flags="-fno-objc-arc" />',
+      ),
+    );
+    await writeFile(join(pluginDir, 'src', 'ios', 'libCoolSDK.a'), '');
+    await run(appDir, `init "${APP_NAME}" "${APP_ID}"`);
+    await installPlatform(appDir, 'ios');
+    await run(appDir, `add ios --packagemanager CocoaPods`);
+    FS = new MappedFS(appDir);
+  });
+
+  afterAll(() => {
+    appDirObj.cleanupCallback();
+  });
+
+  it('Should copy the library to the vendored_libraries path rather than noarc', async () => {
+    const podspec = await FS.read('ios/capacitor-cordova-ios-plugins/CordovaPlugins.podspec');
+    expect(podspec).toContain(`s.vendored_libraries = 'sources/CoolCordovaPlugin/libCoolSDK.a'`);
+    expect(podspec).not.toContain(`s.subspec 'noarc'`);
+    expect(await FS.exists(`ios/capacitor-cordova-ios-plugins/sources/CoolCordovaPlugin/libCoolSDK.a`)).toBe(true);
+    expect(await FS.exists(`ios/capacitor-cordova-ios-plugins/noarc/CoolCordovaPlugin/libCoolSDK.a`)).toBe(false);
+  });
+});
