@@ -71,7 +71,7 @@ This applies to **fork-only** work (not branches named `sync/upstream-*` or `syn
 | CI | The [CI](https://github.com/Cap-go/capacitor-plus/actions/workflows/ci.yml) workflow runs lint and platform builds on the PR | Yes |
 | Review | A maintainer reviews and merges when CI is green | No (manual) |
 | Version tag | After merge to `plus`, the [Bump version](https://github.com/Cap-go/capacitor-plus/actions/workflows/bump_version.yml) workflow runs tests, bumps the patch version with Lerna, and pushes a git tag | Yes |
-| npm release | The tag triggers [Build and publish](https://github.com/Cap-go/capacitor-plus/actions/workflows/build.yml), which publishes `@capacitor-plus/*` packages | Yes |
+| npm release | The tag triggers [Build and publish](https://github.com/Cap-go/capacitor-plus/actions/workflows/build.yml), which stages `@capacitor-plus/*` packages and requests approval. Packages become available after approval; the workflow can finish if the request fails | Staging and request only |
 
 Example fork-only fix merged on `plus`: [Cap-go/capacitor-plus#187](https://github.com/Cap-go/capacitor-plus/pull/187) (`fix(ios): make private API calls static for App Store 2.5.2`).
 
@@ -84,6 +84,8 @@ There is **no** GitHub Actions workflow in this repository that opens or updates
 3. In the PR body, link the Capacitor+ pull request or issue when the change already shipped in the fork, so reviewers can compare behavior and npm availability.
 
 The [Sync Upstream PRs](https://github.com/Cap-go/capacitor-plus/actions/workflows/sync-upstream.yml) workflow imports open upstream PRs into `sync/upstream-pr-*` branches (inbound only, not a backport tool). On schedule it fetches at most 100 open PRs, skips drafts and PRs authored by `riderx`, and matching PRs from other authors can still be imported. To sync one upstream PR by number, including a draft, set `sync_mode` to `specific_pr` and enter the number in `pr_number`.
+
+When merges hit conflicts, the workflow retries with Git's upstream-preferred strategy (`-X theirs`), opens a sync pull request labeled `merge-conflict` when that succeeds, and can file a GitHub issue when automatic resolution fails. A `specific_pr` run deletes and recreates the `sync/upstream-pr-<n>` branch from `plus` and the upstream PR head, so save any manual conflict-resolution commits on that branch before rerunning; you may need to recover or redo them. Manual `workflow_dispatch` runs require write access to this repository; without write access, open an issue with the upstream PR link and ask a maintainer to run the sync.
 
 Real upstream PR examples that reference Capacitor+ or originate from Capgo work:
 
