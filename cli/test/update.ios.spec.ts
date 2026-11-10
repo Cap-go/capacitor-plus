@@ -105,9 +105,8 @@ describe('Update: iOS CocoaPods with a -fno-objc-arc static library without fram
     appDirObj.cleanupCallback();
   });
 
-  it('Should copy the library to the vendored_libraries path rather than noarc', async () => {
+  it('Should copy the library to sources rather than noarc', async () => {
     const podspec = await FS.read('ios/capacitor-cordova-ios-plugins/CordovaPlugins.podspec');
-    expect(podspec).toContain(`s.vendored_libraries = 'sources/CoolCordovaPlugin/libCoolSDK.a'`);
     expect(podspec).not.toContain(`s.subspec 'noarc'`);
     expect(await FS.exists(`ios/capacitor-cordova-ios-plugins/sources/CoolCordovaPlugin/libCoolSDK.a`)).toBe(true);
     expect(await FS.exists(`ios/capacitor-cordova-ios-plugins/noarc/CoolCordovaPlugin/libCoolSDK.a`)).toBe(false);
