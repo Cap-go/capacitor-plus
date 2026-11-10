@@ -21,7 +21,7 @@ import { fatal } from '../errors';
 import { getMajorMinoriOSVersion } from '../ios/common';
 import { logger } from '../log';
 import type { Plugin } from '../plugin';
-import { getPlatformElement, getPluginPlatform, getPluginType, PluginType } from '../plugin';
+import { getPlatformElement, getPluginPlatform, getPluginReferencePath, getPluginType, PluginType } from '../plugin';
 import { convertToUnixPath } from '../util/fs';
 import { runCommand } from '../util/subprocess';
 
@@ -133,7 +133,9 @@ let package = Package(
     if (getPluginType(plugin, config.ios.name) === PluginType.Cordova) {
       const platformTag = getPluginPlatform(plugin, config.ios.name);
       if (platformTag.$?.package) {
-        const relPath = convertToUnixPath(relative(config.ios.nativeXcodeProjDirAbs, plugin.rootPath));
+        const relPath = convertToUnixPath(
+          relative(config.ios.nativeXcodeProjDirAbs, getPluginReferencePath(config, plugin)),
+        );
         packageSwiftText += `,\n        .package(name: "${plugin.id}", path: "${relPath}")`;
       } else {
         const sourceFiles = getPlatformElement(plugin, config.ios.name, 'source-file');
@@ -149,9 +151,12 @@ let package = Package(
       const symlinkFolder = join('symlinks', plugin.name);
       const relPath = symlink
         ? convertToUnixPath(join('symlinks', plugin.name))
-        : convertToUnixPath(relative(config.ios.nativeXcodeProjDirAbs, plugin.rootPath));
+        : convertToUnixPath(relative(config.ios.nativeXcodeProjDirAbs, getPluginReferencePath(config, plugin)));
       if (symlink) {
-        await ensureSymlink(plugin.rootPath, resolve(config.ios.nativeProjectDirAbs, 'CapApp-SPM', symlinkFolder));
+        await ensureSymlink(
+          getPluginReferencePath(config, plugin),
+          resolve(config.ios.nativeProjectDirAbs, 'CapApp-SPM', symlinkFolder),
+        );
       }
       const traits = packageTraits[plugin.id];
       const traitsSuffix = traits?.length
