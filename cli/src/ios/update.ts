@@ -633,7 +633,13 @@ async function copyPluginsNativeFiles(config: Config, cordovaPlugins: Plugin[]) 
         fileName = 'lib' + fileName;
       }
       let destFolder = sourcesFolderName;
-      if (!isSPM && codeFile.$['compiler-flags'] && codeFile.$['compiler-flags'] === '-fno-objc-arc') {
+      if (
+        !isSPM &&
+        fileExt !== 'a' &&
+        codeFile.$.framework !== 'true' &&
+        codeFile.$['compiler-flags'] &&
+        codeFile.$['compiler-flags'] === '-fno-objc-arc'
+      ) {
         destFolder = 'noarc';
       }
       const filePath = getFilePath(config, p, codeFile.$.src);
@@ -706,9 +712,16 @@ function filterResources(plugin: Plugin) {
 
 function filterARCFiles(plugin: Plugin) {
   const sources = getPlatformElement(plugin, platform, 'source-file');
-  const sourcesARC = sources.filter(
-    (sourceFile: any) => sourceFile.$['compiler-flags'] && sourceFile.$['compiler-flags'] === '-fno-objc-arc',
-  );
+  const sourcesARC = sources.filter((sourceFile: any) => {
+    const src = sourceFile.$.src ?? '';
+    const ext = src.split('.').pop();
+    return (
+      ext !== 'a' &&
+      sourceFile.$.framework !== 'true' &&
+      sourceFile.$['compiler-flags'] &&
+      sourceFile.$['compiler-flags'] === '-fno-objc-arc'
+    );
+  });
   return sourcesARC.length > 0;
 }
 
