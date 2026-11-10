@@ -69,9 +69,10 @@ describe('Update: iOS CocoaPods with a -fno-objc-arc library', () => {
     expect(await FS.exists(`ios/capacitor-cordova-ios-plugins/sources/CoolCordovaPlugin/libCoolSDK.a`)).toBe(true);
   });
 
-  it('Should not add a noarc subspec for a library', async () => {
+  it('Should keep .a libraries with compiler-flags out of the noarc subspec', async () => {
     const podspec = await FS.read('ios/capacitor-cordova-ios-plugins/CordovaPlugins.podspec');
     expect(podspec).not.toContain(`s.subspec 'noarc'`);
+    expect(podspec).not.toContain(`'noarc'`);
   });
 });
 
