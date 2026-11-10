@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.6.2](https://github.com/Cap-go/capacitor-plus/compare/8.6.1...8.6.2) (2026-11-10)
+
+
+### Bug Fixes
+
+* **android:** keep plugin annotation types from R8 full mode ([#229](https://github.com/Cap-go/capacitor-plus/issues/229)) ([54d3d89](https://github.com/Cap-go/capacitor-plus/commit/54d3d896d4b4e1e7c8ae30e8b4c0537d9660eb48))
+
+
+
+
+
 ## [8.6.1](https://github.com/Cap-go/capacitor-plus/compare/8.5.3...8.6.1) (2026-11-05)
 
 **Note:** Version bump only for package @capacitor-plus/android
