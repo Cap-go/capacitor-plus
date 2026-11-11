@@ -2,6 +2,10 @@
  * @jest-environment jsdom
  */
 
+/// <reference lib="es2021.weakref" />
+import { setFlagsFromString } from 'v8';
+import { runInNewContext } from 'vm';
+
 import { initBridge } from '../../native-bridge';
 import type { CapacitorGlobal, Plugin } from '../definitions';
 import type { WindowCapacitor, CapacitorInstance } from '../definitions-internal';
@@ -60,6 +64,64 @@ describe('plugin', () => {
 
     const results1 = await Awesome.mph();
     expect(results1).toBe(88);
+  });
+
+  it('plugin proxy is not thenable (Promise.resolve does not hang)', async () => {
+    mockAndroidBridge();
+    initBridge(win);
+    mockAndroidPlugin('Awesome', 'mph');
+
+    cap = initCapacitorGlobal(win);
+
+    const Awesome = cap.registerPlugin<AwesomePlugin>('Awesome');
+
+    await expect(Promise.resolve(Awesome)).resolves.toBe(Awesome);
+  });
+
+  it('plugin proxy has undefined then, catch, and finally (not thenable)', () => {
+    mockAndroidBridge();
+    initBridge(win);
+    mockAndroidPlugin('Awesome', 'mph');
+
+    cap = initCapacitorGlobal(win);
+
+    const Awesome = cap.registerPlugin<AwesomePlugin>('Awesome');
+    const proxy = Awesome as any;
+
+    expect(proxy.then).toBeUndefined();
+    expect(proxy.catch).toBeUndefined();
+    expect(proxy.finally).toBeUndefined();
+  });
+
+  it('addListener rejects when native addListener fails', async () => {
+    mockAndroidBridge();
+    initBridge(win);
+    const w: any = win;
+    w.Capacitor = w.Capacitor ?? {};
+    w.Capacitor.PluginHeaders = w.Capacitor.PluginHeaders ?? [];
+    w.Capacitor.PluginHeaders.push({
+      name: 'RejectingListener',
+      methods: [
+        { name: 'mph', rtype: 'promise' },
+        { name: 'addListener', rtype: 'promise' },
+        { name: 'removeListener' },
+        { name: 'removeAllListeners' },
+      ],
+    });
+
+    cap = initCapacitorGlobal(win);
+
+    const addListenerError = new Error('native addListener failed');
+    (cap as CapacitorInstance).nativePromise = (pluginName, methodName) => {
+      if (pluginName === 'RejectingListener' && methodName === 'addListener') {
+        return Promise.reject(addListenerError);
+      }
+      return Promise.resolve({} as any);
+    };
+
+    const Plg = cap.registerPlugin<RejectingListenerPlugin>('RejectingListener');
+
+    await expect(Plg.addListener('eventName', jest.fn())).rejects.toBe(addListenerError);
   });
 
   it('error from missing native implementation', async (done) => {
@@ -314,6 +376,94 @@ describe('plugin', () => {
     expect(typeof (rtn as any).remove === 'function').toBe(true);
   });
 
+  it('stops forwarding native events once the listener is removed', async () => {
+    const messages = mockRecordingAndroidBridge();
+    initBridge(win);
+    mockAndroidPlugin('Awesome', 'mph');
+
+    cap = initCapacitorGlobal(win);
+
+    const Awesome = cap.registerPlugin<AwesomePlugin>('Awesome');
+
+    const received: unknown[] = [];
+    const handle = await Awesome.addListener('eventName', (data) => received.push(data));
+
+    const listenerCallbackId = messages.find((m) => m.methodName === 'addListener').callbackId;
+    emitNativeEvent(listenerCallbackId, 'before');
+    await handle.remove();
+    emitNativeEvent(listenerCallbackId, 'after');
+
+    expect(received).toEqual(['before']);
+  });
+
+  it('does not give the native bridge a callback to keep for removeListener', async () => {
+    const messages = mockRecordingAndroidBridge();
+    initBridge(win);
+    mockAndroidPlugin('Awesome', 'mph');
+
+    cap = initCapacitorGlobal(win);
+
+    const Awesome = cap.registerPlugin<AwesomePlugin>('Awesome');
+
+    const handle = await Awesome.addListener('eventName', () => {
+      // ignore
+    });
+    await handle.remove();
+    await Promise.resolve();
+
+    const removeListenerMessage = messages.find((m) => m.methodName === 'removeListener');
+    expect(removeListenerMessage.callbackId).toBe('-1');
+  });
+
+  it('stops forwarding native events after removeAllListeners', async () => {
+    const messages = mockRecordingAndroidBridge();
+    initBridge(win);
+    mockAndroidPlugin('Awesome', 'mph');
+
+    cap = initCapacitorGlobal(win);
+
+    const Awesome = cap.registerPlugin<AwesomePlugin>('Awesome');
+
+    const received: unknown[] = [];
+    await Awesome.addListener('eventName', (data) => received.push(data));
+
+    const listenerCallbackId = messages.find((m) => m.methodName === 'addListener').callbackId;
+    emitNativeEvent(listenerCallbackId, 'before');
+    await Awesome.removeAllListeners();
+    emitNativeEvent(listenerCallbackId, 'after');
+
+    expect(received).toEqual(['before']);
+  });
+
+  it('lets a removed native listener be garbage collected', async () => {
+    setFlagsFromString('--expose-gc');
+    const collectGarbage = runInNewContext('gc') as () => void;
+
+    mockRecordingAndroidBridge();
+    initBridge(win);
+    mockAndroidPlugin('Awesome', 'mph');
+
+    cap = initCapacitorGlobal(win);
+
+    const Awesome = cap.registerPlugin<AwesomePlugin>('Awesome');
+
+    // Stands in for what a real listener closes over, such as an iframe's window.
+    let captured: WeakRef<object> | undefined;
+    const register = () => {
+      const capture = {};
+      captured = new WeakRef(capture);
+      return Awesome.addListener('eventName', () => capture);
+    };
+    const handle = await register();
+    await handle.remove();
+
+    // A WeakRef keeps its target alive until the current job ends, so collect in a later one.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    collectGarbage();
+
+    expect(captured?.deref()).toBeUndefined();
+  });
+
   it('async removeAllListeners on web, lazy load and call implementation', async (done) => {
     const AwesomeWeb = class extends WebPlugin {
       async removeAllListeners() {
@@ -337,6 +487,20 @@ describe('plugin', () => {
     };
   };
 
+  const mockRecordingAndroidBridge = () => {
+    const messages: any[] = [];
+    win.androidBridge = {
+      postMessage: (m) => {
+        messages.push(JSON.parse(m));
+      },
+    };
+    return messages;
+  };
+
+  const emitNativeEvent = (callbackId: string, data: unknown) => {
+    (win as any).Capacitor.fromNative({ callbackId, methodName: 'addListener', success: true, data });
+  };
+
   const mockAndroidPlugin = (pluginClassName: string, methodName: string) => {
     const w: any = win;
     w.Capacitor = w.Capacitor ?? {};
@@ -351,25 +515,12 @@ describe('plugin', () => {
       ],
     });
   };
-
-  it('plugin proxy must not be a Thenable (Promise.resolve chaining short-circuit)', async () => {
-    // Web platform; no native bridge headers. registerPlugin returns a Proxy
-    // that wraps method dispatch. The proxy MUST NOT be unintentionally Thenable
-    // — otherwise Promise.resolve(proxy) and `await proxy` invoke proxy.then(...)
-    // and dispatch a bogus "then" method to the native bridge (or web stub).
-    // See GH issue #8472 for the production failure modes that motivated this regression test.
-    cap = initCapacitorGlobal(win);
-    const Awesome = cap.registerPlugin('Awesome');
-
-    expect(typeof (Awesome as unknown as { then?: unknown }).then).toBe('undefined');
-    expect(typeof (Awesome as unknown as { catch?: unknown }).catch).toBe('undefined');
-    expect(typeof (Awesome as unknown as { finally?: unknown }).finally).toBe('undefined');
-
-    const resolved = await Promise.resolve(Awesome);
-    expect(resolved).toBe(Awesome);
-  });
 });
 
 interface AwesomePlugin extends Plugin {
+  mph(): Promise<number>;
+}
+
+interface RejectingListenerPlugin extends Plugin {
   mph(): Promise<number>;
 }
