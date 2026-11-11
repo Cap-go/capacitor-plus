@@ -147,16 +147,14 @@ export const createCapacitor = (win: WindowCapacitor): CapacitorInstance => {
       nativeListeners.add(listener);
 
       const forward = (...args: any[]) => listener.callback?.(...args);
-      const call = addListener({ eventName }, forward);
-
+      const call = addListener({ eventName }, forward).then((callbackId: string) => callbackId);
       const remove = async () => {
         listener.callback = null;
         nativeListeners.delete(listener);
 
         const callbackId = await call;
 
-        // Native never answers removeListener, so passing a callback would only store it forever.
-        removeListener({
+        await removeListener({
           eventName,
           callbackId,
         });

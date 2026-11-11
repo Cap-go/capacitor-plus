@@ -376,7 +376,7 @@ describe('plugin', () => {
     expect(typeof (rtn as any).remove === 'function').toBe(true);
   });
 
-  it('stops forwarding native events once the listener is removed', async () => {
+  it('stops delivering native events once the listener is removed', async () => {
     const messages = mockRecordingAndroidBridge();
     initBridge(win);
     mockAndroidPlugin('Awesome', 'mph');
@@ -387,16 +387,48 @@ describe('plugin', () => {
 
     const received: unknown[] = [];
     const handle = await Awesome.addListener('eventName', (data) => received.push(data));
+    const listenerId = callbackIdOf(messages, 'addListener');
 
-    const listenerCallbackId = messages.find((m) => m.methodName === 'addListener').callbackId;
-    emitNativeEvent(listenerCallbackId, 'before');
+    sendFromNative(listenerId, { n: 1 });
     await handle.remove();
-    emitNativeEvent(listenerCallbackId, 'after');
+    sendFromNative(listenerId, { n: 2 });
 
-    expect(received).toEqual(['before']);
+    expect(received).toEqual([{ n: 1 }]);
   });
 
-  it('does not give the native bridge a callback to keep for removeListener', async () => {
+  it('clears the addListener forwarder and native listener tracking on remove', async () => {
+    const messages = mockRecordingAndroidBridge();
+    initBridge(win);
+    mockAndroidPlugin('Awesome', 'mph');
+
+    cap = initCapacitorGlobal(win);
+    const nativeCallbackSpy = jest.spyOn(cap as CapacitorInstance, 'nativeCallback');
+
+    const Awesome = cap.registerPlugin<AwesomePlugin>('Awesome');
+
+    const userCallback = jest.fn();
+    const handle = await Awesome.addListener('eventName', userCallback);
+
+    const addListenerCall = nativeCallbackSpy.mock.calls.find((c) => c[0] === 'Awesome' && c[1] === 'addListener');
+    expect(addListenerCall).toBeDefined();
+    const bridgeForwarder = addListenerCall![3] as (...args: unknown[]) => void;
+    expect(bridgeForwarder).not.toBe(userCallback);
+
+    const listenerId = callbackIdOf(messages, 'addListener');
+    sendFromNative(listenerId, { n: 1 });
+    expect(userCallback).toHaveBeenCalledWith({ n: 1 });
+
+    await handle.remove();
+    userCallback.mockClear();
+
+    sendFromNative(listenerId, { n: 2 });
+    bridgeForwarder({ n: 3 });
+    expect(userCallback).not.toHaveBeenCalled();
+
+    nativeCallbackSpy.mockRestore();
+  });
+
+  it('does not store a callback for removeListener', async () => {
     const messages = mockRecordingAndroidBridge();
     initBridge(win);
     mockAndroidPlugin('Awesome', 'mph');
@@ -409,37 +441,56 @@ describe('plugin', () => {
       // ignore
     });
     await handle.remove();
-    await Promise.resolve();
 
-    const removeListenerMessage = messages.find((m) => m.methodName === 'removeListener');
-    expect(removeListenerMessage.callbackId).toBe('-1');
+    expect(callbackIdOf(messages, 'removeListener')).toBe('-1');
   });
 
-  it('stops forwarding native events after removeAllListeners', async () => {
+  it('stops delivering native events after removeAllListeners, only for that plugin', async () => {
     const messages = mockRecordingAndroidBridge();
     initBridge(win);
     mockAndroidPlugin('Awesome', 'mph');
+    mockAndroidPlugin('Other', 'mph');
 
     cap = initCapacitorGlobal(win);
 
     const Awesome = cap.registerPlugin<AwesomePlugin>('Awesome');
+    const Other = cap.registerPlugin<AwesomePlugin>('Other');
 
     const received: unknown[] = [];
-    await Awesome.addListener('eventName', (data) => received.push(data));
+    await Awesome.addListener('eventName', (data) => received.push(['Awesome', data]));
+    await Other.addListener('eventName', (data) => received.push(['Other', data]));
 
-    const listenerCallbackId = messages.find((m) => m.methodName === 'addListener').callbackId;
-    emitNativeEvent(listenerCallbackId, 'before');
-    await Awesome.removeAllListeners();
-    emitNativeEvent(listenerCallbackId, 'after');
+    const removing = Awesome.removeAllListeners();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    sendFromNative(callbackIdOf(messages, 'removeAllListeners'));
+    await removing;
 
-    expect(received).toEqual(['before']);
+    sendFromNative(callbackIdOf(messages, 'addListener', 'Awesome'), { n: 1 });
+    sendFromNative(callbackIdOf(messages, 'addListener', 'Other'), { n: 1 });
+
+    expect(received).toEqual([['Other', { n: 1 }]]);
+  });
+
+  it('stops delivering native events once a Capacitor.addListener handle is removed', async () => {
+    const messages = mockRecordingAndroidBridge();
+    initBridge(win);
+
+    const received: unknown[] = [];
+    const handle = (win as any).Capacitor.addListener('Awesome', 'eventName', (data: unknown) => received.push(data));
+    const listenerId = callbackIdOf(messages, 'addListener');
+
+    sendFromNative(listenerId, { n: 1 });
+    await handle.remove();
+    sendFromNative(listenerId, { n: 2 });
+
+    expect(received).toEqual([{ n: 1 }]);
   });
 
   it('lets a removed native listener be garbage collected', async () => {
     setFlagsFromString('--expose-gc');
     const collectGarbage = runInNewContext('gc') as () => void;
 
-    mockRecordingAndroidBridge();
+    mockAndroidBridge();
     initBridge(win);
     mockAndroidPlugin('Awesome', 'mph');
 
@@ -447,7 +498,7 @@ describe('plugin', () => {
 
     const Awesome = cap.registerPlugin<AwesomePlugin>('Awesome');
 
-    // Stands in for what a real listener closes over, such as an iframe's window.
+    // stands in for what a real listener closes over, such as an iframe's window
     let captured: WeakRef<object> | undefined;
     const register = () => {
       const capture = {};
@@ -457,7 +508,7 @@ describe('plugin', () => {
     const handle = await register();
     await handle.remove();
 
-    // A WeakRef keeps its target alive until the current job ends, so collect in a later one.
+    // a WeakRef keeps its target alive until the current job ends, so collect in a later one
     await new Promise((resolve) => setTimeout(resolve, 0));
     collectGarbage();
 
@@ -497,8 +548,11 @@ describe('plugin', () => {
     return messages;
   };
 
-  const emitNativeEvent = (callbackId: string, data: unknown) => {
-    (win as any).Capacitor.fromNative({ callbackId, methodName: 'addListener', success: true, data });
+  const callbackIdOf = (messages: any[], methodName: string, pluginId = 'Awesome'): string =>
+    messages.find((m) => m.methodName === methodName && m.pluginId === pluginId).callbackId;
+
+  const sendFromNative = (callbackId: string, data = {}) => {
+    (win as any).Capacitor.fromNative({ callbackId, success: true, data });
   };
 
   const mockAndroidPlugin = (pluginClassName: string, methodName: string) => {
@@ -511,7 +565,8 @@ describe('plugin', () => {
         { name: methodName, rtype: 'promise' },
         { name: 'addListener' },
         { name: 'removeListener' },
-        { name: 'removeAllListeners' },
+        // matches the real header on both platforms
+        { name: 'removeAllListeners', rtype: 'promise' },
       ],
     });
   };
