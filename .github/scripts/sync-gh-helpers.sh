@@ -177,8 +177,15 @@ merge_upstream_preferred() {
 }
 
 abort_in_progress_cherry_pick() {
-  if [ -f .git/CHERRY_PICK_HEAD ] || [ -d .git/sequencer ]; then
-    git cherry-pick --abort >/dev/null 2>&1 || git reset --hard HEAD >/dev/null 2>&1 || true
+  # Use git-dir, not .git/..., because worktrees have .git as a file.
+  local git_dir
+  git_dir=$(command git rev-parse --git-dir 2>/dev/null || echo .git)
+  command git cherry-pick --abort >/dev/null 2>&1 || true
+  if [ -f "${git_dir}/CHERRY_PICK_HEAD" ] || [ -d "${git_dir}/sequencer" ]; then
+    command git reset --hard HEAD >/dev/null 2>&1 || true
+  fi
+  if [ -n "$(command git diff --name-only --diff-filter=U 2>/dev/null)" ]; then
+    command git reset --hard HEAD >/dev/null 2>&1 || true
   fi
 }
 
@@ -297,6 +304,7 @@ cherry_pick_upstream_pr() {
 
   echo "Clean cherry-pick hit conflicts. Retrying and preferring upstream PR hunks on overlapping lines."
   abort_in_progress_cherry_pick
+  command git reset --hard HEAD >/dev/null 2>&1 || true
 
   if cherry_pick_shas --theirs "${shas[@]}"; then
     CHERRY_PICK_RESOLUTION="theirs"
