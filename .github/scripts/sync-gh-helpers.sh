@@ -302,6 +302,7 @@ cherry_pick_upstream_pr() {
     if cherry_pick_shas "${shas[@]}"; then
       CHERRY_PICK_RESOLUTION="clean"
       echo "Cherry-pick completed cleanly"
+      format_after_sync
       return 0
     fi
 
@@ -322,6 +323,7 @@ cherry_pick_upstream_pr() {
   if cherry_pick_shas --theirs "${shas[@]}"; then
     CHERRY_PICK_RESOLUTION="theirs"
     echo "Cherry-pick completed by preferring upstream PR hunks on conflicts. Capacitor+ only hunks were kept."
+    format_after_sync
     return 0
   fi
 
@@ -359,7 +361,8 @@ upstream_pr_already_applied() {
 }
 
 # Format only files changed since base_ref so a repo-wide fmt cannot
-# add unrelated diffs to a sync PR.
+# add unrelated diffs to a sync PR. Uses real prettier --write (not
+# prettier-pretty-check) so Java and TypeScript match plus lint.
 format_files_changed_since() {
   local base_ref="$1"
 
@@ -377,6 +380,7 @@ format_files_changed_since() {
 
   local prettier_files=()
   local eslint_files=()
+  local swift_files=()
   local f
   while IFS= read -r f; do
     [ -z "$f" ] && continue
@@ -387,16 +391,48 @@ format_files_changed_since() {
     case "$f" in
       *.ts) eslint_files+=("$f") ;;
     esac
+    case "$f" in
+      *.swift) swift_files+=("$f") ;;
+    esac
   done <<< "$files"
 
-  if [ "${#prettier_files[@]}" -gt 0 ] && command -v bun >/dev/null 2>&1; then
-    echo "Running prettier on ${#prettier_files[@]} changed file(s)"
-    bunx prettier --plugin=prettier-plugin-java --write -- "${prettier_files[@]}" || echo "prettier had some issues, continuing..."
+  local prettier_bin=""
+  if command -v bun >/dev/null 2>&1; then
+    prettier_bin="bunx prettier"
+  elif [ -x node_modules/.bin/prettier ]; then
+    prettier_bin="node_modules/.bin/prettier"
   fi
 
-  if [ "${#eslint_files[@]}" -gt 0 ] && command -v bun >/dev/null 2>&1; then
-    echo "Running eslint --fix on ${#eslint_files[@]} changed TypeScript file(s)"
-    bunx eslint --fix -- "${eslint_files[@]}" || echo "eslint had some issues, continuing..."
+  local eslint_bin=""
+  if command -v bun >/dev/null 2>&1; then
+    eslint_bin="bunx eslint"
+  elif [ -x node_modules/.bin/eslint ]; then
+    eslint_bin="node_modules/.bin/eslint"
+  fi
+
+  if [ "${#prettier_files[@]}" -gt 0 ]; then
+    if [ -n "$prettier_bin" ]; then
+      echo "Running prettier on ${#prettier_files[@]} changed file(s)"
+      # shellcheck disable=SC2086
+      $prettier_bin --plugin=prettier-plugin-java --write -- "${prettier_files[@]}" || echo "prettier had some issues, continuing..."
+    else
+      echo "Skipping prettier: bun and local prettier not found"
+    fi
+  fi
+
+  if [ "${#eslint_files[@]}" -gt 0 ]; then
+    if [ -n "$eslint_bin" ]; then
+      echo "Running eslint --fix on ${#eslint_files[@]} changed TypeScript file(s)"
+      # shellcheck disable=SC2086
+      $eslint_bin --fix -- "${eslint_files[@]}" || echo "eslint had some issues, continuing..."
+    else
+      echo "Skipping eslint --fix: bun and local eslint not found"
+    fi
+  fi
+
+  if [ "${#swift_files[@]}" -gt 0 ] && command -v swiftlint >/dev/null 2>&1; then
+    echo "Running swiftlint --fix on ${#swift_files[@]} changed Swift file(s)"
+    swiftlint --fix --format -- "${swift_files[@]}" || echo "swiftlint had some issues, continuing..."
   fi
 
   local staged=()
@@ -406,11 +442,37 @@ format_files_changed_since() {
   if [ "${#eslint_files[@]}" -gt 0 ]; then
     staged+=("${eslint_files[@]}")
   fi
+  if [ "${#swift_files[@]}" -gt 0 ]; then
+    staged+=("${swift_files[@]}")
+  fi
   if [ "${#staged[@]}" -gt 0 ] && ! git diff --quiet -- "${staged[@]}"; then
     echo "Formatter made changes, committing..."
     git add -- "${staged[@]}"
     git commit -m "style: auto-format code after upstream sync"
   fi
+}
+
+# Pick a plus base ref and format files this sync added or changed.
+format_after_sync() {
+  local base="${SYNC_FORMAT_BASE:-}"
+  local head
+  head=$(command git rev-parse HEAD)
+  if [ -z "$base" ]; then
+    # Prefer a plus ref that is still distinct from HEAD. If we merged
+    # while on plus itself, the local plus ref has moved with us.
+    if command git rev-parse --verify plus >/dev/null 2>&1       && [ "$(command git rev-parse plus)" != "$head" ]; then
+      base=plus
+    elif command git rev-parse --verify origin/plus >/dev/null 2>&1       && [ "$(command git rev-parse origin/plus)" != "$head" ]; then
+      base=origin/plus
+    else
+      echo "Skipping format after sync: no plus base distinct from HEAD"
+      return 0
+    fi
+  fi
+  format_files_changed_since "$base" || {
+    echo "format after sync had issues, continuing..."
+    return 0
+  }
 }
 
 # Merge upstream into plus while keeping Capacitor+ customizations.
@@ -428,6 +490,7 @@ merge_plus_preserving() {
 
   if git merge "$upstream_ref" --no-edit -m "$commit_message"; then
     MERGE_PLUS_PRESERVING_RESOLUTION="clean"
+    format_after_sync
     return 0
   fi
 
@@ -442,6 +505,7 @@ merge_plus_preserving() {
 
   if git merge "$upstream_ref" -X ours --no-edit -m "${commit_message} (plus-preserving conflicts)"; then
     MERGE_PLUS_PRESERVING_RESOLUTION="ours"
+    format_after_sync
     return 0
   fi
 
@@ -473,6 +537,7 @@ merge_plus_preserving() {
   if command git rev-parse -q --verify MERGE_HEAD >/dev/null; then
     git commit --no-edit || git commit -m "${commit_message} (plus-preserving conflicts)"
     MERGE_PLUS_PRESERVING_RESOLUTION="ours"
+    format_after_sync
     return 0
   fi
 
