@@ -396,6 +396,38 @@ describe('plugin', () => {
     expect(received).toEqual([{ n: 1 }]);
   });
 
+  it('clears the addListener forwarder and native listener tracking on remove', async () => {
+    const messages = mockRecordingAndroidBridge();
+    initBridge(win);
+    mockAndroidPlugin('Awesome', 'mph');
+
+    cap = initCapacitorGlobal(win);
+    const nativeCallbackSpy = jest.spyOn(cap as CapacitorInstance, 'nativeCallback');
+
+    const Awesome = cap.registerPlugin<AwesomePlugin>('Awesome');
+
+    const userCallback = jest.fn();
+    const handle = await Awesome.addListener('eventName', userCallback);
+
+    const addListenerCall = nativeCallbackSpy.mock.calls.find((c) => c[0] === 'Awesome' && c[1] === 'addListener');
+    expect(addListenerCall).toBeDefined();
+    const bridgeForwarder = addListenerCall![3] as (...args: unknown[]) => void;
+    expect(bridgeForwarder).not.toBe(userCallback);
+
+    const listenerId = callbackIdOf(messages, 'addListener');
+    sendFromNative(listenerId, { n: 1 });
+    expect(userCallback).toHaveBeenCalledWith({ n: 1 });
+
+    await handle.remove();
+    userCallback.mockClear();
+
+    sendFromNative(listenerId, { n: 2 });
+    bridgeForwarder({ n: 3 });
+    expect(userCallback).not.toHaveBeenCalled();
+
+    nativeCallbackSpy.mockRestore();
+  });
+
   it('does not store a callback for removeListener', async () => {
     const messages = mockRecordingAndroidBridge();
     initBridge(win);
