@@ -162,4 +162,47 @@ public class SystemBarsTest {
 
         return controller;
     }
+
+    @Test
+    public void hideWithEmptyBarHidesSystemBars() throws Exception {
+        WindowInsetsControllerCompat controller = invokeHide("");
+
+        verify(controller).hide(WindowInsetsCompat.Type.systemBars());
+        verify(controller, never()).hide(WindowInsetsCompat.Type.statusBars());
+        verify(controller, never()).hide(WindowInsetsCompat.Type.navigationBars());
+    }
+
+    @Test
+    public void hideWithStatusBarHidesOnlyStatusBars() throws Exception {
+        WindowInsetsControllerCompat controller = invokeHide("StatusBar");
+
+        verify(controller).hide(WindowInsetsCompat.Type.statusBars());
+        verify(controller, never()).hide(WindowInsetsCompat.Type.systemBars());
+        verify(controller, never()).hide(WindowInsetsCompat.Type.navigationBars());
+    }
+
+    private WindowInsetsControllerCompat invokeHide(String bar) throws Exception {
+        SystemBars plugin = new SystemBars();
+        Bridge bridge = mock(Bridge.class);
+        AppCompatActivity activity = mock(AppCompatActivity.class);
+        Window window = mock(Window.class);
+        View decorView = mock(View.class);
+        WindowInsetsControllerCompat controller = mock(WindowInsetsControllerCompat.class);
+
+        when(bridge.getActivity()).thenReturn(activity);
+        when(activity.getWindow()).thenReturn(window);
+        when(window.getDecorView()).thenReturn(decorView);
+
+        plugin.setBridge(bridge);
+
+        try (MockedStatic<WindowCompat> windowCompat = mockStatic(WindowCompat.class)) {
+            windowCompat.when(() -> WindowCompat.getInsetsController(window, decorView)).thenReturn(controller);
+
+            Method setHidden = SystemBars.class.getDeclaredMethod("setHidden", boolean.class, String.class);
+            setHidden.setAccessible(true);
+            setHidden.invoke(plugin, true, bar);
+        }
+
+        return controller;
+    }
 }
