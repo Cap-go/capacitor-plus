@@ -88,9 +88,9 @@ public class SystemBarsTest {
         );
         when(insets.isVisible(WindowInsetsCompat.Type.ime())).thenReturn(false);
 
-        Method injectSafeAreaCSS = SystemBars.class.getDeclaredMethod("injectSafeAreaCSS", WindowInsetsCompat.class);
+        Method injectSafeAreaCSS = SystemBars.class.getDeclaredMethod("injectSafeAreaCSS", WindowInsetsCompat.class, boolean.class);
         injectSafeAreaCSS.setAccessible(true);
-        injectSafeAreaCSS.invoke(plugin, insets);
+        injectSafeAreaCSS.invoke(plugin, insets, false);
 
         ArgumentCaptor<String> scriptCaptor = ArgumentCaptor.forClass(String.class);
         verify(webView).evaluateJavascript(scriptCaptor.capture(), any());
