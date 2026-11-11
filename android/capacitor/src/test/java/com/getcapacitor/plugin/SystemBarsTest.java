@@ -1,5 +1,6 @@
 package com.getcapacitor.plugin;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -99,6 +100,42 @@ public class SystemBarsTest {
         Assert.assertTrue(script.contains("\"--safe-area-inset-left\", \"10px\""));
         Assert.assertTrue(script.contains("\"--safe-area-inset-bottom\", \"15px\""));
         Assert.assertTrue(script.contains("\"--safe-area-inset-right\", \"5px\""));
+    }
+
+    @Test
+    public void bottomInsetIsNavigationBarWhenKeyboardHidden() throws Exception {
+        assertEquals(126, invokeGetBottomInset(126, 0, false));
+    }
+
+    @Test
+    public void bottomInsetIsZeroWhenDockedKeyboardCoversNavigationBar() throws Exception {
+        assertEquals(0, invokeGetBottomInset(126, 883, true));
+    }
+
+    @Test
+    public void bottomInsetIsZeroWhenKeyboardInsetEqualsNavigationBar() throws Exception {
+        assertEquals(0, invokeGetBottomInset(126, 126, true));
+    }
+
+    @Test
+    public void bottomInsetIsUncoveredPartWhenKeyboardPartiallyCoversNavigationBar() throws Exception {
+        assertEquals(76, invokeGetBottomInset(126, 50, true));
+    }
+
+    @Test
+    public void bottomInsetIsNavigationBarWhenFloatingKeyboardCoversNothing() throws Exception {
+        assertEquals(63, invokeGetBottomInset(63, 0, true));
+    }
+
+    private int invokeGetBottomInset(int navigationBarBottom, int imeBottom, boolean keyboardVisible) throws Exception {
+        Method getBottomInset = SystemBars.class.getDeclaredMethod("getBottomInset", Insets.class, Insets.class, boolean.class);
+        getBottomInset.setAccessible(true);
+        return (int) getBottomInset.invoke(
+            new SystemBars(),
+            Insets.of(0, 0, 0, navigationBarBottom),
+            Insets.of(0, 0, 0, imeBottom),
+            keyboardVisible
+        );
     }
 
     private WindowInsetsControllerCompat invokeShow(String bar) throws Exception {
