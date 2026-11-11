@@ -122,10 +122,15 @@ public class SystemBars extends Plugin {
     protected void handleOnResume() {
         super.handleOnResume();
         getBridge().executeOnMainThread(() -> {
-            applyEdgeToEdgeWindowAppearance();
+            // When insetsHandling is disable, native app code owns window fitting.
+            // Re-forcing edge-to-edge here would draw content under the system bars
+            // because SystemBars does not install an inset listener in that mode.
+            if (!INSETS_HANDLING_DISABLE.equals(insetsHandling)) {
+                applyEdgeToEdgeWindowAppearance();
+                ViewCompat.requestApplyInsets((View) getBridge().getWebView().getParent());
+            }
             setStyle(currentGestureBarStyle, BAR_GESTURE_BAR);
             setStyle(currentStatusBarStyle, BAR_STATUS_BAR);
-            ViewCompat.requestApplyInsets((View) getBridge().getWebView().getParent());
         });
     }
 
