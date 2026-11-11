@@ -168,7 +168,7 @@ merge_upstream_preferred() {
     return 1
   fi
 
-  if [ -f .git/MERGE_HEAD ]; then
+  if command git rev-parse -q --verify MERGE_HEAD >/dev/null; then
     git commit --no-edit || git commit -m "$commit_message"
     return 0
   fi
@@ -197,10 +197,7 @@ cherry_pick_one_sha() {
 
   local output
   local rc=0
-  set +e
-  output=$(git cherry-pick -x "$@" "$sha" 2>&1)
-  rc=$?
-  set -e
+  output=$(git cherry-pick -x "$@" "$sha" 2>&1) || rc=$?
   printf '%s\n' "$output"
 
   if [ "$rc" -eq 0 ]; then
@@ -260,6 +257,7 @@ cherry_pick_upstream_pr() {
   local upstream_repo="$1"
   local pr_number="$2"
   local _pr_ref="${3:-upstream-pr-${pr_number}}"
+  local mode="${4:-auto}"
 
   CHERRY_PICK_RESOLUTION="failed"
 
@@ -268,9 +266,13 @@ cherry_pick_upstream_pr() {
   local sha
   mapfile -t raw_shas < <(list_upstream_pr_commit_shas "$upstream_repo" "$pr_number" 2>/dev/null || true)
   for sha in "${raw_shas[@]+"${raw_shas[@]}"}"; do
-    if [[ "$sha" =~ ^[0-9a-f]{7,40}$ ]]; then
-      shas+=("$sha")
+    [[ "$sha" =~ ^[0-9a-f]{7,40}$ ]] || continue
+    # Skip merge commits. cherry-pick without -m cannot apply them.
+    if [ "$(command git rev-list --parents -n 1 "$sha" 2>/dev/null | wc -w)" -gt 2 ]; then
+      echo "Skipping merge commit ${sha}"
+      continue
     fi
+    shas+=("$sha")
   done
 
   if [ "${#shas[@]}" -eq 0 ]; then
@@ -296,15 +298,26 @@ cherry_pick_upstream_pr() {
 
   echo "Cherry-picking ${#shas[@]} commit(s) from upstream PR #${pr_number}"
 
-  if cherry_pick_shas "${shas[@]}"; then
-    CHERRY_PICK_RESOLUTION="clean"
-    echo "Cherry-pick completed cleanly"
-    return 0
-  fi
+  if [ "$mode" != "theirs" ]; then
+    if cherry_pick_shas "${shas[@]}"; then
+      CHERRY_PICK_RESOLUTION="clean"
+      echo "Cherry-pick completed cleanly"
+      return 0
+    fi
 
-  echo "Clean cherry-pick hit conflicts. Retrying and preferring upstream PR hunks on overlapping lines."
-  abort_in_progress_cherry_pick
-  command git reset --hard HEAD >/dev/null 2>&1 || true
+    echo "Clean cherry-pick hit conflicts."
+    abort_in_progress_cherry_pick
+    command git reset --hard HEAD >/dev/null 2>&1 || true
+    if [ "$mode" = "clean" ]; then
+      echo "Leaving the tree clean so a later -X theirs merge can retry."
+      CHERRY_PICK_RESOLUTION="failed"
+      return 1
+    fi
+    echo "Retrying and preferring upstream PR hunks on overlapping lines."
+  else
+    abort_in_progress_cherry_pick
+    command git reset --hard HEAD >/dev/null 2>&1 || true
+  fi
 
   if cherry_pick_shas --theirs "${shas[@]}"; then
     CHERRY_PICK_RESOLUTION="theirs"
@@ -336,8 +349,10 @@ upstream_pr_already_applied() {
   fi
 
   local limit
-  limit=$(git merge-base "$upstream_main_ref" "$pr_ref")
-  if git cherry "$sync_ref" "$pr_ref" "$limit" | grep -q '^+'; then
+  limit=$(git merge-base "$upstream_main_ref" "$pr_ref") || return 1
+  local cherry_out
+  cherry_out=$(git cherry "$sync_ref" "$pr_ref" "$limit") || return 1
+  if printf '%s\n' "$cherry_out" | grep -q '^+'; then
     return 1
   fi
   return 0
@@ -376,17 +391,24 @@ format_files_changed_since() {
 
   if [ "${#prettier_files[@]}" -gt 0 ] && command -v bun >/dev/null 2>&1; then
     echo "Running prettier on ${#prettier_files[@]} changed file(s)"
-    bun run prettier -- --write "${prettier_files[@]}" || echo "prettier had some issues, continuing..."
+    bunx prettier --plugin=prettier-plugin-java --write -- "${prettier_files[@]}" || echo "prettier had some issues, continuing..."
   fi
 
   if [ "${#eslint_files[@]}" -gt 0 ] && command -v bun >/dev/null 2>&1; then
     echo "Running eslint --fix on ${#eslint_files[@]} changed TypeScript file(s)"
-    bun run eslint -- --fix "${eslint_files[@]}" || echo "eslint had some issues, continuing..."
+    bunx eslint --fix -- "${eslint_files[@]}" || echo "eslint had some issues, continuing..."
   fi
 
-  if ! git diff --quiet; then
+  local staged=()
+  if [ "${#prettier_files[@]}" -gt 0 ]; then
+    staged+=("${prettier_files[@]}")
+  fi
+  if [ "${#eslint_files[@]}" -gt 0 ]; then
+    staged+=("${eslint_files[@]}")
+  fi
+  if [ "${#staged[@]}" -gt 0 ] && ! git diff --quiet -- "${staged[@]}"; then
     echo "Formatter made changes, committing..."
-    git add -A
+    git add -- "${staged[@]}"
     git commit -m "style: auto-format code after upstream sync"
   fi
 }
@@ -448,7 +470,7 @@ merge_plus_preserving() {
     return 1
   fi
 
-  if [ -f .git/MERGE_HEAD ]; then
+  if command git rev-parse -q --verify MERGE_HEAD >/dev/null; then
     git commit --no-edit || git commit -m "${commit_message} (plus-preserving conflicts)"
     MERGE_PLUS_PRESERVING_RESOLUTION="ours"
     return 0
@@ -496,7 +518,11 @@ git() {
     if [ -n "$pr_ref" ] && [ "$has_abort" = false ]; then
       local pr_number="${pr_ref#upstream-pr-}"
       echo "Intercepting merge of ${pr_ref}: cherry-picking only commits from upstream PR #${pr_number}"
-      cherry_pick_upstream_pr "${UPSTREAM_REPO:-ionic-team/capacitor}" "$pr_number" "$pr_ref"
+      if [ "$has_theirs" = true ]; then
+        cherry_pick_upstream_pr "${UPSTREAM_REPO:-ionic-team/capacitor}" "$pr_number" "$pr_ref" theirs
+      else
+        cherry_pick_upstream_pr "${UPSTREAM_REPO:-ionic-team/capacitor}" "$pr_number" "$pr_ref" clean
+      fi
       return $?
     fi
 

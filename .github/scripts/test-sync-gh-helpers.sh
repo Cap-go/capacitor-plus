@@ -340,6 +340,7 @@ test_git_wrapper_intercepts_upstream_pr_merge() {
   (
     cd "$plus"
     source "${ROOT}/sync-gh-helpers.sh"
+    list_upstream_pr_commit_shas() { return 1; }
     # Same invocation the scheduled workflow uses.
     git merge upstream-pr-1 --no-edit -m "chore: sync upstream PR #1 from @tester"
   )
@@ -387,6 +388,7 @@ test_git_wrapper_treats_cherry_pick_as_applied() {
   if ! (
     cd "$plus"
     source "${ROOT}/sync-gh-helpers.sh"
+    list_upstream_pr_commit_shas() { return 1; }
     git merge upstream-pr-1 --no-edit -m "chore: sync upstream PR #1"
     tip=$(command git rev-parse upstream-pr-1)
     git merge-base --is-ancestor "$tip" HEAD
@@ -428,7 +430,62 @@ test_merge_upstream_preferred_on_plus_keeps_customization() {
   return 0
 }
 
+
+test_git_wrapper_plain_merge_leaves_conflicts_for_theirs_retry() {
+  local work
+  work=$(mktemp -d)
+  init_git_repo "${work}/repo"
+  local repo="${work}/repo"
+
+  printf 'same-line\n' > "${repo}/shared.txt"
+  git -C "$repo" add shared.txt
+  git -C "$repo" commit -m "base" >/dev/null
+
+  git -C "$repo" checkout -b plus >/dev/null 2>&1
+  printf 'plus-line\n' > "${repo}/shared.txt"
+  git -C "$repo" add shared.txt
+  git -C "$repo" commit -m "plus line" >/dev/null
+
+  git -C "$repo" checkout -b pr-branch main >/dev/null 2>&1
+  printf 'pr-line\n' > "${repo}/shared.txt"
+  git -C "$repo" add shared.txt
+  git -C "$repo" commit -m "pr line" >/dev/null
+
+  git -C "$repo" checkout plus >/dev/null 2>&1
+  git -C "$repo" branch upstream-pr-1 pr-branch >/dev/null
+  git -C "$repo" branch upstream-main main >/dev/null
+
+  (
+    cd "$repo"
+    source "${ROOT}/sync-gh-helpers.sh"
+    list_upstream_pr_commit_shas() { return 1; }
+    if git merge upstream-pr-1 --no-edit -m "chore: sync upstream PR #1"; then
+      echo "  plain merge of a conflicting upstream PR should fail so the workflow can take its conflict branch"
+      rm -rf "$work"
+      return 1
+    fi
+    if ! git merge upstream-pr-1 -X theirs --no-edit -m "chore: sync upstream PR #1 (upstream-preferred conflicts)"; then
+      echo "  -X theirs should apply the upstream PR hunk"
+      rm -rf "$work"
+      return 1
+    fi
+  ) || {
+    rm -rf "$work"
+    return 1
+  }
+
+  if ! assert_file_equals "${repo}/shared.txt" $'pr-line\n'; then
+    echo "  -X theirs should keep the upstream PR hunk on a same-line conflict"
+    rm -rf "$work"
+    return 1
+  fi
+
+  rm -rf "$work"
+  return 0
+}
+
 run_test old_merge_wipes_plus_customization test_old_merge_wipes_plus_customization
+run_test git_wrapper_plain_merge_leaves_conflicts_for_theirs_retry test_git_wrapper_plain_merge_leaves_conflicts_for_theirs_retry
 run_test cherry_pick_keeps_plus_and_applies_pr test_cherry_pick_keeps_plus_and_applies_pr
 run_test cherry_pick_combines_nonoverlapping_hunks test_cherry_pick_theirs_prefers_pr_hunk_keeps_plus_hunk
 run_test cherry_pick_theirs_resolves_same_hunk_conflict test_cherry_pick_theirs_resolves_same_hunk_conflict
