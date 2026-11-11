@@ -126,13 +126,18 @@ final class CapacitorWebViewCookies: NSObject, WKHTTPCookieStoreObserver {
     private func apply(_ cookies: [HTTPCookie]) -> [HTTPCookie] {
         let cookies = cookies.filter { !isMarker($0) }
         let current = Dictionary(cookies.map { (CookieKey($0), $0) }, uniquingKeysWith: { _, last in last })
+        let jar = HTTPCookieStorage.shared
         if let previous = snapshot {
-            let jar = HTTPCookieStorage.shared
             let changed = current.filter { key, cookie in
-                previous[key]?.value != cookie.value || previous[key]?.expiresDate != cookie.expiresDate
+                previous[key]?.value != cookie.value
+                    || previous[key]?.expiresDate != cookie.expiresDate
+                    || previous[key]?.isHTTPOnly != cookie.isHTTPOnly
+                    || previous[key]?.isSecure != cookie.isSecure
             }
             changed.values.forEach(jar.setCookie)
             previous.filter { current[$0.key] == nil }.values.forEach(jar.deleteCookie)
+        } else {
+            current.values.forEach(jar.setCookie)
         }
         snapshot = current
         return cookies
