@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.6.5](https://github.com/Cap-go/capacitor-plus/compare/8.6.4...8.6.5) (2026-11-11)
+
+
+### Bug Fixes
+
+* **sync:** cherry-pick upstream PRs instead of merging their branches ([#243](https://github.com/Cap-go/capacitor-plus/issues/243)) ([a2d646e](https://github.com/Cap-go/capacitor-plus/commit/a2d646ed19ae21cc9fa080ff6f6b1276a6dd7548)), closes [#223](https://github.com/Cap-go/capacitor-plus/issues/223) [#223](https://github.com/Cap-go/capacitor-plus/issues/223) [#223](https://github.com/Cap-go/capacitor-plus/issues/223) [#8692](https://github.com/Cap-go/capacitor-plus/issues/8692) [#8692](https://github.com/Cap-go/capacitor-plus/issues/8692) [#8692](https://github.com/Cap-go/capacitor-plus/issues/8692)
+
+
+
+
+
+## [8.6.4](https://github.com/Cap-go/capacitor-plus/compare/8.6.3...8.6.4) (2026-11-11)
+
+**Note:** Version bump only for package @capacitor-plus/android
+
+
+
+
+
 ## [8.6.3](https://github.com/Cap-go/capacitor-plus/compare/8.6.2...8.6.3) (2026-11-10)
 
 **Note:** Version bump only for package @capacitor-plus/android
