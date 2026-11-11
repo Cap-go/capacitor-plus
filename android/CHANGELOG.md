@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.6.4](https://github.com/Cap-go/capacitor-plus/compare/8.6.3...8.6.4) (2026-11-11)
+
+**Note:** Version bump only for package @capacitor-plus/android
+
+
+
+
+
 ## [8.6.3](https://github.com/Cap-go/capacitor-plus/compare/8.6.2...8.6.3) (2026-11-10)
 
 **Note:** Version bump only for package @capacitor-plus/android
