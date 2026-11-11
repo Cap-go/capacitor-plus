@@ -163,8 +163,8 @@ open class WebViewDelegationHandler: NSObject, WKNavigationDelegate, WKUIDelegat
     open func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         if case .initialLoad(let isOpaque) = webViewLoadingState {
             webView.isOpaque = isOpaque
-            webViewLoadingState = .subsequentLoad
         }
+        webViewLoadingState = .subsequentLoad
         CAPLog.print("⚡️  WebView loaded")
     }
 
