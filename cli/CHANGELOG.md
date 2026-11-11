@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.6.5](https://github.com/Cap-go/capacitor-plus/compare/8.6.4...8.6.5) (2026-11-11)
+
+**Note:** Version bump only for package @capacitor-plus/cli
+
+
+
+
+
 ## [8.6.4](https://github.com/Cap-go/capacitor-plus/compare/8.6.3...8.6.4) (2026-11-11)
 
 **Note:** Version bump only for package @capacitor-plus/cli
