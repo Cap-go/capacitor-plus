@@ -484,7 +484,130 @@ test_git_wrapper_plain_merge_leaves_conflicts_for_theirs_retry() {
   return 0
 }
 
+
+test_format_files_changed_since_commits_formatted_ts() {
+  local work
+  work=$(mktemp -d)
+  init_git_repo "${work}/repo"
+  local repo="${work}/repo"
+
+  printf 'export const ok = 1;\n' > "${repo}/ok.ts"
+  git -C "$repo" add ok.ts
+  git -C "$repo" commit -m "base" >/dev/null
+  git -C "$repo" checkout -b plus >/dev/null 2>&1
+
+  git -C "$repo" checkout -b sync-pr plus >/dev/null 2>&1
+  printf 'const value = UNFORMATTED;\n' > "${repo}/ugly.ts"
+  git -C "$repo" add ugly.ts
+  git -C "$repo" commit -m "upstream adds unformatted ts" >/dev/null
+
+  mkdir -p "${work}/bin"
+  cat > "${work}/bin/bun" <<'EOF'
+#!/usr/bin/env bash
+exit 0
+EOF
+  cat > "${work}/bin/bunx" <<'EOF'
+#!/usr/bin/env bash
+if [ "$1" != "prettier" ]; then
+  exit 0
+fi
+shift
+files=()
+seen_dd=false
+write=false
+for arg in "$@"; do
+  case "$arg" in
+    --write) write=true ;;
+    --) seen_dd=true ;;
+    *)
+      if [ "$seen_dd" = true ]; then
+        files+=("$arg")
+      fi
+      ;;
+  esac
+done
+if [ "$write" != true ]; then
+  exit 0
+fi
+for f in "${files[@]}"; do
+  [ -f "$f" ] || continue
+  if grep -q UNFORMATTED "$f"; then
+    sed 's/UNFORMATTED/formatted/' "$f" > "${f}.tmp"
+    mv "${f}.tmp" "$f"
+  fi
+done
+exit 0
+EOF
+  chmod +x "${work}/bin/bun" "${work}/bin/bunx"
+
+  (
+    cd "$repo"
+    PATH="${work}/bin:${PATH}"
+    source "${ROOT}/sync-gh-helpers.sh"
+    format_files_changed_since plus
+  )
+
+  if ! assert_file_equals "${repo}/ugly.ts" $'const value = formatted;\n'; then
+    echo "  expected prettier --write to format the changed TypeScript file"
+    rm -rf "$work"
+    return 1
+  fi
+
+  local msg
+  msg=$(git -C "$repo" log -1 --pretty=%s)
+  if [ "$msg" != "style: auto-format code after upstream sync" ]; then
+    echo "  expected a format commit, got: ${msg}"
+    rm -rf "$work"
+    return 1
+  fi
+
+  rm -rf "$work"
+  return 0
+}
+
+test_format_files_changed_since_skips_when_already_formatted() {
+  local work
+  work=$(mktemp -d)
+  init_git_repo "${work}/repo"
+  local repo="${work}/repo"
+
+  printf 'export const ok = 1;\n' > "${repo}/ok.ts"
+  git -C "$repo" add ok.ts
+  git -C "$repo" commit -m "base" >/dev/null
+  git -C "$repo" checkout -b plus >/dev/null 2>&1
+  git -C "$repo" checkout -b sync-pr plus >/dev/null 2>&1
+  printf 'export const added = 2;\n' > "${repo}/clean.ts"
+  git -C "$repo" add clean.ts
+  git -C "$repo" commit -m "already formatted ts" >/dev/null
+
+  mkdir -p "${work}/bin"
+  printf '#!/usr/bin/env bash\nexit 0\n' > "${work}/bin/bun"
+  printf '#!/usr/bin/env bash\nexit 0\n' > "${work}/bin/bunx"
+  chmod +x "${work}/bin/bun" "${work}/bin/bunx"
+
+  local before
+  before=$(git -C "$repo" rev-parse HEAD)
+  (
+    cd "$repo"
+    PATH="${work}/bin:${PATH}"
+    source "${ROOT}/sync-gh-helpers.sh"
+    format_files_changed_since plus
+  )
+  local after
+  after=$(git -C "$repo" rev-parse HEAD)
+  if [ "$before" != "$after" ]; then
+    echo "  did not expect a format commit when prettier changes nothing"
+    rm -rf "$work"
+    return 1
+  fi
+
+  rm -rf "$work"
+  return 0
+}
+
 run_test old_merge_wipes_plus_customization test_old_merge_wipes_plus_customization
+run_test format_files_changed_since_commits_formatted_ts test_format_files_changed_since_commits_formatted_ts
+run_test format_files_changed_since_skips_when_already_formatted test_format_files_changed_since_skips_when_already_formatted
 run_test git_wrapper_plain_merge_leaves_conflicts_for_theirs_retry test_git_wrapper_plain_merge_leaves_conflicts_for_theirs_retry
 run_test cherry_pick_keeps_plus_and_applies_pr test_cherry_pick_keeps_plus_and_applies_pr
 run_test cherry_pick_combines_nonoverlapping_hunks test_cherry_pick_theirs_prefers_pr_hunk_keeps_plus_hunk
