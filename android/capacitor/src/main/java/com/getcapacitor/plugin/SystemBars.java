@@ -118,6 +118,17 @@ public class SystemBars extends Plugin {
         setStyle(currentStatusBarStyle, BAR_STATUS_BAR);
     }
 
+    @Override
+    protected void handleOnResume() {
+        super.handleOnResume();
+        getBridge().executeOnMainThread(() -> {
+            applyEdgeToEdgeWindowAppearance();
+            setStyle(currentGestureBarStyle, BAR_GESTURE_BAR);
+            setStyle(currentStatusBarStyle, BAR_STATUS_BAR);
+            ViewCompat.requestApplyInsets((View) getBridge().getWebView().getParent());
+        });
+    }
+
     private void initSystemBars() {
         // If you already know what the value of the `viewport-fit=` meta tag is going to be,
         // passing it here through `initialViewportFitValueHint` can help prevent layout shifting.
@@ -147,18 +158,22 @@ public class SystemBars extends Plugin {
         initWindowInsetsListener();
 
         getBridge().executeOnMainThread(() -> {
-            Window window = getActivity().getWindow();
-            WindowCompat.setDecorFitsSystemWindows(window, false);
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-                window.setNavigationBarColor(android.graphics.Color.TRANSPARENT);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    window.setNavigationBarContrastEnforced(false);
-                }
-            }
+            applyEdgeToEdgeWindowAppearance();
             setStyle(style, "");
             setHidden(hidden, "");
             ViewCompat.requestApplyInsets((View) getBridge().getWebView().getParent());
         });
+    }
+
+    private void applyEdgeToEdgeWindowAppearance() {
+        Window window = getActivity().getWindow();
+        WindowCompat.setDecorFitsSystemWindows(window, false);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            window.setNavigationBarColor(android.graphics.Color.TRANSPARENT);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                window.setNavigationBarContrastEnforced(false);
+            }
+        }
     }
 
     @PluginMethod

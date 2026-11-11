@@ -56,6 +56,24 @@ public class SystemBarsTest {
     }
 
     @Test
+    public void hideWithEmptyBarHidesSystemBars() throws Exception {
+        WindowInsetsControllerCompat controller = invokeSetHidden(true, "");
+
+        verify(controller).hide(WindowInsetsCompat.Type.systemBars());
+        verify(controller, never()).hide(WindowInsetsCompat.Type.statusBars());
+        verify(controller, never()).hide(WindowInsetsCompat.Type.navigationBars());
+    }
+
+    @Test
+    public void hideWithStatusBarHidesOnlyStatusBars() throws Exception {
+        WindowInsetsControllerCompat controller = invokeSetHidden(true, "StatusBar");
+
+        verify(controller).hide(WindowInsetsCompat.Type.statusBars());
+        verify(controller, never()).hide(WindowInsetsCompat.Type.systemBars());
+        verify(controller, never()).hide(WindowInsetsCompat.Type.navigationBars());
+    }
+
+    @Test
     public void injectSafeAreaCSSUsesOriginalSystemBarInsets() throws Exception {
         SystemBars plugin = new SystemBars();
         Bridge bridge = mock(Bridge.class);
@@ -102,6 +120,10 @@ public class SystemBarsTest {
     }
 
     private WindowInsetsControllerCompat invokeShow(String bar) throws Exception {
+        return invokeSetHidden(false, bar);
+    }
+
+    private WindowInsetsControllerCompat invokeSetHidden(boolean hide, String bar) throws Exception {
         SystemBars plugin = new SystemBars();
         Bridge bridge = mock(Bridge.class);
         AppCompatActivity activity = mock(AppCompatActivity.class);
@@ -120,7 +142,7 @@ public class SystemBarsTest {
 
             Method setHidden = SystemBars.class.getDeclaredMethod("setHidden", boolean.class, String.class);
             setHidden.setAccessible(true);
-            setHidden.invoke(plugin, false, bar);
+            setHidden.invoke(plugin, hide, bar);
         }
 
         return controller;
