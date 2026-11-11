@@ -13,6 +13,6 @@
       "tagVersionPrefix": ""
     }
   },
-  "version": "8.6.3",
+  "version": "8.6.5",
   "$schema": "node_modules/lerna/schemas/lerna-schema.json"
 }
