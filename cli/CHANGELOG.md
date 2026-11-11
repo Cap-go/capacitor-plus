@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.6.6](https://github.com/Cap-go/capacitor-plus/compare/8.6.5...8.6.6) (2026-11-11)
+
+
+### Bug Fixes
+
+* **cli:** guard non-array requiredElementsArray in iOS plist merge ([#238](https://github.com/Cap-go/capacitor-plus/issues/238)) ([2ac7fb2](https://github.com/Cap-go/capacitor-plus/commit/2ac7fb27b50714002a77b2510c154e8e9ae2554d))
+
+
+
+
+
 ## [8.6.5](https://github.com/Cap-go/capacitor-plus/compare/8.6.4...8.6.5) (2026-11-11)
 
 **Note:** Version bump only for package @capacitor-plus/cli

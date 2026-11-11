@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [8.6.6](https://github.com/Cap-go/capacitor-plus/compare/8.6.5...8.6.6) (2026-11-11)
+
+
+### Bug Fixes
+
+* **android:** restore SystemBars work lost to upstream-preferred sync ([#244](https://github.com/Cap-go/capacitor-plus/issues/244)) ([a49dadd](https://github.com/Cap-go/capacitor-plus/commit/a49daddd516a5267e4cf5e87e7d58585a68c0413)), closes [#67](https://github.com/Cap-go/capacitor-plus/issues/67) [#219](https://github.com/Cap-go/capacitor-plus/issues/219) [#106](https://github.com/Cap-go/capacitor-plus/issues/106) [#219](https://github.com/Cap-go/capacitor-plus/issues/219) [#8480](https://github.com/Cap-go/capacitor-plus/issues/8480) [#219](https://github.com/Cap-go/capacitor-plus/issues/219) [#8692](https://github.com/Cap-go/capacitor-plus/issues/8692) [#223](https://github.com/Cap-go/capacitor-plus/issues/223) [#240](https://github.com/Cap-go/capacitor-plus/issues/240) [#240](https://github.com/Cap-go/capacitor-plus/issues/240) [#8707](https://github.com/Cap-go/capacitor-plus/issues/8707)
+* **cli:** guard non-array requiredElementsArray in iOS plist merge ([#238](https://github.com/Cap-go/capacitor-plus/issues/238)) ([2ac7fb2](https://github.com/Cap-go/capacitor-plus/commit/2ac7fb27b50714002a77b2510c154e8e9ae2554d))
+* **sync:** format changed files after cherry-pick so lint passes ([#245](https://github.com/Cap-go/capacitor-plus/issues/245)) ([cd7e810](https://github.com/Cap-go/capacitor-plus/commit/cd7e81048a307060b49a32d84944d57241c6e408))
+
+
+### Features
+
+* **android:** allow scoping WebView bridge origin policy ([#235](https://github.com/Cap-go/capacitor-plus/issues/235)) ([bf662fe](https://github.com/Cap-go/capacitor-plus/commit/bf662fe75f96141f4927a501ac552ede7a2342ec))
+
+
+
+
+
 ## [8.6.5](https://github.com/Cap-go/capacitor-plus/compare/8.6.4...8.6.5) (2026-11-11)
 
 
