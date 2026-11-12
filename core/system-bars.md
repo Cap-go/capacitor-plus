@@ -42,6 +42,11 @@ const setSystemBarStyleLight = async () => {
   await SystemBars.setStyle({ style: SystemBarsStyle.Light });
 };
 
+const getStatusBarStyle = async () => {
+  const { style } = await SystemBars.getStyle({ bar: SystemBarType.StatusBar });
+  console.log('status bar style', style);
+};
+
 const hideSystemBars = async () => {
   await SystemBars.hide();
 };
@@ -119,6 +124,7 @@ export default config;
 <docgen-index>
 
 * [`setStyle(...)`](#setstyle)
+* [`getStyle(...)`](#getstyle)
 * [`show(...)`](#show)
 * [`hide(...)`](#hide)
 * [`setAnimation(...)`](#setanimation)
@@ -146,6 +152,28 @@ Set the current style of the system bars.
 | **`options`** | <code><a href="#systembarsstyleoptions">SystemBarsStyleOptions</a></code> |
 
 **Since:** 8.0.0
+
+--------------------
+
+
+### getStyle(...)
+
+```typescript
+getStyle(options?: SystemBarsGetStyleOptions) => Promise<SystemBarsGetStyleResult>
+```
+
+Get the current style of a system bar.
+
+Returns the style that was requested, so `DEFAULT` is returned as `DEFAULT`
+rather than the `LIGHT` or `DARK` style it currently resolves to.
+
+| Param         | Type                                                                            |
+| ------------- | ------------------------------------------------------------------------------- |
+| **`options`** | <code><a href="#systembarsgetstyleoptions">SystemBarsGetStyleOptions</a></code> |
+
+**Returns:** <code>Promise&lt;<a href="#systembarsgetstyleresult">SystemBarsGetStyleResult</a>&gt;</code>
+
+**Since:** 9.0.0
 
 --------------------
 
@@ -220,7 +248,7 @@ Only available on iOS.
 
 **Returns:** <code>Promise&lt;<a href="#pluginlistenerhandle">PluginListenerHandle</a>&gt;</code>
 
-**Since:** 8.7.0
+**Since:** 9.0.0
 
 --------------------
 
@@ -233,7 +261,7 @@ removeAllListeners() => Promise<void>
 
 Remove all listeners for this plugin.
 
-**Since:** 8.7.0
+**Since:** 9.0.0
 
 --------------------
 
@@ -247,6 +275,20 @@ Remove all listeners for this plugin.
 | ----------- | ----------------------------------------------------------- | ----------------------------------------------- | ---------------------- | ----- |
 | **`style`** | <code><a href="#systembarsstyle">SystemBarsStyle</a></code> | Style of the text and icons of the system bars. | <code>'DEFAULT'</code> | 8.0.0 |
 | **`bar`**   | <code><a href="#systembartype">SystemBarType</a></code>     | The system bar to which to apply the style.     | <code>null</code>      | 8.0.0 |
+
+
+#### SystemBarsGetStyleResult
+
+| Prop        | Type                                                        | Description                                                                                   | Since |
+| ----------- | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------- | ----- |
+| **`style`** | <code><a href="#systembarsstyle">SystemBarsStyle</a></code> | The style last set for the system bar, using `setStyle()` or the `style` configuration value. | 9.0.0 |
+
+
+#### SystemBarsGetStyleOptions
+
+| Prop      | Type                                                    | Description                                                                                             | Default                  | Since |
+| --------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------ | ----- |
+| **`bar`** | <code><a href="#systembartype">SystemBarType</a></code> | The system bar to get the style of. On iOS, only the status bar has a style, so this option is ignored. | <code>'StatusBar'</code> | 9.0.0 |
 
 
 #### SystemBarsVisibilityOptions
