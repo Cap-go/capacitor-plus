@@ -10,7 +10,7 @@ import {
   readdirSync,
 } from 'fs-extra';
 import { tmpdir } from 'os';
-import { join, relative, resolve } from 'path';
+import { dirname, join, relative, resolve } from 'path';
 import type { PlistObject } from 'plist';
 import { build, parse } from 'plist';
 import { extract } from 'tar';
@@ -159,7 +159,9 @@ let package = Package(
         ? symlinkFolder
         : convertToUnixPath(relative(spmDirectory, getPluginReferencePath(config, plugin)));
       if (symlink) {
-        await ensureSymlink(plugin.rootPath, resolve(config.ios.nativeProjectDirAbs, 'CapApp-SPM', symlinkFolder));
+        const linkPath = resolve(config.ios.nativeProjectDirAbs, 'CapApp-SPM', symlinkFolder);
+        const relativePluginPath = relative(dirname(linkPath), plugin.rootPath);
+        await ensureSymlink(relativePluginPath, linkPath);
       }
       const traits = packageTraits[plugin.id];
       const traitsSuffix = traits?.length
