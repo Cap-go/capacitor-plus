@@ -15,6 +15,7 @@ import type { Config } from '../definitions';
 import { fatal, isFatal } from '../errors';
 import { runIOS } from '../ios/run';
 import { logger, output } from '../log';
+import type { Plugin } from '../plugin';
 import { CapLiveReloadHelper } from '../util/livereload';
 import { getPlatformTargets } from '../util/native-run';
 
@@ -30,11 +31,8 @@ export interface RunCommandOptions {
   targetNameSdkVersion?: string;
   sync?: boolean;
   forwardPorts?: string;
-  liveReload?: boolean;
-  host?: string;
-  port?: string;
+  url?: string;
   configuration?: string;
-  https?: boolean;
 }
 
 export async function runCommand(
@@ -104,7 +102,7 @@ export async function runCommand(
         }
       }
       await run(config, platformName, options);
-      if (options.liveReload) {
+      if (options.url) {
         new Promise((resolve) => process.on('SIGINT', resolve))
           .then(async () => {
             await CapLiveReloadHelper.revertCapConfigForLiveReload();
@@ -113,9 +111,7 @@ export async function runCommand(
             }
           })
           .then(() => process.exit());
-        logger.info(
-          `App running with live reload listing for: ${options.https ? 'https' : 'http'}://${options.host}${options.port ? `:${options.port}` : ''}. Press Ctrl+C to quit.`,
-        );
+        logger.info(`App running with live reload listening for: ${options.url}. Press Ctrl+C to quit.`);
         await sleepForever();
       }
     } catch (e: any) {
