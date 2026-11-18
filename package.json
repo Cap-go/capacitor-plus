@@ -27,11 +27,8 @@
     "check:ios-dynamic-dispatch": "node scripts/check-ios-dynamic-dispatch.mjs"
   },
   "prettier": "@ionic/prettier-config",
-  "eslintConfig": {
-    "extends": "@ionic/eslint-config/recommended"
-  },
   "devDependencies": {
-    "@ionic/eslint-config": "^0.4.0",
+    "@ionic/eslint-config": "^0.5.0",
     "@ionic/prettier-config": "^4.0.0",
     "@ionic/swiftlint-config": "^2.0.0",
     "@types/node": "^24.10.1",
