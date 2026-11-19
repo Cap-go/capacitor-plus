@@ -3,6 +3,7 @@ package com.getcapacitor.plugin;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
@@ -84,9 +85,7 @@ public class SystemBarsTest {
         insetsHandlingField.set(plugin, "css");
 
         WindowInsetsCompat insets = mock(WindowInsetsCompat.class);
-        when(insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout())).thenReturn(
-            Insets.of(20, 40, 10, 30)
-        );
+        when(insets.getInsets(anyInt())).thenReturn(Insets.of(10, 20, 5, 15));
 
         Method injectSafeAreaCSS = SystemBars.class.getDeclaredMethod("injectSafeAreaCSS", WindowInsetsCompat.class);
         injectSafeAreaCSS.setAccessible(true);
@@ -95,10 +94,10 @@ public class SystemBarsTest {
         ArgumentCaptor<String> scriptCaptor = ArgumentCaptor.forClass(String.class);
         verify(webView).evaluateJavascript(scriptCaptor.capture(), any());
         String script = scriptCaptor.getValue();
-        assertTrue(script.contains("\"--safe-area-inset-top\", \"20px\""));
-        assertTrue(script.contains("\"--safe-area-inset-left\", \"10px\""));
-        assertTrue(script.contains("\"--safe-area-inset-bottom\", \"15px\""));
-        assertTrue(script.contains("\"--safe-area-inset-right\", \"5px\""));
+        assertTrue(script.contains("\"--safe-area-inset-top\", \"10px\""));
+        assertTrue(script.contains("\"--safe-area-inset-left\", \"5px\""));
+        assertTrue(script.contains("\"--safe-area-inset-bottom\", \"7.5px\""));
+        assertTrue(script.contains("\"--safe-area-inset-right\", \"2.5px\""));
     }
 
     @Test
