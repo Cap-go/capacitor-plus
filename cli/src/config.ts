@@ -116,7 +116,15 @@ async function loadExtConfigTS(
 
     // eslint-disable-next-line @typescript-eslint/no-require-imports -- resolve the app's TypeScript install
     const ts = require(tsPath);
-    const extConfigObject = (await requireTS(ts, extConfigFilePath)) as any;
+    let extConfigObject: any;
+    try {
+      extConfigObject = (await requireTS(ts, extConfigFilePath)) as any;
+    } catch (e) {
+      if (!isESMOnlyError(e)) {
+        throw e;
+      }
+      extConfigObject = await importModule(extConfigFilePath);
+    }
     const extConfig = extConfigObject.default ? await extConfigObject.default : extConfigObject;
 
     return {
