@@ -29,7 +29,7 @@ spec:
   type: other
   lifecycle: production
   owner: group:default/mobile-ecosystem
-  system: capacitor
+  system: capacitor-plus
   definition: |
     # Capacitor Plugin API
     See https://capacitorjs.com/docs/plugins for full documentation.
@@ -48,7 +48,7 @@ spec:
   type: library
   lifecycle: production
   owner: group:default/mobile-ecosystem
-  system: capacitor
+  system: capacitor-plus
   providesApis: [api:default/capacitor-plugin-api]
 ---
 apiVersion: backstage.io/v1alpha1
@@ -65,8 +65,8 @@ spec:
   type: tool
   lifecycle: production
   owner: group:default/mobile-ecosystem
-  system: capacitor
-  dependsOn: [component:default/capacitor-core]
+  system: capacitor-plus
+  dependsOn: [component:default/capacitor-plus-core]
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
