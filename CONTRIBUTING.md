@@ -2,7 +2,7 @@
 
 This guide covers contributing to Capacitor through [issues & discussions](#issues--discussions) and [code](#developing-capacitor). It is written to be followed literally, by people and by AI coding agents alike.
 
-> **For AI agents:** read this file in full before changing anything, then read [`AGENTS.md`](./AGENTS.md) for repo-specific technical conventions and pitfalls. If the two disagree, this file wins. If a rule here does not cover your situation, ask the human you are working for. If you are running autonomously and cannot ask, take the most conservative option this guide describes, and state the assumption you made in the PR description under "Notes / Comments".
+> **For AI agents:** read this file in full before changing anything, then read [`AGENTS.md`](./AGENTS.md) for Capacitor+ repository conventions and pitfalls. If the two disagree on workflow for this fork (package manager, CI targets, PR sections), [`AGENTS.md`](./AGENTS.md) wins. If a rule here does not cover your situation, ask the human you are working for. If you are running autonomously and cannot ask, take the most conservative option this guide describes, and state the assumption you made in the PR description under "Not Tested".
 
 ## Contents
 
@@ -61,15 +61,15 @@ To create a code reproduction:
 
 ### Local setup
 
-Required tools (versions are the ones CI uses on `next`; check `.github/workflows/ci.yml` if in doubt. Older branches such as `main` may use older versions, for example Node 22 and Xcode 26):
+Required tools (versions match `.github/workflows/ci.yml` on the `plus` branch in this repository):
 
 | Tool | Version | Needed for |
 | --- | --- | --- |
 | Node.js | 24 or newer | everything |
-| npm | the one bundled with Node | everything |
+| Bun | latest (`https://bun.sh/`) | everything (do not use npm or npx) |
 | JDK | 21 | Android (`android/`) |
 | Android SDK | installed through Android Studio; Gradle itself runs through `android/gradlew` | Android |
-| macOS, Xcode 27 and an iOS 27 simulator (iPhone 17) | CI uses Xcode 27.0 | iOS (`ios/`) |
+| macOS, Xcode 26 and an iOS simulator | CI uses `/Applications/Xcode_26.0.app` | iOS (`ios/`) |
 | SwiftLint | latest (`brew install swiftlint`) | iOS linting, macOS only |
 
 You can only build and test the platforms your machine supports. Without macOS you cannot run the iOS tests locally. Say so in the PR; CI runs them.
@@ -82,7 +82,7 @@ git remote add upstream git@github.com:ionic-team/capacitor.git
 git fetch upstream            # gets both upstream/main and upstream/next
 
 # 2. Install dependencies for every workspace (core, cli, ios, android)
-npm install
+bun install
 
 # 3. macOS only: SwiftLint is required to lint iOS code locally
 brew install swiftlint
@@ -91,17 +91,16 @@ brew install swiftlint
 Record the baseline before changing anything, so you can tell your failures from existing ones. Run the build and tests for the area you are about to touch (see [Which tests to run](#which-tests-to-run)), plus lint. For example, for `core` or `cli`:
 
 ```shell
-npm run build -w core && npm test -w core     # or: npm run build -w cli && npm test -w cli
-npm run lint
+bun run build -w core && bun test -w core     # or: bun run build -w cli && bun test -w cli
+bun run lint
 ```
 
-`npm run lint` chains several steps and stops at the first one that fails. Run the steps one at a time to see all of them:
+`bun run lint` chains several steps and stops at the first one that fails. Run the steps one at a time to see all of them:
 
 ```shell
-npm run eslint
-npm run prettier -- --check
-npm run swiftlint -- lint        # macOS only
-npm run lint:package-swift
+bun run eslint
+bun run prettier -- --check
+bun run swiftlint -- lint        # macOS only
 ```
 
 If something fails on an untouched checkout, work out why:
@@ -248,14 +247,13 @@ Run the checks for every area you touched **before** opening the PR, and report 
 
 | You changed | Run | Notes |
 | --- | --- | --- |
-| `core/src/**` | `npm run build -w core` then `npm test -w core` | Jest. `build` also regenerates the plugin docs (`core/*.md`); commit any docs it changes. |
-| `core/native-bridge.ts` | `npm run build:nativebridge`, then `npm test -w core` | Commit the regenerated `native-bridge.js` files under `android/` and `ios/`, otherwise your change does nothing at runtime. |
-| `cli/src/**` | `npm run build -w cli` then `npm test -w cli` | Jest, run serially. |
-| `ios/**` | `npm run verify -w ios` | macOS and Xcode only. Builds and runs the iOS unit tests through the root `Package.swift`. There is no Xcode project for the runtime. |
-| `Package.swift` (repo root) | `npm run build:package-swift` | Regenerates `ios/Package.swift`; commit both. Never edit `ios/Package.swift` by hand. |
-| `android/**` | `npm run verify -w android` | Needs JDK 21. Runs Gradle `clean lint build test` for `:capacitor-android`. Lint treats warnings as errors. |
-| `android-template/`, `ios-spm-template/`, `ios-pods-template/` | `npm run build -w cli` then `npm test -w cli` | Templates ship through the CLI. New template files must be `git add`-ed, or they are silently left out of the package. |
-| anything | `npm run lint` | ESLint, Prettier check, SwiftLint and a check that `ios/Package.swift` is up to date. `npm run fmt` fixes most findings automatically. |
+| `core/src/**` | `bun run build -w core` then `bun test -w core` | Jest. `build` also regenerates the plugin docs (`core/*.md`); commit any docs it changes. |
+| `core/native-bridge.ts` | `bun run build:nativebridge`, then `bun test -w core` | Commit the regenerated `native-bridge.js` files under `android/` and `ios/`, otherwise your change does nothing at runtime. |
+| `cli/src/**` | `bun run build -w cli` then `bun test -w cli` | Jest, run serially. |
+| `ios/**` | `bun run verify -w ios` | macOS and Xcode only. Builds and tests the Capacitor and CapacitorCordova Xcode workspaces under `ios/`. |
+| `android/**` | `bun run verify -w android` | Needs JDK 21. Runs Gradle `clean lint build test` for `:capacitor-android`. Lint treats warnings as errors. |
+| `android-template/`, `ios-spm-template/`, `ios-pods-template/` | `bun run build -w cli` then `bun test -w cli` | Templates ship through the CLI. New template files must be `git add`-ed, or they are silently left out of the package. |
+| anything | `bun run lint` | ESLint, Prettier check, and SwiftLint. `bun run fmt` fixes most findings automatically. |
 
 #### Writing new tests
 
@@ -273,7 +271,7 @@ CI (`.github/workflows/ci.yml`) runs lint, `test-core`, `test-cli`, `test-ios` a
 
 ### Changelog and versioning
 
-**Do not edit any `CHANGELOG.md` and do not bump any version number.** Both are generated by Lerna from commit messages when maintainers cut a release. The changelog entry for your change is your PR's squashed commit message, which is why the PR title format matters. For the same reason, do not edit `lerna.json` or the `version` field of any `package.json`.
+**Do not edit any `CHANGELOG.md` and do not bump any version number.** In this fork, changelogs are managed by CI/CD (see [`AGENTS.md`](./AGENTS.md)); upstream uses Lerna from commit messages on release. The changelog entry for your change is your PR's squashed commit message, which is why the PR title format matters. For the same reason, do not edit `lerna.json` or the `version` field of any `package.json`.
 
 The version bump follows from the commit type (see the table in [Commit messages](#commit-messages)):
 
@@ -290,6 +288,21 @@ If your change affects documented user-facing behavior (config options, CLI flag
 3. **Description:** use the following template and fill in every section. Delete the HTML comments. Write "N/A" for sections that do not apply rather than removing them.
 
 ```markdown
+## What
+<!--- Brief description of the change (required by AGENTS.md) -->
+
+## Why
+<!--- Motivation for this change (required by AGENTS.md) -->
+
+## How
+<!--- Implementation approach (required by AGENTS.md) -->
+
+## Testing
+<!--- What you tested and how (required by AGENTS.md) -->
+
+## Not Tested
+<!--- What still needs validation, if anything (required by AGENTS.md) -->
+
 ## Description
 <!--- Describe your changes in detail -->
 
@@ -336,7 +349,7 @@ Reviewers check the following, roughly in this order. Check them yourself first.
 3. **Conventional title.** The PR title is a valid Conventional Commit. For breaking changes it has `!` after the scope, and the PR description has a `BREAKING CHANGE:` paragraph for the maintainer to add at merge.
 4. **Tests.** A regression test for fixes, new tests for features, and the relevant suites from [Which tests to run](#which-tests-to-run) were run, with results reported.
 5. **CI green.** Including lint: no new Android lint warnings (they fail the build) and no new SwiftLint violations. Pre-existing failures are listed in the PR, not silently fixed or ignored.
-6. **Generated files are regenerated, not hand-edited, and none is missing.** The `native-bridge.js` copies, `ios/Package.swift` and the `core/*.md` plugin docs.
+6. **Generated files are regenerated, not hand-edited, and none is missing.** The `native-bridge.js` copies and the `core/*.md` plugin docs.
 7. **No dead code left behind.** If your change makes code obsolete, remove it, including related checks and handlers elsewhere. Reviewers regularly ask for this.
 8. **Cross-platform consistency.** If the behavior exists on Android, iOS and web, the PR changes all of them or explains why not.
 9. **Bridge correctness.** Every plugin call is resolved or rejected exactly once (unless `keepAlive` is set), the plugin queue is never blocked, and only JSON-representable values cross the bridge.
@@ -350,7 +363,6 @@ Common reasons PRs are sent back or closed:
 * breaking change with no `BREAKING CHANGE:` paragraph in the PR description (a `!` alone does not reach the changelog or trigger a major), or with `!` before the scope (`feat!(cli):`) instead of after it;
 * edited `CHANGELOG.md` or a version number by hand;
 * changed `core/native-bridge.ts` without rebuilding and committing the generated `native-bridge.js` files;
-* edited `ios/Package.swift` directly instead of the root `Package.swift`;
 * added a dependency, or a new public API, without prior discussion;
 * no tests, or tests that don't fail without the fix;
 * unrelated changes mixed into one PR;
@@ -366,7 +378,7 @@ Tick each item before you open the PR.
 - [ ] No new dependencies, no hand-edited generated files, no `CHANGELOG.md` or version edits
 - [ ] Regression or new tests added (unless the change is exempt: lint, formatting, tooling, docs or CI only)
 - [ ] Ran the commands from [Which tests to run](#which-tests-to-run) for every touched area, plus the lint steps, and your change adds no new failures or warnings (list any pre-existing failures in the PR; see [Local setup](#local-setup))
-- [ ] Regenerated and committed generated files (`native-bridge.js`, `ios/Package.swift`, `core/*.md`) where needed
+- [ ] Regenerated and committed generated files (`native-bridge.js`, `core/*.md`) where needed
 - [ ] PR title is a valid Conventional Commit, with `!` after the scope, and a `BREAKING CHANGE:` paragraph in the PR description, if breaking
 - [ ] PR description template filled in, including tests run and platforms affected
 - [ ] AI assistance disclosed, if applicable
