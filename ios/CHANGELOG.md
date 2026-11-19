@@ -7,41 +7,21 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 **Note:** Version bump only for package @capacitor-plus/ios
 
-
-
-
-
 ## [8.6.5](https://github.com/Cap-go/capacitor-plus/compare/8.6.4...8.6.5) (2026-11-11)
 
 **Note:** Version bump only for package @capacitor-plus/ios
-
-
-
-
 
 ## [8.6.4](https://github.com/Cap-go/capacitor-plus/compare/8.6.3...8.6.4) (2026-11-11)
 
 **Note:** Version bump only for package @capacitor-plus/ios
 
-
-
-
-
 ## [8.6.3](https://github.com/Cap-go/capacitor-plus/compare/8.6.2...8.6.3) (2026-11-10)
 
 **Note:** Version bump only for package @capacitor-plus/ios
 
-
-
-
-
 ## [8.6.2](https://github.com/Cap-go/capacitor-plus/compare/8.6.1...8.6.2) (2026-11-10)
 
 **Note:** Version bump only for package @capacitor-plus/ios
-
-
-
-
 
 ## [8.6.1](https://github.com/Cap-go/capacitor-plus/compare/8.5.3...8.6.1) (2026-11-05)
 

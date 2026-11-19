@@ -10,41 +10,21 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 * **cli:** guard non-array requiredElementsArray in iOS plist merge ([#238](https://github.com/Cap-go/capacitor-plus/issues/238)) ([2ac7fb2](https://github.com/Cap-go/capacitor-plus/commit/2ac7fb27b50714002a77b2510c154e8e9ae2554d))
 
-
-
-
-
 ## [8.6.5](https://github.com/Cap-go/capacitor-plus/compare/8.6.4...8.6.5) (2026-11-11)
 
 **Note:** Version bump only for package @capacitor-plus/cli
-
-
-
-
 
 ## [8.6.4](https://github.com/Cap-go/capacitor-plus/compare/8.6.3...8.6.4) (2026-11-11)
 
 **Note:** Version bump only for package @capacitor-plus/cli
 
-
-
-
-
 ## [8.6.3](https://github.com/Cap-go/capacitor-plus/compare/8.6.2...8.6.3) (2026-11-10)
 
 **Note:** Version bump only for package @capacitor-plus/cli
 
-
-
-
-
 ## [8.6.2](https://github.com/Cap-go/capacitor-plus/compare/8.6.1...8.6.2) (2026-11-10)
 
 **Note:** Version bump only for package @capacitor-plus/cli
-
-
-
-
 
 ## [8.6.1](https://github.com/Cap-go/capacitor-plus/compare/8.5.3...8.6.1) (2026-11-05)
 
