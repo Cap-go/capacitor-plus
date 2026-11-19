@@ -210,28 +210,27 @@ open class CapacitorBridge: NSObject, CAPBridgeProtocol {
         injectMiscFiles.removeAll()
     }
 
-    /**
-     Set up our Cordova compat by loading all known Cordova plugins and injecting their JS.
-     */
-    func setupCordovaCompatibility() {
-        if injectCordovaFiles {
-            exportCordovaJS()
-            registerCordovaPlugins()
-        } else {
-            observers.append(NotificationCenter.default.addObserver(forName: UIApplication.willEnterForegroundNotification, object: nil, queue: OperationQueue.main) { [weak self] _ in
-                guard self?.viewController?.view.window?.windowScene == nil else { return }
-                self?.triggerDocumentJSEvent(eventName: "resume")
-            })
-            observers.append(NotificationCenter.default.addObserver(forName: UIApplication.didEnterBackgroundNotification, object: nil, queue: OperationQueue.main) { [weak self] _ in
-                guard self?.viewController?.view.window?.windowScene == nil else { return }
-                self?.triggerDocumentJSEvent(eventName: "pause")
-            })
-            observers.append(NotificationCenter.default.addObserver(forName: UIScene.willEnterForegroundNotification, object: nil, queue: OperationQueue.main) { [weak self] notification in
-                self?.triggerSceneLifecycleJSEvent("resume", for: notification)
-            })
-            observers.append(NotificationCenter.default.addObserver(forName: UIScene.didEnterBackgroundNotification, object: nil, queue: OperationQueue.main) { [weak self] notification in
-                self?.triggerSceneLifecycleJSEvent("pause", for: notification)
-            })
+    func setupListeners() {
+        if !cordovaIsPresent {
+            observers.append(
+                NotificationCenter.default.addObserver(
+                    forName: UIScene.willEnterForegroundNotification,
+                    object: nil,
+                    queue: .main
+                ) { [weak self] notification in
+                    self?.triggerSceneLifecycleJSEvent("resume", for: notification)
+                }
+            )
+
+            observers.append(
+                NotificationCenter.default.addObserver(
+                    forName: UIScene.didEnterBackgroundNotification,
+                    object: nil,
+                    queue: .main
+                ) { [weak self] notification in
+                    self?.triggerSceneLifecycleJSEvent("pause", for: notification)
+                }
+            )
         }
     }
 
