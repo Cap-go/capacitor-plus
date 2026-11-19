@@ -83,10 +83,9 @@ public class SystemBarsTest {
         insetsHandlingField.setAccessible(true);
         insetsHandlingField.set(plugin, "css");
 
-        WindowInsetsCompat insets = mock(WindowInsetsCompat.class);
-        when(insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout())).thenReturn(
-            Insets.of(20, 40, 10, 30)
-        );
+        WindowInsetsCompat insets = new WindowInsetsCompat.Builder()
+            .setInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(), Insets.of(20, 40, 10, 30))
+            .build();
 
         Method injectSafeAreaCSS = SystemBars.class.getDeclaredMethod("injectSafeAreaCSS", WindowInsetsCompat.class);
         injectSafeAreaCSS.setAccessible(true);
