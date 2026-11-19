@@ -7,13 +7,32 @@ metadata:
   annotations:
     github.com/project-slug: Cap-go/capacitor-plus
   links:
-    - url: https://capgo.app/docs/plugins/capacitor-plus/
-      title: Capacitor+ installation
-    - url: https://capacitorjs.com/docs/
-      title: Upstream Capacitor documentation
-  tags: [capacitor, mobile, typescript, swift, java]
+    - url: https://capacitorjs.com/docs
+      title: Documentation
 spec:
   owner: group:default/mobile-ecosystem
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: capacitor-plugin-api
+  title: Capacitor Plugin API
+  description: JavaScript/native bridge API for authoring and consuming Capacitor plugins.
+  annotations:
+    github.com/project-slug: ionic-team/capacitor
+    backstage.io/source-location: url:https://github.com/ionic-team/capacitor/tree/main/core/src
+  links:
+    - url: https://capacitorjs.com/docs/plugins
+      title: Plugin Authoring Guide
+  tags: [typescript, plugin-bridge]
+spec:
+  type: other
+  lifecycle: production
+  owner: group:default/mobile-ecosystem
+  system: capacitor-plus
+  definition: |
+    # Capacitor Plugin API
+    See https://capacitorjs.com/docs/plugins for full documentation.
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -30,6 +49,7 @@ spec:
   lifecycle: production
   owner: group:default/mobile-ecosystem
   system: capacitor-plus
+  providesApis: [api:default/capacitor-plugin-api]
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
@@ -46,6 +66,7 @@ spec:
   lifecycle: production
   owner: group:default/mobile-ecosystem
   system: capacitor-plus
+  dependsOn: [component:default/capacitor-plus-core]
 ---
 apiVersion: backstage.io/v1alpha1
 kind: Component
