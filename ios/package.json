@@ -20,9 +20,9 @@
     "scripts/pods_helpers.rb"
   ],
   "scripts": {
-    "verify": "node ../scripts/check-ios-dynamic-dispatch.mjs && npm run xc:build:Capacitor && npm run xc:build:CapacitorCordova",
-    "xc:build:Capacitor": "cd Capacitor && xcodebuild clean test -workspace Capacitor.xcworkspace -scheme Capacitor -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' && cd ..",
-    "xc:build:CapacitorCordova": "cd CapacitorCordova && xcodebuild && cd .."
+    "verify": "node ../scripts/check-ios-dynamic-dispatch.mjs && npm run xc:build && npm run xc:test",
+    "xc:build": "cd .. && xcodebuild build -scheme Capacitor-Package -destination 'generic/platform=iOS Simulator'",
+    "xc:test": "cd .. && xcodebuild test -scheme Capacitor-Package -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' -collect-test-diagnostics never"
   },
   "peerDependencies": {
     "@capacitor-plus/core": "^8.6.0",
