@@ -260,20 +260,6 @@ open class CapacitorBridge: NSObject, CAPBridgeProtocol {
     }
 
     /**
-     Export the core Cordova JS runtime
-     */
-    private func triggerSceneLifecycleJSEvent(_ eventName: String, for notification: Notification) {
-        guard let scene = notification.object as? UIWindowScene,
-              scene === viewController?.view.window?.windowScene else {
-            return
-        }
-        guard case .subsequentLoad = webViewDelegationHandler.webViewLoadingState, webView?.isLoading == false else {
-            return
-        }
-        triggerDocumentJSEvent(eventName: eventName)
-    }
-
-    /**
      Reset the state of the bridge between navigations to avoid
      sending data back to the page from a previous page.
      */
