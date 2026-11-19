@@ -1,6 +1,5 @@
 package com.getcapacitor.plugin;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.res.Configuration;
@@ -8,6 +7,7 @@ import android.content.res.Resources;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.webkit.WebView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -32,7 +32,6 @@ public class SystemBars extends Plugin {
     static final String BAR_STATUS_BAR = "StatusBar";
     static final String BAR_GESTURE_BAR = "NavigationBar";
 
-    // TODO: In Cap 9, add an additional option "full"
     static final String INSETS_HANDLING_CSS = "css";
     static final String INSETS_HANDLING_DISABLE = "disable";
     static final String INSETS_HANDLING_NATIVE = "native";
@@ -41,19 +40,19 @@ public class SystemBars extends Plugin {
     private static final int WEBVIEW_VERSION_WITH_SAFE_AREA_FIX = 140;
 
     static final String viewportMetaJSFunction = """
-        function capacitorSystemBarsCheckMetaViewport() {
-            const meta = document.querySelectorAll("meta[name=viewport]");
-            if (meta.length == 0) {
-                return false;
-            }
-            // get the last found meta viewport tag
-            const metaContent = meta[meta.length - 1].content;
-            return metaContent.includes("viewport-fit=cover");
+    function capacitorSystemBarsCheckMetaViewport() {
+        const meta = document.querySelectorAll("meta[name=viewport]");
+        if (meta.length == 0) {
+            return false;
         }
-        capacitorSystemBarsCheckMetaViewport();
-        """;
+        // get the last found meta viewport tag
+        const metaContent = meta[meta.length - 1].content;
+        return metaContent.includes("viewport-fit=cover");
+    }
+    capacitorSystemBarsCheckMetaViewport();
+    """;
 
-    private String insetsHandling = INSETS_HANDLING_CSS;
+    private String insetsHandling = INSETS_HANDLING_NATIVE;
     private boolean hasViewportCover = false;
 
     private String currentStatusBarStyle = STYLE_DEFAULT;
@@ -93,14 +92,12 @@ public class SystemBars extends Plugin {
                 @Override
                 public void onPageCommitVisible(WebView view, String url) {
                     super.onPageCommitVisible(view, url);
-                    bridge
-                        .getWebView()
-                        .evaluateJavascript(viewportMetaJSFunction, (res) -> {
-                            hasViewportCover = "true".equals(res);
+                    bridge.getWebView().evaluateJavascript(viewportMetaJSFunction, (res) -> {
+                        hasViewportCover = res.equals("true");
 
-                            // Request new execution tree of `setOnApplyWindowInsetsListener`
-                            bridge.getWebView().requestApplyInsets();
-                        });
+                        // Request new execution tree of `setOnApplyWindowInsetsListener`
+                        bridge.getWebView().requestApplyInsets();
+                    });
                 }
             };
             this.getBridge().addWebViewListener(webViewListener);
@@ -115,22 +112,6 @@ public class SystemBars extends Plugin {
         setStyle(currentStatusBarStyle, BAR_STATUS_BAR);
     }
 
-    @Override
-    protected void handleOnResume() {
-        super.handleOnResume();
-        getBridge().executeOnMainThread(() -> {
-            // When insetsHandling is disable, native app code owns window fitting.
-            // Re-forcing edge-to-edge here would draw content under the system bars
-            // because SystemBars does not install an inset listener in that mode.
-            if (!INSETS_HANDLING_DISABLE.equals(insetsHandling)) {
-                applyEdgeToEdgeWindowAppearance();
-                ViewCompat.requestApplyInsets((View) getBridge().getWebView().getParent());
-            }
-            setStyle(currentGestureBarStyle, BAR_GESTURE_BAR);
-            setStyle(currentStatusBarStyle, BAR_STATUS_BAR);
-        });
-    }
-
     private void initSystemBars() {
         // If you already know what the value of the `viewport-fit=` meta tag is going to be,
         // passing it here through `initialViewportFitValueHint` can help prevent layout shifting.
@@ -140,7 +121,7 @@ public class SystemBars extends Plugin {
         String style = getConfig().getString("style", STYLE_DEFAULT).toUpperCase(Locale.US);
         boolean hidden = getConfig().getBoolean("hidden", false);
 
-        String configuredInsetsHandling = getConfig().getString("insetsHandling", INSETS_HANDLING_CSS);
+        String configuredInsetsHandling = getConfig().getString("insetsHandling", INSETS_HANDLING_NATIVE);
         if (
             INSETS_HANDLING_CSS.equals(configuredInsetsHandling) ||
             INSETS_HANDLING_DISABLE.equals(configuredInsetsHandling) ||
@@ -150,9 +131,9 @@ public class SystemBars extends Plugin {
         } else {
             Logger.warn(
                 "SystemBars",
-                "Unknown insetsHandling value '" + configuredInsetsHandling + "'. Falling back to '" + INSETS_HANDLING_CSS + "'."
+                "Unknown insetsHandling value '" + configuredInsetsHandling + "'. Falling back to '" + INSETS_HANDLING_NATIVE + "'."
             );
-            insetsHandling = INSETS_HANDLING_CSS;
+            insetsHandling = INSETS_HANDLING_NATIVE;
         }
 
         warnAboutUnsupportedConfigurationValues();
@@ -160,22 +141,9 @@ public class SystemBars extends Plugin {
         initWindowInsetsListener();
 
         getBridge().executeOnMainThread(() -> {
-            applyEdgeToEdgeWindowAppearance();
             setStyle(style, "");
             setHidden(hidden, "");
-            ViewCompat.requestApplyInsets((View) getBridge().getWebView().getParent());
         });
-    }
-
-    private void applyEdgeToEdgeWindowAppearance() {
-        Window window = getActivity().getWindow();
-        WindowCompat.setDecorFitsSystemWindows(window, false);
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-            window.setNavigationBarColor(android.graphics.Color.TRANSPARENT);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                window.setNavigationBarContrastEnforced(false);
-            }
-        }
     }
 
     @PluginMethod
@@ -236,8 +204,8 @@ public class SystemBars extends Plugin {
                 // We need to correct for a possible shown IME
                 v.setPadding(0, 0, 0, keyboardVisible ? imeInsets.bottom : 0);
 
-                WindowInsetsCompat newInsets = new WindowInsetsCompat.Builder(insets)
-                    .setInsets(
+                WindowInsetsCompat newInsets = withoutOverlayingKeyboard(
+                    new WindowInsetsCompat.Builder(insets).setInsets(
                         WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(),
                         Insets.of(
                             systemBarsInsets.left,
@@ -245,10 +213,11 @@ public class SystemBars extends Plugin {
                             systemBarsInsets.right,
                             getBottomInset(systemBarsInsets, imeInsets, keyboardVisible)
                         )
-                    )
-                    .build();
+                    ),
+                    keyboardOverlaysWebView
+                ).build();
 
-                injectSafeAreaCSS(newInsets, keyboardVisible);
+                injectSafeAreaCSS(newInsets);
 
                 return newInsets;
             }
@@ -272,15 +241,26 @@ public class SystemBars extends Plugin {
                 keyboardOverlaysWebView
             ).build();
 
-            injectSafeAreaCSS(newInsets, keyboardVisible);
+            injectSafeAreaCSS(newInsets);
 
             return newInsets;
         });
     }
 
-    // Take keyboardVisible from the listener's original insets. Below API 30, rebuilt insets
-    // mistake the navigation bar for an open keyboard, so the bottom inset would become 0.
-    private void injectSafeAreaCSS(WindowInsetsCompat insets, boolean keyboardVisible) {
+    private WindowInsetsCompat.Builder withoutOverlayingKeyboard(WindowInsetsCompat.Builder builder, boolean keyboardOverlaysWebView) {
+        if (!keyboardOverlaysWebView) {
+            return builder;
+        }
+
+        // WebView >= 139 shrinks its visual viewport for the IME insets it receives, which makes the page pannable above the keyboard.
+        // Unlike Chrome it ignores `VirtualKeyboard.overlaysContent` and `interactive-widget=overlays-content`,
+        // so not handing it the IME insets is the only way to opt out.
+        // Setting them to `0` rather than consuming them keeps the WebView's inset state up to date.
+        // See: https://developer.android.com/develop/ui/views/layout/webapps/understand-window-insets
+        return builder.setInsets(WindowInsetsCompat.Type.ime(), Insets.NONE).setVisible(WindowInsetsCompat.Type.ime(), false);
+    }
+
+    private void injectSafeAreaCSS(WindowInsetsCompat insets) {
         if (!INSETS_HANDLING_CSS.equals(insetsHandling)) {
             return;
         }
@@ -319,7 +299,6 @@ public class SystemBars extends Plugin {
     }
 
     private void setStyle(String style, String bar) {
-        String requestedStyle = style;
         if (style.equals(STYLE_DEFAULT)) {
             style = getStyleForTheme();
         }
@@ -327,12 +306,12 @@ public class SystemBars extends Plugin {
         Window window = getActivity().getWindow();
         WindowInsetsControllerCompat windowInsetsControllerCompat = WindowCompat.getInsetsController(window, window.getDecorView());
         if (bar.isEmpty() || bar.equals(BAR_STATUS_BAR)) {
-            currentStatusBarStyle = requestedStyle;
+            currentStatusBarStyle = style;
             windowInsetsControllerCompat.setAppearanceLightStatusBars(!style.equals(STYLE_DARK));
         }
 
         if (bar.isEmpty() || bar.equals(BAR_GESTURE_BAR)) {
-            currentGestureBarStyle = requestedStyle;
+            currentGestureBarStyle = style;
             windowInsetsControllerCompat.setAppearanceLightNavigationBars(!style.equals(STYLE_DARK));
         }
 

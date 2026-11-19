@@ -49,9 +49,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.json.JSONException;
@@ -119,7 +117,6 @@ public class Bridge {
 
     // Our MessageHandler for sending and receiving data to the WebView
     private final MessageHandler msgHandler;
-    private final boolean scopedWebMessages;
 
     // The ThreadHandler for executing plugin calls
     private final HandlerThread handlerThread = new HandlerThread("CapacitorPlugins");
@@ -158,26 +155,6 @@ public class Bridge {
     // A pre-determined path to load the bridge
     private ServerPath serverPath;
 
-    /**
-     * Create the Bridge with a reference to the main {@link Activity} for the
-     * app, and a reference to the {@link WebView} our app will use.
-     * @param context
-     * @param webView
-     * @deprecated Use {@link Bridge.Builder} to create Bridge instances
-     */
-    @Deprecated
-    public Bridge(
-        AppCompatActivity context,
-        WebView webView,
-        List<Class<? extends Plugin>> initialPlugins,
-        MockCordovaInterfaceImpl cordovaInterface,
-        PluginManager pluginManager,
-        CordovaPreferences preferences,
-        CapConfig config
-    ) {
-        this(context, null, null, webView, initialPlugins, new ArrayList<>(), cordovaInterface, pluginManager, preferences, config, null);
-    }
-
     private Bridge(
         AppCompatActivity context,
         ServerPath serverPath,
@@ -185,11 +162,7 @@ public class Bridge {
         WebView webView,
         List<Class<? extends Plugin>> initialPlugins,
         List<Plugin> pluginInstances,
-        MockCordovaInterfaceImpl cordovaInterface,
-        PluginManager pluginManager,
-        CordovaPreferences preferences,
-        CapConfig config,
-        Function<Bridge, MessageHandler.WebMessagePolicy> webMessagePolicyFactory
+        CapConfig config
     ) {
         this.app = new App();
         this.serverPath = serverPath;
@@ -209,13 +182,7 @@ public class Bridge {
         // Initialize web view and message handler for it
         this.initWebView();
         this.setAllowedOriginRules();
-        this.scopedWebMessages = webMessagePolicyFactory != null;
-        this.msgHandler = new MessageHandler(
-            this,
-            webView,
-            pluginManager,
-            scopedWebMessages ? Objects.requireNonNull(webMessagePolicyFactory.apply(this)) : null
-        );
+        this.msgHandler = new MessageHandler(this, webView);
 
         // Grab any intent info that our app was launched with
         Intent intent = context.getIntent();
@@ -258,15 +225,8 @@ public class Bridge {
         JSInjector injector = getJSInjector();
         if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
             String allowedOrigin = Uri.parse(appUrl).buildUpon().path(null).fragment(null).clearQuery().build().toString();
-            final String finalAllowedOrigin = allowedOrigin;
-            Set<String> allowedOrigins = new HashSet<String>() {
-                {
-                    add(finalAllowedOrigin);
-                    addAll(allowedOriginRules);
-                }
-            };
             try {
-                WebViewCompat.addDocumentStartJavaScript(webView, injector.getScriptString(), allowedOrigins);
+                WebViewCompat.addDocumentStartJavaScript(webView, injector.getScriptString(), Collections.singleton(allowedOrigin));
                 injector = null;
             } catch (IllegalArgumentException ex) {
                 Logger.warn("Invalid url, using fallback");
@@ -342,36 +302,10 @@ public class Bridge {
         }
     }
 
-    private static int effectivePort(Uri uri) {
-        int port = uri.getPort();
-        if (port != -1) {
-            return port;
-        }
-        if ("https".equals(uri.getScheme())) {
-            return 443;
-        }
-        if ("http".equals(uri.getScheme())) {
-            return 80;
-        }
-        return -1;
-    }
-
-    public static boolean shouldBlockHttpInterceptorNavigation(Uri url, Uri appOrigin) {
-        String path = url.getPath();
-        if (path == null || !path.startsWith(CAPACITOR_HTTP_INTERCEPTOR_START)) {
-            return false;
-        }
-        return (
-            appOrigin.getHost().equals(url.getHost()) &&
-            url.getScheme().equals(appOrigin.getScheme()) &&
-            effectivePort(appOrigin) == effectivePort(url)
-        );
-    }
-
     public boolean launchIntent(Uri url) {
         // The proxy returns a remote body at the app origin, so block it before plugins can allow it.
-        Uri appUri = Uri.parse(appUrl);
-        if (shouldBlockHttpInterceptorNavigation(url, appUri)) {
+        String path = url.getPath();
+        if (path != null && path.startsWith(CAPACITOR_HTTP_INTERCEPTOR_START)) {
             return true;
         }
 
@@ -392,6 +326,7 @@ public class Bridge {
             return false;
         }
 
+        Uri appUri = Uri.parse(appUrl);
         if (
             !(appUri.getHost().equals(url.getHost()) && url.getScheme().equals(appUri.getScheme())) &&
             !appAllowNavigationMask.matches(url.getHost())
@@ -1377,10 +1312,6 @@ public class Bridge {
         return appAllowNavigationMask;
     }
 
-    public boolean hasScopedWebMessages() {
-        return scopedWebMessages;
-    }
-
     public Set<String> getAllowedOriginRules() {
         return allowedOriginRules;
     }
@@ -1434,7 +1365,6 @@ public class Bridge {
 
         private Bundle instanceState = null;
         private CapConfig config = null;
-        private Function<Bridge, MessageHandler.WebMessagePolicy> webMessagePolicyFactory;
         private List<Class<? extends Plugin>> plugins = new ArrayList<>();
         private List<Plugin> pluginInstances = new ArrayList<>();
         private AppCompatActivity activity;
@@ -1454,11 +1384,6 @@ public class Bridge {
 
         public Builder setInstanceState(Bundle instanceState) {
             this.instanceState = instanceState;
-            return this;
-        }
-
-        public Builder setWebMessagePolicy(Function<Bridge, MessageHandler.WebMessagePolicy> factory) {
-            this.webMessagePolicyFactory = Objects.requireNonNull(factory);
             return this;
         }
 
@@ -1523,19 +1448,7 @@ public class Bridge {
             WebView webView = this.fragment != null ? fragment.getView().findViewById(R.id.webview) : activity.findViewById(R.id.webview);
 
             // Bridge initialization
-            Bridge bridge = new Bridge(
-                activity,
-                serverPath,
-                fragment,
-                webView,
-                plugins,
-                pluginInstances,
-                cordovaInterface,
-                pluginManager,
-                preferences,
-                config,
-                webMessagePolicyFactory
-            );
+            Bridge bridge = new Bridge(activity, serverPath, fragment, webView, plugins, pluginInstances, config);
 
             if (webView instanceof CapacitorWebView capacitorWebView) {
                 capacitorWebView.setBridge(bridge);

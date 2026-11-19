@@ -1,17 +1,11 @@
 package com.getcapacitor;
 
-import android.net.Uri;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import androidx.webkit.JavaScriptReplyProxy;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.function.Predicate;
-import org.apache.cordova.PluginManager;
+import java.util.function.Function;
 
 /**
  * MessageHandler handles messages from the WebView, dispatching them
@@ -27,78 +21,28 @@ public class MessageHandler {
     private Bridge bridge;
     private WebView webView;
     private JavaScriptReplyProxy javaScriptReplyProxy;
-    private final boolean scopedWebMessages;
 
-    public static final class WebMessagePolicy {
-
-        private final Set<String> originRules;
-        private final Predicate<Uri> acceptsOrigin;
-
-        public WebMessagePolicy(Set<String> originRules, Predicate<Uri> acceptsOrigin) {
-            this.originRules = Collections.unmodifiableSet(new LinkedHashSet<>(Objects.requireNonNull(originRules)));
-            this.acceptsOrigin = Objects.requireNonNull(acceptsOrigin);
-        }
-
-        public Set<String> originRules() {
-            return originRules;
-        }
-
-        public Predicate<Uri> acceptsOrigin() {
-            return acceptsOrigin;
-        }
-    }
-
-    public MessageHandler(Bridge bridge, WebView webView, PluginManager cordovaPluginManager) {
-        this(bridge, webView, cordovaPluginManager, null);
-    }
-
-    MessageHandler(Bridge bridge, WebView webView, PluginManager cordovaPluginManager, WebMessagePolicy policy) {
+    public MessageHandler(Bridge bridge, WebView webView) {
         this.bridge = bridge;
         this.webView = webView;
-        this.cordovaPluginManager = cordovaPluginManager;
-        this.scopedWebMessages = policy != null;
 
-        Set<String> originRules = scopedWebMessages ? policy.originRules() : bridge.getAllowedOriginRules();
-        if (scopedWebMessages && originRules.isEmpty()) {
-            return;
-        }
-
-        if (
-            WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER) &&
-            (scopedWebMessages || !bridge.getConfig().isUsingLegacyBridge())
-        ) {
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER) && !bridge.getConfig().isUsingLegacyBridge()) {
             WebViewCompat.WebMessageListener capListener = (view, message, sourceOrigin, isMainFrame, replyProxy) -> {
-                if (!isMainFrame) {
-                    Logger.warn("Plugin execution is allowed in Main Frame only");
-                    return;
-                }
-                if (!scopedWebMessages || (sourceOrigin != null && policy.acceptsOrigin().test(sourceOrigin))) {
-                    javaScriptReplyProxy = replyProxy;
+                if (isMainFrame) {
                     postMessage(message.getData());
+                    javaScriptReplyProxy = replyProxy;
+                } else {
+                    Logger.warn("Plugin execution is allowed in Main Frame only");
                 }
             };
             try {
-                WebViewCompat.addWebMessageListener(webView, "androidBridge", originRules, capListener);
-                return;
+                WebViewCompat.addWebMessageListener(webView, "androidBridge", bridge.getAllowedOriginRules(), capListener);
             } catch (Exception ex) {
-                if (scopedWebMessages) {
-                    Logger.error("Unable to register scoped Android bridge", ex);
-                    return;
-                }
+                webView.addJavascriptInterface(this, "androidBridge");
             }
-        }
-
-        // The legacy interface has no way to identify the caller's frame or origin.
-        if (scopedWebMessages) {
-            Logger.warn("Scoped Android bridge unavailable on this WebView");
         } else {
             webView.addJavascriptInterface(this, "androidBridge");
         }
-    }
-
-    void onModernBridgeMessage(String data, JavaScriptReplyProxy replyProxy) {
-        javaScriptReplyProxy = replyProxy;
-        postMessage(data);
     }
 
     /**
@@ -147,11 +91,11 @@ public class MessageHandler {
 
             boolean isValidCallbackId = !call.getCallbackId().equals(PluginCall.CALLBACK_ID_DANGLING);
             if (isValidCallbackId) {
-                if (!scopedWebMessages && bridge.getConfig().isUsingLegacyBridge()) {
+                if (bridge.getConfig().isUsingLegacyBridge()) {
                     legacySendResponseMessage(data);
                 } else if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER) && javaScriptReplyProxy != null) {
                     javaScriptReplyProxy.postMessage(data.toString());
-                } else if (!scopedWebMessages) {
+                } else {
                     legacySendResponseMessage(data);
                 }
             } else {
