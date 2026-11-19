@@ -22,7 +22,7 @@
   "scripts": {
     "verify": "node ../scripts/check-ios-dynamic-dispatch.mjs && npm run xc:test",
     "xc:build": "cd .. && xcodebuild build -scheme Capacitor-Package -destination 'generic/platform=iOS Simulator'",
-    "xc:test": "cd .. && xcodebuild test -scheme Capacitor-Package -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' -collect-test-diagnostics never"
+    "xc:test": "cd .. && xcodebuild test -scheme Capacitor-Package -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' -parallel-testing-enabled YES -maximum-concurrent-test-simulator-destinations 4 -collect-test-diagnostics never"
   },
   "peerDependencies": {
     "@capacitor-plus/core": "^8.6.0",
