@@ -83,7 +83,6 @@ dependencies {
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.webkit:webkit:$androidxWebkitVersion"
     testImplementation "junit:junit:$junitVersion"
-    testImplementation 'org.robolectric:robolectric:4.14.1'
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
 testImplementation 'org.json:json:20250517'
