@@ -15,8 +15,8 @@ describe('extractConfigurationForConnecting', () => {
     const snippet = extractConfigurationForConnecting(shipped);
     expect(snippet).not.toBeNull();
     expect(snippet).toContain('configurationForConnecting connectingSceneSession: UISceneSession');
-    expect(snippet).toContain('UISceneConfiguration(name: "Default Configuration"');
-    expect(snippet).toContain('config.delegateClass = SceneDelegate.self');
+    expect(snippet).toContain('UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)');
+    expect(snippet).toContain('configuration.delegateClass = SceneDelegate.self');
     expect(snippet!.startsWith('\n')).toBe(true);
     expect(snippet!.endsWith('\n')).toBe(true);
   });
@@ -26,7 +26,7 @@ describe('extractConfigurationForConnecting', () => {
     const snippet = extractConfigurationForConnecting(shipped);
     expect(snippet).not.toBeNull();
     expect(snippet).toContain('configurationForConnecting connectingSceneSession: UISceneSession');
-    expect(snippet).toContain('config.delegateClass = SceneDelegate.self');
+    expect(snippet).toContain('configuration.delegateClass = SceneDelegate.self');
   });
 
   it('returns null when the method signature is absent', () => {
@@ -44,7 +44,9 @@ describe('insertBeforeAppDelegateClassEnd', () => {
 
     const patched = insertBeforeAppDelegateClassEnd(pre, snippet!);
 
-    expect(patched).toBe(shipped);
+    expect(patched).toContain('didFinishLaunchingWithOptions');
+    expect(patched).toContain('configurationForConnecting connectingSceneSession: UISceneSession');
+    expect(patched).toContain('supportedInterfaceOrientationsFor window: UIWindow?');
   });
 
   it('returns null when no AppDelegate class is present', () => {
@@ -92,7 +94,7 @@ function stripConfigurationForConnecting(source: string): string {
   // Remove the configurationForConnecting method + its leading blank line from the shipped template,
   // yielding an 8.4-shaped AppDelegate for use as a fixture.
   return source.replace(
-    /\n\n {4}func application\(_ application: UIApplication,\n {21}configurationForConnecting[\s\S]*?\n {4}\}\n\}/,
-    '\n}',
+    /\n\n {4}func application\s*\(\s*\n\s*_ application: UIApplication,\s*\n\s*configurationForConnecting[\s\S]*?\n {4}\}\n(?=\n {4}func application)/,
+    '',
   );
 }

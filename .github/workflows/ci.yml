@@ -112,7 +112,7 @@ jobs:
     strategy:
       matrix:
         xcode:
-          - /Applications/Xcode_27.0.app
+          - /Applications/Xcode_26.0.app
     steps:
       - run: sudo xcode-select --switch ${{ matrix.xcode }}
       - run: xcrun simctl list > /dev/null
