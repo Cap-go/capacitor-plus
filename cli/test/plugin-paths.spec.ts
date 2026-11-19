@@ -1,10 +1,11 @@
 import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'fs-extra';
-import { join, resolve } from 'path';
+import { join, relative, resolve } from 'path';
 
 import { installGradlePlugins } from '../src/android/update';
 import type { Config } from '../src/definitions';
 import { getPackageReferencePath, getPluginReferencePath, PluginType } from '../src/plugin';
 import type { Plugin } from '../src/plugin';
+import { convertToUnixPath } from '../src/util/fs';
 import { generatePackageText } from '../src/util/spm';
 
 import { mktmp } from './util';
@@ -69,6 +70,23 @@ public class AppPlugin extends Plugin {
   writeFileSync(join(pluginDir, 'Package.swift'), '// swift-tools-version: 5.9\n');
   writeFileSync(join(androidPkgDir, 'package.json'), JSON.stringify({ name: '@capacitor/android', version: '8.6.0' }));
   writeFileSync(join(iosPkgDir, 'package.json'), JSON.stringify({ name: '@capacitor/ios', version: '8.6.0' }));
+  writeFileSync(
+    join(iosPkgDir, 'Package.swift'),
+    `// swift-tools-version: 5.9
+import PackageDescription
+
+let package = Package(
+    name: "capacitor",
+    platforms: [.iOS(.v15)],
+    products: [
+        .library(name: "Capacitor", targets: ["Capacitor"])
+    ],
+    targets: [
+        .target(name: "Capacitor", path: "capacitor-swift-pm")
+    ]
+)
+`,
+  );
   writeFileSync(join(appDir, 'ios', 'App', 'App.xcodeproj', 'project.pbxproj'), 'IPHONEOS_DEPLOYMENT_TARGET = 15;\n');
 
   const plugin: Plugin = {
@@ -174,8 +192,10 @@ describe('plugin reference paths (#8621)', () => {
       const { config, plugin, appDir } = fixture;
 
       const text = await generatePackageText(config, [plugin]);
+      const spmDir = join(appDir, 'ios', 'App', 'CapApp-SPM');
+      const pluginPackagePath = convertToUnixPath(relative(spmDir, getPluginReferencePath(config, plugin)));
 
-      expect(text).toContain(`.package(name: "CapacitorApp", path: "../../../node_modules/@capacitor/app")`);
+      expect(text).toContain(`.package(name: "CapacitorApp", path: "${pluginPackagePath}")`);
       expect(text).not.toContain('global-store');
 
       for (const line of text.split('\n')) {
