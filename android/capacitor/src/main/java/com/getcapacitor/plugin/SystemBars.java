@@ -292,12 +292,16 @@ public class SystemBars extends Plugin {
         return builder.setInsets(WindowInsetsCompat.Type.ime(), Insets.NONE).setVisible(WindowInsetsCompat.Type.ime(), false);
     }
 
+    Insets getSystemBarInsetsForCss(WindowInsetsCompat insets) {
+        return insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+    }
+
     private void injectSafeAreaCSS(WindowInsetsCompat insets) {
         if (!INSETS_HANDLING_CSS.equals(insetsHandling)) {
             return;
         }
 
-        Insets systemBarsInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+        Insets systemBarsInsets = getSystemBarInsetsForCss(insets);
 
         // Convert pixels to density-independent pixels
         float density = getActivity().getResources().getDisplayMetrics().density;

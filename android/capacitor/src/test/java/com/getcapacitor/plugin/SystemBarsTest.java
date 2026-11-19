@@ -3,11 +3,12 @@ package com.getcapacitor.plugin;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -59,7 +60,7 @@ public class SystemBarsTest {
 
     @Test
     public void injectSafeAreaCSSUsesOriginalSystemBarInsets() throws Exception {
-        SystemBars plugin = new SystemBars();
+        SystemBars plugin = spy(new SystemBars());
         Bridge bridge = mock(Bridge.class);
         AppCompatActivity activity = mock(AppCompatActivity.class);
         Resources resources = mock(Resources.class);
@@ -84,12 +85,11 @@ public class SystemBarsTest {
         insetsHandlingField.setAccessible(true);
         insetsHandlingField.set(plugin, SystemBars.INSETS_HANDLING_CSS);
 
-        WindowInsetsCompat insets = mock(WindowInsetsCompat.class);
-        when(insets.getInsets(anyInt())).thenReturn(Insets.of(10, 20, 5, 15));
+        doReturn(Insets.of(10, 20, 5, 15)).when(plugin).getSystemBarInsetsForCss(any());
 
         Method injectSafeAreaCSS = SystemBars.class.getDeclaredMethod("injectSafeAreaCSS", WindowInsetsCompat.class);
         injectSafeAreaCSS.setAccessible(true);
-        injectSafeAreaCSS.invoke(plugin, insets);
+        injectSafeAreaCSS.invoke(plugin, new Object[] { null });
 
         ArgumentCaptor<String> scriptCaptor = ArgumentCaptor.forClass(String.class);
         verify(webView).evaluateJavascript(scriptCaptor.capture(), any());
