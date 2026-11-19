@@ -12,11 +12,11 @@ import {
   PluginType,
   getAllElements,
   getFilePath,
-  getPackageReferencePath,
   getPlatformElement,
   getPluginPlatform,
-  getPluginReferencePath,
   getPluginType,
+  getPackageReferencePath,
+  getPluginReferencePath,
   getPlugins,
   printPlugins,
 } from '../plugin';
@@ -51,7 +51,6 @@ export async function updateAndroid(config: Config): Promise<void> {
     }
     await copyPluginsNativeFiles(config, cordovaPlugins);
   }
-  await copyPluginsNativeFiles(config, capacitorPlugins);
   if (!(await pathExists(config.android.webDirAbs))) {
     await copyTask(config, platform);
   }
@@ -166,14 +165,20 @@ export async function installGradlePlugins(
   }
   if (!capacitorAndroidPackagePath) {
     fatal(
-      `Unable to find ${c.strong('node_modules/@capacitor/android')}.\n` +
-        `Are you sure ${c.strong('@capacitor/android')} is installed?`,
+      `Unable to find ${c.strong('node_modules/@capacitor-plus/android')} or ${c.strong('node_modules/@capacitor/android')}.\n` +
+        `Are you sure ${c.strong('@capacitor-plus/android')} or ${c.strong('@capacitor/android')} is installed?`,
     );
   }
+
+  const enableCordova = cordovaPlugins.length > 0 || config.app.forceCordova;
 
   const capacitorAndroidPath = resolve(
     getPackageReferencePath(config, capacitorAndroidPackageId, dirname(capacitorAndroidPackagePath)),
     'capacitor',
+  );
+  const capacitorCordovaAndroidPath = resolve(
+    getPackageReferencePath(config, capacitorAndroidPackageId, dirname(capacitorAndroidPackagePath)),
+    'capacitor-cordova',
   );
 
   const settingsPath = config.android.platformDirAbs;
@@ -282,9 +287,7 @@ export async function handleCordovaPluginsGradle(config: Config, cordovaPlugins:
   const applyArray: any[] = [];
   applyArray.push(`apply from: "cordova.variables.gradle"`);
   cordovaPlugins.map((p) => {
-    const relativePluginPath = convertToUnixPath(
-      relative(config.android.cordovaPluginsDirAbs, getPluginReferencePath(config, p)),
-    );
+    const relativePluginPath = convertToUnixPath(relative(config.android.cordovaPluginsDirAbs, p.rootPath));
     const frameworks = getPlatformElement(p, platform, 'framework');
     frameworks.map((framework: any) => {
       if (!framework.$.type && !framework.$.custom) {

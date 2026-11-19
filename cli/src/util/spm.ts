@@ -1,26 +1,23 @@
-import {
-  ensureSymlink,
-  pathExists,
-  existsSync,
-  readFileSync,
-  writeFileSync,
-  remove,
-  move,
-  mkdtemp,
-  readdirSync,
-} from 'fs-extra';
+import { ensureSymlink, pathExists, existsSync, readFileSync, writeFileSync, remove, move, mkdtemp } from 'fs-extra';
 import { tmpdir } from 'os';
 import { join, relative, resolve } from 'path';
 import type { PlistObject } from 'plist';
 import { build, parse } from 'plist';
 import { extract } from 'tar';
 
+import { getCordovaPlugins } from '../cordova';
 import type { Config } from '../definitions';
 import { fatal } from '../errors';
-import { getMajorMinoriOSVersion } from '../ios/common';
+import { getMajoriOSVersion } from '../ios/common';
 import { logger } from '../log';
 import type { Plugin } from '../plugin';
-import { getPlatformElement, getPluginPlatform, getPluginReferencePath, getPluginType, PluginType } from '../plugin';
+import { getPlatformElement, getPluginPlatform, getPluginType, PluginType } from '../plugin';
+import {
+  CORDOVA_PRODUCT,
+  SOURCE_PACKAGE_IDENTITY,
+  renderCapacitorPackage,
+  resolveCapacitorPackagePath,
+} from '../util/capacitor-package';
 import { convertToUnixPath } from '../util/fs';
 import { runCommand } from '../util/subprocess';
 
@@ -104,9 +101,13 @@ export async function removeCocoapodsFiles(config: Config): Promise<void> {
 }
 
 export async function generatePackageText(config: Config, plugins: Plugin[]): Promise<string> {
-  const iosVersion = getMajorMinoriOSVersion(config);
+  const iosVersion = getMajoriOSVersion(config);
+  const cordovaPlugins = await getCordovaPlugins(config, 'ios');
+  const enableCordova = cordovaPlugins.length > 0 || config.app.forceCordova;
   const packageTraits = config.app.extConfig.experimental?.ios?.spm?.packageTraits ?? {};
   const packageOptions = config.app.extConfig.experimental?.ios?.spm?.packageOptions ?? {};
+  const capacitorPackagePath = await resolveCapacitorPackagePath(config);
+  const spmDirectory = join(config.ios.nativeProjectDirAbs, 'CapApp-SPM');
   const swiftToolsVersion = config.app.extConfig.experimental?.ios?.spm?.swiftToolsVersion ?? '5.9';
 
   let packageSwiftText = `// swift-tools-version: ${swiftToolsVersion}
@@ -115,7 +116,7 @@ import PackageDescription
 // DO NOT MODIFY THIS FILE - managed by Capacitor CLI commands
 let package = Package(
     name: "CapApp-SPM",
-    platforms: [.iOS(${iosVersion.includes('.') ? `"${iosVersion}"` : `.v${iosVersion}`})],
+    platforms: [.iOS(.v${iosVersion})],
     products: [
         .library(
             name: "CapApp-SPM",
@@ -128,9 +129,7 @@ let package = Package(
     if (getPluginType(plugin, config.ios.name) === PluginType.Cordova) {
       const platformTag = getPluginPlatform(plugin, config.ios.name);
       if (platformTag.$?.package) {
-        const relPath = convertToUnixPath(
-          relative(config.ios.nativeXcodeProjDirAbs, getPluginReferencePath(config, plugin)),
-        );
+        const relPath = convertToUnixPath(relative(config.ios.nativeXcodeProjDirAbs, plugin.rootPath));
         packageSwiftText += `,\n        .package(name: "${plugin.id}", path: "${relPath}")`;
       } else {
         const sourceFiles = getPlatformElement(plugin, config.ios.name, 'source-file');
@@ -145,13 +144,10 @@ let package = Package(
       const symlink = options?.symlink;
       const symlinkFolder = join('symlinks', plugin.name);
       const relPath = symlink
-        ? convertToUnixPath(join('symlinks', plugin.name))
-        : convertToUnixPath(relative(config.ios.nativeXcodeProjDirAbs, getPluginReferencePath(config, plugin)));
+        ? symlinkFolder
+        : convertToUnixPath(relative(config.ios.nativeXcodeProjDirAbs, plugin.rootPath));
       if (symlink) {
-        await ensureSymlink(
-          getPluginReferencePath(config, plugin),
-          resolve(config.ios.nativeProjectDirAbs, 'CapApp-SPM', symlinkFolder),
-        );
+        await ensureSymlink(plugin.rootPath, resolve(config.ios.nativeProjectDirAbs, 'CapApp-SPM', symlinkFolder));
       }
       const traits = packageTraits[plugin.id];
       const traitsSuffix = traits?.length
@@ -191,7 +187,7 @@ let package = Package(
     if (getPluginType(plugin, config.ios.name) === PluginType.Cordova) {
       const platformTag = getPluginPlatform(plugin, config.ios.name);
       if (platformTag.$?.package) {
-        pluginText = `,\n                .product(name: "${plugin.id}", package: "${plugin.id}"${aliasText})`;
+        pluginText = `,\n                .product(name: "${plugin.id}", package: "${plugin.id}")`;
       } else {
         const sourceFiles = getPlatformElement(plugin, config.ios.name, 'source-file');
         const headerFiles = getPlatformElement(plugin, config.ios.name, 'header-file');
@@ -357,113 +353,6 @@ export async function ensureSPMGitignoreEntry(config: Config): Promise<void> {
 
   const updated = contents.endsWith('\n') ? contents + entry + '\n' : contents + '\n' + entry + '\n';
   writeFileSync(gitignorePath, updated);
-}
-
-export function hasSceneManifest(config: Config): boolean {
-  const infoPlist = resolve(config.ios.nativeTargetDirAbs, 'Info.plist');
-  if (!existsSync(infoPlist)) {
-    return false;
-  }
-  const entries = parse(readFileSync(infoPlist, 'utf-8')) as PlistObject;
-  return entries['UIApplicationSceneManifest'] !== undefined;
-}
-
-function storyboardResourceExists(nativeTargetDirAbs: string, storyboardName: string): boolean {
-  const fileName = `${storyboardName}.storyboard`;
-  const stack = [nativeTargetDirAbs];
-
-  while (stack.length > 0) {
-    const dir = stack.pop() as string;
-
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isFile() && entry.name === fileName) {
-        return true;
-      }
-
-      if (entry.isDirectory()) {
-        stack.push(resolve(dir, entry.name));
-      }
-    }
-  }
-
-  return false;
-}
-
-function resolvedSceneStoryboardFile(entries: PlistObject, nativeTargetDirAbs: string): string | undefined {
-  const mainStoryboard = entries['UIMainStoryboardFile'];
-  if (typeof mainStoryboard === 'string' && mainStoryboard.trim() !== '') {
-    if (storyboardResourceExists(nativeTargetDirAbs, mainStoryboard)) {
-      return mainStoryboard;
-    }
-  }
-
-  return undefined;
-}
-
-type MutablePlistObject = { -readonly [P in keyof PlistObject]: PlistObject[P] };
-
-function syncSceneStoryboardInManifest(entries: MutablePlistObject, nativeTargetDirAbs: string): boolean {
-  const manifest = entries['UIApplicationSceneManifest'] as MutablePlistObject | undefined;
-  if (!manifest) {
-    return false;
-  }
-
-  const configs = manifest['UISceneConfigurations'] as MutablePlistObject | undefined;
-  const roleArray = configs?.['UIWindowSceneSessionRoleApplication'] as MutablePlistObject[] | undefined;
-  if (!roleArray?.length) {
-    return false;
-  }
-
-  const storyboard = resolvedSceneStoryboardFile(entries, nativeTargetDirAbs);
-  let changed = false;
-
-  for (const role of roleArray) {
-    if (storyboard && role['UISceneStoryboardFile'] === undefined) {
-      role['UISceneStoryboardFile'] = storyboard;
-      changed = true;
-    }
-  }
-
-  return changed;
-}
-
-export async function addSceneManifestIfNeeded(config: Config): Promise<void> {
-  const infoPlist = resolve(config.ios.nativeTargetDirAbs, 'Info.plist');
-
-  if (!existsSync(infoPlist)) {
-    logger.warn(infoPlist + ' not found.');
-    return;
-  }
-
-  const entries = parse(readFileSync(infoPlist, 'utf-8')) as MutablePlistObject;
-
-  if (entries['UIApplicationSceneManifest'] !== undefined) {
-    if (syncSceneStoryboardInManifest(entries, config.ios.nativeTargetDirAbs)) {
-      writeFileSync(infoPlist, build(entries));
-    } else {
-      logger.warn('Found UIApplicationSceneManifest in ' + infoPlist + ', skipping.');
-    }
-    return;
-  }
-
-  const sceneConfiguration: MutablePlistObject = {
-    UISceneConfigurationName: 'Default Configuration',
-    UISceneDelegateClassName: '$(PRODUCT_MODULE_NAME).SceneDelegate',
-  };
-
-  const storyboard = resolvedSceneStoryboardFile(entries, config.ios.nativeTargetDirAbs);
-  if (storyboard) {
-    sceneConfiguration['UISceneStoryboardFile'] = storyboard;
-  }
-
-  entries['UIApplicationSceneManifest'] = {
-    UIApplicationSupportsMultipleScenes: false,
-    UISceneConfigurations: {
-      UIWindowSceneSessionRoleApplication: [sceneConfiguration],
-    },
-  };
-
-  writeFileSync(infoPlist, build(entries));
 }
 
 export async function checkSwiftToolsVersion(config: Config, version: string | undefined): Promise<string | null> {

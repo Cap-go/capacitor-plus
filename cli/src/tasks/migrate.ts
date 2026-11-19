@@ -11,48 +11,18 @@ import { getMajoriOSVersion } from '../ios/common';
 import { logger, logPrompt, logSuccess } from '../log';
 import { deleteFolderRecursive } from '../util/fs';
 import { getBlockedInstallScripts, hasBlockedCapacitorScripts, logBlockedInstallScripts } from '../util/npm';
+import { ensureSPMGitignoreEntry } from '../util/spm';
 import { runCommand } from '../util/subprocess';
 import { extractTemplate } from '../util/template';
 
-import { migrateToUIScene } from './migrate-uiscene';
+import { removeDebugXcconfig } from './migrate-debug-xcconfig';
+import { migrateToEdgeToEdge } from './migrate-edge-to-edge';
+import { migrateToSwiftUI } from './migrate-swiftui';
+import { migrateToModernProject } from './migrate-to-modern-project';
 
 let allDependencies: { [key: string]: any } = {};
-const libs = [
-  '@capacitor-plus/core',
-  '@capacitor-plus/cli',
-  '@capacitor-plus/ios',
-  '@capacitor-plus/android',
-  '@capacitor/core',
-  '@capacitor/cli',
-  '@capacitor/ios',
-  '@capacitor/android',
-];
+const libs = ['@capacitor/core', '@capacitor/cli', '@capacitor/ios', '@capacitor/android'];
 const plugins = [
-  '@capacitor-plus/action-sheet',
-  '@capacitor-plus/app',
-  '@capacitor-plus/app-launcher',
-  '@capacitor-plus/browser',
-  '@capacitor-plus/camera',
-  '@capacitor-plus/clipboard',
-  '@capacitor-plus/device',
-  '@capacitor-plus/dialog',
-  '@capacitor-plus/filesystem',
-  '@capacitor-plus/geolocation',
-  '@capacitor-plus/google-maps',
-  '@capacitor-plus/haptics',
-  '@capacitor-plus/keyboard',
-  '@capacitor-plus/local-notifications',
-  '@capacitor-plus/motion',
-  '@capacitor-plus/network',
-  '@capacitor-plus/preferences',
-  '@capacitor-plus/push-notifications',
-  '@capacitor-plus/screen-orientation',
-  '@capacitor-plus/screen-reader',
-  '@capacitor-plus/share',
-  '@capacitor-plus/splash-screen',
-  '@capacitor-plus/status-bar',
-  '@capacitor-plus/text-zoom',
-  '@capacitor-plus/toast',
   '@capacitor/action-sheet',
   '@capacitor/app',
   '@capacitor/app-launcher',
@@ -79,15 +49,33 @@ const plugins = [
   '@capacitor/text-zoom',
   '@capacitor/toast',
 ];
-const coreVersion = '^8.0.0';
-const pluginVersion = '^8.0.0';
-const gradleVersion = '8.14.3';
-const iOSVersion = '15';
-export async function migrateCommand(config: Config, noprompt: boolean, packagemanager: string): Promise<void> {
-  let installFailed = false;
-  let scriptsBlocked = false;
-  let scriptsUnverified = false;
+const coreVersion = 'next';
+const pluginVersion = 'next';
+const gradleVersion = '9.8.2';
+const iOSVersion = '16';
+let installFailed = false;
+let scriptsBlocked = false;
 
+// AGP 9 changed the defaults of these properties and Android Studio's AGP Upgrade Assistant
+// writes them into gradle.properties as compatibility shims. Capacitor apps need none of them,
+// most are deprecated and will be removed in AGP 10, and some (android.builtInKotlin,
+// android.sdk.defaultTargetSdkToCompileSdkIfUnset) break a Capacitor 9 build.
+const agpMigrationAssistantProperties = [
+  'android.builtInKotlin',
+  'android.defaults.buildfeatures.resvalues',
+  'android.dependency.useConstraints',
+  'android.enableAppCompileTimeRClass',
+  'android.newDsl',
+  'android.r8.optimizedResourceShrinking',
+  'android.r8.strictFullModeForKeepRules',
+  'android.sdk.defaultTargetSdkToCompileSdkIfUnset',
+  'android.uniquePackageNames',
+  'android.usesSdkInManifest.disallowed',
+];
+
+const jcenterLine = /^jcenter\(\)\s*(\/\/.*)?$/;
+
+export async function migrateCommand(config: Config, noprompt: boolean, packagemanager: string): Promise<void> {
   if (config === null) {
     fatal('Config data missing');
   }
@@ -184,19 +172,14 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
 
       if (runNpmInstall && !installFailed) {
         const blocked = await getBlockedInstallScripts(config.app.rootDir, installerType);
-        if (blocked === null) {
-          scriptsUnverified = true;
-        } else if (blocked.length > 0) {
+        if (blocked && blocked.length > 0) {
           logBlockedInstallScripts(blocked);
           scriptsBlocked = hasBlockedCapacitorScripts(blocked);
         }
       }
 
       // Update iOS Projects
-      if (
-        (allDependencies['@capacitor-plus/ios'] || allDependencies['@capacitor/ios']) &&
-        existsSync(config.ios.platformDirAbs)
-      ) {
+      if (allDependencies['@capacitor/ios'] && existsSync(config.ios.platformDirAbs)) {
         const currentiOSVersion = getMajoriOSVersion(config);
         if (parseInt(currentiOSVersion) < parseInt(iOSVersion)) {
           // ios template changes
@@ -230,7 +213,21 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
           return updateAppDelegate(join(config.ios.nativeTargetDirAbs, 'AppDelegate.swift'));
         });
 
-        await migrateToUIScene(config);
+        await runTask(`Removing debug.xcconfig.`, () => {
+          return removeDebugXcconfig(config);
+        });
+
+        await runTask(`Migrating to recommended project settings`, () => {
+          return migrateToModernProject(config);
+        });
+
+        await migrateToSwiftUI(config);
+
+        if ((await config.ios.packageManager) === 'SPM') {
+          await runTask('Ensuring Package.resolved is in CapApp-SPM/.gitignore.', () => {
+            return ensureSPMGitignoreEntry(config);
+          });
+        }
       }
 
       if (!installFailed) {
@@ -241,10 +238,7 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
         logger.warn('Skipped Running cap sync.');
       }
 
-      if (
-        (allDependencies['@capacitor-plus/android'] || allDependencies['@capacitor/android']) &&
-        existsSync(config.android.platformDirAbs)
-      ) {
+      if (allDependencies['@capacitor/android'] && existsSync(config.android.platformDirAbs)) {
         // AndroidManifest.xml add "density"
         await runTask(`Migrating AndroidManifest.xml by adding density to Activity configChanges.`, () => {
           return updateAndroidManifest(join(config.android.srcMainDirAbs, 'AndroidManifest.xml'));
@@ -413,7 +407,7 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
         return writeBreakingChanges();
       });
 
-      if (!installFailed && !scriptsBlocked && !scriptsUnverified) {
+      if (!installFailed && !scriptsBlocked) {
         logSuccess(`Migration to Capacitor ${coreVersion} is complete. Run and test your app!`);
       } else if (scriptsBlocked) {
         logger.warn(
@@ -478,7 +472,6 @@ async function installLatestLibs(dependencyManager: string, runInstall: boolean,
   });
 
   if (runInstall) {
-    rimraf.sync(join(config.app.rootDir, 'node_modules/@capacitor-plus/!(cli)'));
     rimraf.sync(join(config.app.rootDir, 'node_modules/@capacitor/!(cli)'));
     await runCommand(dependencyManager, ['install']);
     if (dependencyManager == 'yarn') {
@@ -487,22 +480,12 @@ async function installLatestLibs(dependencyManager: string, runInstall: boolean,
       await runCommand(dependencyManager, ['update']);
     }
   } else {
-    logger.info(`Please run an install command with your package manager of choice. (ex: yarn add)`);
+    logger.info(`Please run an install command with your package manager of choice. (ex: yarn install)`);
   }
 }
 
 async function writeBreakingChanges() {
   const breaking = [
-    '@capacitor-plus/action-sheet',
-    '@capacitor-plus/barcode-scanner',
-    '@capacitor-plus/browser',
-    '@capacitor-plus/camera',
-    '@capacitor-plus/geolocation',
-    '@capacitor-plus/google-maps',
-    '@capacitor-plus/push-notifications',
-    '@capacitor-plus/screen-orientation',
-    '@capacitor-plus/splash-screen',
-    '@capacitor-plus/status-bar',
     '@capacitor/action-sheet',
     '@capacitor/barcode-scanner',
     '@capacitor/browser',
@@ -526,10 +509,17 @@ async function writeBreakingChanges() {
       )}.`,
     );
   }
-  if (allDependencies['@capacitor/ios'] || allDependencies['@capacitor-plus/ios']) {
+  if (allDependencies['@capacitor/android']) {
     logger.info(
-      'IMPORTANT: Capacitor 8.5 adopts UIScene on iOS. ' +
-        'See https://capacitorjs.com/docs/updating/8-5 for the full 8.4 → 8.5 migration guide.',
+      `IMPORTANT: The SystemBars 'insetsHandling' option now defaults to 'native' instead of 'css'. ` +
+        `If your app reads the '--safe-area-inset-*' CSS variables that Capacitor injected, ` +
+        `set 'plugins.SystemBars.insetsHandling' to 'css' in your Capacitor configuration file.`,
+    );
+  }
+  if (allDependencies['@capacitor/ios']) {
+    logger.info(
+      'IMPORTANT: Capacitor 9.0 boots iOS apps from a SwiftUI App struct with UIScene. ' +
+        'See https://capacitorjs.com/docs/next/updating/9-0 for the full migration guide.',
     );
   }
 }
