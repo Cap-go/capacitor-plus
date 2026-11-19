@@ -34,6 +34,15 @@ describe('capacitor package resolution', () => {
     writeFileSync(join(installed, 'Package.swift'), '// ios package');
   });
 
+  it('prefers @capacitor-plus/ios when both platform packages are installed', async () => {
+    const plusInstalled = join(appRoot, 'node_modules', '@capacitor-plus', 'ios');
+    mkdirSync(plusInstalled, { recursive: true });
+    writeFileSync(join(plusInstalled, 'package.json'), '{ "name": "@capacitor-plus/ios" }');
+    writeFileSync(join(plusInstalled, 'Package.swift'), '// plus ios package');
+
+    expect(await resolveCapacitorPackagePath(makeConfig(appRoot))).toBe(plusInstalled);
+  });
+
   it('depends on the installed @capacitor/ios by path', async () => {
     const path = await resolveCapacitorPackagePath(makeConfig(appRoot));
 

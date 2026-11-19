@@ -15,7 +15,8 @@ const SOURCE_PACKAGE_NAME = new RegExp(`name:\\s*"${SOURCE_PACKAGE_IDENTITY}"`);
 export const CORDOVA_PRODUCT = 'CapacitorCordova';
 
 /** The npm package the Swift package ships inside. */
-const PLATFORM_PACKAGE = '@capacitor/ios';
+const PLATFORM_PACKAGE_PLUS = '@capacitor-plus/ios';
+const PLATFORM_PACKAGE_UPSTREAM = '@capacitor/ios';
 
 /** Plugins published before Capacitor 9 depend on the platform as a prebuilt xcframework. */
 const BINARY_PACKAGE_IDENTITY = 'capacitor-swift-pm';
@@ -28,19 +29,37 @@ const BINARY_PACKAGE_IDENTITY = 'capacitor-swift-pm';
  * versioned against on the same release, with no git tag to line up against the npm version. It
  * also carries no version for the app package and any generated plugin packages to disagree about.
  */
-export async function resolveCapacitorPackagePath(config: Config): Promise<string> {
-  const packageJsonPath = resolveNode(config.app.rootDir, PLATFORM_PACKAGE, 'package.json');
-
-  if (!packageJsonPath) {
-    fatal(`Unable to find node_modules/${PLATFORM_PACKAGE}.\nAre you sure ${PLATFORM_PACKAGE} is installed?`);
+function resolveInstalledPlatformPackage(rootDir: string): { packageName: string; packageJsonPath: string } | undefined {
+  let packageJsonPath = resolveNode(rootDir, PLATFORM_PACKAGE_PLUS, 'package.json');
+  if (packageJsonPath) {
+    return { packageName: PLATFORM_PACKAGE_PLUS, packageJsonPath };
   }
 
-  const absolutePath = installDirectory(dirname(packageJsonPath), config.app.rootDir);
+  packageJsonPath = resolveNode(rootDir, PLATFORM_PACKAGE_UPSTREAM, 'package.json');
+  if (packageJsonPath) {
+    return { packageName: PLATFORM_PACKAGE_UPSTREAM, packageJsonPath };
+  }
+
+  return undefined;
+}
+
+export async function resolveCapacitorPackagePath(config: Config): Promise<string> {
+  const resolved = resolveInstalledPlatformPackage(config.app.rootDir);
+
+  if (!resolved) {
+    fatal(
+      `Unable to find node_modules/${PLATFORM_PACKAGE_PLUS} or node_modules/${PLATFORM_PACKAGE_UPSTREAM}.\n` +
+        `Are you sure ${PLATFORM_PACKAGE_PLUS} or ${PLATFORM_PACKAGE_UPSTREAM} is installed?`,
+    );
+  }
+
+  const { packageName, packageJsonPath } = resolved;
+  const absolutePath = installDirectory(dirname(packageJsonPath), config.app.rootDir, packageName);
 
   if (!existsSync(resolve(absolutePath, 'Package.swift'))) {
     fatal(
-      `The installed ${PLATFORM_PACKAGE} has no Package.swift (looked in ${absolutePath}).\n` +
-        `Early 9.0.0 alphas did not ship one; update ${PLATFORM_PACKAGE} to build with SPM.`,
+      `The installed ${packageName} has no Package.swift (looked in ${absolutePath}).\n` +
+        `Early 9.0.0 alphas did not ship one; update ${packageName} to build with SPM.`,
     );
   }
 
@@ -54,14 +73,14 @@ export async function resolveCapacitorPackagePath(config: Config): Promise<strin
  * actually lives — an absolute path outside the app, which the generated `Package.swift` is
  * committed with. The entry inside the project stays valid on every machine.
  */
-function installDirectory(resolved: string, rootDir: string): string {
+function installDirectory(resolved: string, rootDir: string, platformPackage: string): string {
   const real = realPath(resolved);
   if (!real) {
     return resolved;
   }
 
   for (let dir = resolve(rootDir); ; dir = dirname(dir)) {
-    const candidate = resolve(dir, 'node_modules', PLATFORM_PACKAGE);
+    const candidate = resolve(dir, 'node_modules', ...platformPackage.split('/'));
     if (realPath(candidate) === real) {
       return candidate;
     }
