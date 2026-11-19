@@ -3,7 +3,7 @@
 // Swift extensions marked as @objc and internal are available to the Obj-C runtime but are not available at compile time.
 // so we need this declaration to avoid compiler complaints
 @interface CAPInstanceDescriptor (InternalSwiftExtension)
-- (void)_parseConfigurationAt:(NSURL *)configURL;
+- (void)_parseConfigurationAt:(NSURL *)configURL cordovaConfiguration:(NSURL *)cordovaURL;
 @end
 
 NSString* const CAPInstanceDescriptorDefaultScheme = @"capacitor";
@@ -14,7 +14,7 @@ NSString* const CAPInstanceDescriptorDefaultHostname = @"localhost";
     if (self = [super init]) {
         _instanceType = CAPInstanceTypeFixed;
         [self _setDefaultsWithAppLocation:[[NSBundle mainBundle] URLForResource:@"public" withExtension:nil]];
-        [self _parseConfigurationAt:[[NSBundle mainBundle] URLForResource:@"capacitor.config" withExtension:@"json"]];
+        [self _parseConfigurationAt:[[NSBundle mainBundle] URLForResource:@"capacitor.config" withExtension:@"json"] cordovaConfiguration:nil];
     }
     return self;
 }
@@ -23,7 +23,7 @@ NSString* const CAPInstanceDescriptorDefaultHostname = @"localhost";
     if (self = [super init]) {
         _instanceType = CAPInstanceTypeVariable;
         [self _setDefaultsWithAppLocation:appURL];
-        [self _parseConfigurationAt:configURL];
+        [self _parseConfigurationAt:configURL cordovaConfiguration:nil];
     }
     return self;
 }
@@ -32,7 +32,7 @@ NSString* const CAPInstanceDescriptorDefaultHostname = @"localhost";
     if (self = [super init]) {
         _instanceType = CAPInstanceTypeVariable;
         [self _setDefaultsWithAppLocation:appURL];
-        [self _parseConfigurationAt:configURL];
+        [self _parseConfigurationAt:configURL cordovaConfiguration:cordovaURL];
     }
     return self;
 }
