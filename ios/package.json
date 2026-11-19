@@ -20,7 +20,7 @@
     "scripts/pods_helpers.rb"
   ],
   "scripts": {
-    "verify": "node ../scripts/check-ios-dynamic-dispatch.mjs && npm run xc:build && npm run xc:test",
+    "verify": "node ../scripts/check-ios-dynamic-dispatch.mjs && npm run xc:test",
     "xc:build": "cd .. && xcodebuild build -scheme Capacitor-Package -destination 'generic/platform=iOS Simulator'",
     "xc:test": "cd .. && xcodebuild test -scheme Capacitor-Package -destination 'platform=iOS Simulator,name=iPhone 17,OS=latest' -collect-test-diagnostics never"
   },
