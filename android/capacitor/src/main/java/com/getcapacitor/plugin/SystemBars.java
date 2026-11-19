@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.os.Build;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.Window;
@@ -52,7 +53,7 @@ public class SystemBars extends Plugin {
         capacitorSystemBarsCheckMetaViewport();
         """;
 
-    private String insetsHandling = INSETS_HANDLING_NATIVE;
+    private String insetsHandling = INSETS_HANDLING_CSS;
     private boolean hasViewportCover = false;
 
     private String currentStatusBarStyle = STYLE_DEFAULT;
@@ -95,7 +96,7 @@ public class SystemBars extends Plugin {
                     bridge
                         .getWebView()
                         .evaluateJavascript(viewportMetaJSFunction, (res) -> {
-                            hasViewportCover = res.equals("true");
+                            hasViewportCover = "true".equals(res);
 
                             // Request new execution tree of `setOnApplyWindowInsetsListener`
                             bridge.getWebView().requestApplyInsets();
@@ -114,6 +115,22 @@ public class SystemBars extends Plugin {
         setStyle(currentStatusBarStyle, BAR_STATUS_BAR);
     }
 
+    @Override
+    protected void handleOnResume() {
+        super.handleOnResume();
+        getBridge().executeOnMainThread(() -> {
+            // When insetsHandling is disable, native app code owns window fitting.
+            // Re-forcing edge-to-edge here would draw content under the system bars
+            // because SystemBars does not install an inset listener in that mode.
+            if (!INSETS_HANDLING_DISABLE.equals(insetsHandling)) {
+                applyEdgeToEdgeWindowAppearance();
+                ViewCompat.requestApplyInsets((View) getBridge().getWebView().getParent());
+            }
+            setStyle(currentGestureBarStyle, BAR_GESTURE_BAR);
+            setStyle(currentStatusBarStyle, BAR_STATUS_BAR);
+        });
+    }
+
     private void initSystemBars() {
         // If you already know what the value of the `viewport-fit=` meta tag is going to be,
         // passing it here through `initialViewportFitValueHint` can help prevent layout shifting.
@@ -123,7 +140,7 @@ public class SystemBars extends Plugin {
         String style = getConfig().getString("style", STYLE_DEFAULT).toUpperCase(Locale.US);
         boolean hidden = getConfig().getBoolean("hidden", false);
 
-        String configuredInsetsHandling = getConfig().getString("insetsHandling", INSETS_HANDLING_NATIVE);
+        String configuredInsetsHandling = getConfig().getString("insetsHandling", INSETS_HANDLING_CSS);
         if (
             INSETS_HANDLING_CSS.equals(configuredInsetsHandling) ||
             INSETS_HANDLING_DISABLE.equals(configuredInsetsHandling) ||
@@ -133,9 +150,9 @@ public class SystemBars extends Plugin {
         } else {
             Logger.warn(
                 "SystemBars",
-                "Unknown insetsHandling value '" + configuredInsetsHandling + "'. Falling back to '" + INSETS_HANDLING_NATIVE + "'."
+                "Unknown insetsHandling value '" + configuredInsetsHandling + "'. Falling back to '" + INSETS_HANDLING_CSS + "'."
             );
-            insetsHandling = INSETS_HANDLING_NATIVE;
+            insetsHandling = INSETS_HANDLING_CSS;
         }
 
         warnAboutUnsupportedConfigurationValues();
@@ -143,9 +160,22 @@ public class SystemBars extends Plugin {
         initWindowInsetsListener();
 
         getBridge().executeOnMainThread(() -> {
+            applyEdgeToEdgeWindowAppearance();
             setStyle(style, "");
             setHidden(hidden, "");
+            ViewCompat.requestApplyInsets((View) getBridge().getWebView().getParent());
         });
+    }
+
+    private void applyEdgeToEdgeWindowAppearance() {
+        Window window = getActivity().getWindow();
+        WindowCompat.setDecorFitsSystemWindows(window, false);
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            window.setNavigationBarColor(android.graphics.Color.TRANSPARENT);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                window.setNavigationBarContrastEnforced(false);
+            }
+        }
     }
 
     @PluginMethod

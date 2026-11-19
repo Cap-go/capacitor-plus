@@ -1,11 +1,16 @@
 package com.getcapacitor;
 
+import android.net.Uri;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import androidx.webkit.JavaScriptReplyProxy;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
-import java.util.function.Function;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * MessageHandler handles messages from the WebView, dispatching them
@@ -18,28 +23,70 @@ public class MessageHandler {
         void intercept(JSObject object);
     }
 
+    public static final class WebMessagePolicy {
+
+        private final Set<String> originRules;
+        private final Predicate<Uri> acceptsOrigin;
+
+        public WebMessagePolicy(Set<String> originRules, Predicate<Uri> acceptsOrigin) {
+            this.originRules = Collections.unmodifiableSet(new LinkedHashSet<>(Objects.requireNonNull(originRules)));
+            this.acceptsOrigin = Objects.requireNonNull(acceptsOrigin);
+        }
+
+        public Set<String> originRules() {
+            return originRules;
+        }
+
+        public Predicate<Uri> acceptsOrigin() {
+            return acceptsOrigin;
+        }
+    }
+
     private Bridge bridge;
     private WebView webView;
     private JavaScriptReplyProxy javaScriptReplyProxy;
+    private final boolean scopedWebMessages;
 
     public MessageHandler(Bridge bridge, WebView webView) {
+        this(bridge, webView, null);
+    }
+
+    MessageHandler(Bridge bridge, WebView webView, WebMessagePolicy policy) {
         this.bridge = bridge;
         this.webView = webView;
+        this.scopedWebMessages = policy != null;
 
-        if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER) && !bridge.getConfig().isUsingLegacyBridge()) {
+        Set<String> originRules = scopedWebMessages ? policy.originRules() : bridge.getAllowedOriginRules();
+        if (scopedWebMessages && originRules.isEmpty()) {
+            return;
+        }
+
+        if (
+            WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER) &&
+            (scopedWebMessages || !bridge.getConfig().isUsingLegacyBridge())
+        ) {
             WebViewCompat.WebMessageListener capListener = (view, message, sourceOrigin, isMainFrame, replyProxy) -> {
-                if (isMainFrame) {
-                    postMessage(message.getData());
-                    javaScriptReplyProxy = replyProxy;
-                } else {
+                if (!isMainFrame) {
                     Logger.warn("Plugin execution is allowed in Main Frame only");
+                    return;
+                }
+                if (!scopedWebMessages || (sourceOrigin != null && policy.acceptsOrigin().test(sourceOrigin))) {
+                    javaScriptReplyProxy = replyProxy;
+                    postMessage(message.getData());
                 }
             };
             try {
-                WebViewCompat.addWebMessageListener(webView, "androidBridge", bridge.getAllowedOriginRules(), capListener);
+                WebViewCompat.addWebMessageListener(webView, "androidBridge", originRules, capListener);
+                return;
             } catch (Exception ex) {
+                if (scopedWebMessages) {
+                    Logger.error("Unable to register scoped Android bridge", ex);
+                    return;
+                }
                 webView.addJavascriptInterface(this, "androidBridge");
             }
+        } else if (scopedWebMessages) {
+            Logger.warn("Scoped Android bridge unavailable on this WebView");
         } else {
             webView.addJavascriptInterface(this, "androidBridge");
         }
@@ -91,11 +138,11 @@ public class MessageHandler {
 
             boolean isValidCallbackId = !call.getCallbackId().equals(PluginCall.CALLBACK_ID_DANGLING);
             if (isValidCallbackId) {
-                if (bridge.getConfig().isUsingLegacyBridge()) {
+                if (!scopedWebMessages && bridge.getConfig().isUsingLegacyBridge()) {
                     legacySendResponseMessage(data);
                 } else if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER) && javaScriptReplyProxy != null) {
                     javaScriptReplyProxy.postMessage(data.toString());
-                } else {
+                } else if (!scopedWebMessages) {
                     legacySendResponseMessage(data);
                 }
             } else {
@@ -113,10 +160,5 @@ public class MessageHandler {
         final String runScript = "window.Capacitor.fromNative(" + data.toString() + ")";
         final WebView webView = this.webView;
         webView.post(() -> webView.evaluateJavascript(runScript, null));
-    }
-
-    private void callPluginMethod(String callbackId, String pluginId, String methodName, JSObject methodData) {
-        PluginCall call = new PluginCall(this, pluginId, callbackId, methodName, methodData);
-        bridge.callPluginMethod(pluginId, methodName, call);
     }
 }
