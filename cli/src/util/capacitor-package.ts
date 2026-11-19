@@ -29,7 +29,9 @@ const BINARY_PACKAGE_IDENTITY = 'capacitor-swift-pm';
  * versioned against on the same release, with no git tag to line up against the npm version. It
  * also carries no version for the app package and any generated plugin packages to disagree about.
  */
-function resolveInstalledPlatformPackage(rootDir: string): { packageName: string; packageJsonPath: string } | undefined {
+function resolveInstalledPlatformPackage(
+  rootDir: string,
+): { packageName: string; packageJsonPath: string } | undefined {
   let packageJsonPath = resolveNode(rootDir, PLATFORM_PACKAGE_PLUS, 'package.json');
   if (packageJsonPath) {
     return { packageName: PLATFORM_PACKAGE_PLUS, packageJsonPath };

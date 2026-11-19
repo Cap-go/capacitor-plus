@@ -4,7 +4,7 @@ import { pathExists } from 'fs-extra';
 
 import c from './colors';
 import type { Config, PackageManager } from './definitions';
-import { send } from './ipc';
+import { deliver, send } from './ipc';
 import { output } from './log';
 import { detectRunContext, isAgentDriven } from './run-context';
 import type { Confidence, RunContext, Surface } from './run-context';
@@ -29,6 +29,8 @@ export type ProjectIdSource = 'repository' | 'session' | 'none';
 
 export interface CommandMetricData {
   app_id: string | null;
+  project_id: string | null;
+  project_id_source: ProjectIdSource;
   command: string;
   arguments: string;
   options: string;
@@ -37,6 +39,11 @@ export interface CommandMetricData {
   node_version: string;
   os: string;
   ios_package_manager: PackageManager | 'unknown';
+  surface: Surface;
+  confidence: Confidence;
+  agent_id?: string;
+  agent_version?: string;
+  agent_detected_by?: string;
 }
 
 export interface Metric<N extends string, D> {
@@ -187,55 +194,78 @@ export function telemetryAction(config: Config, action: CommanderAction): Comman
 
     const end = new Date();
 
-    const packages = Object.entries({
-      ...config.app.package.devDependencies,
-      ...config.app.package.dependencies,
-    });
-
-    // Only collect packages in the capacitor-plus org:
-    // https://www.npmjs.com/org/capacitor-plus
-    const capacitorPackages = packages.filter(([k]) => k.startsWith('@capacitor-plus/'));
-
-    const versions = capacitorPackages.map(([k, v]): [string, string] => [
-      `${k.replace(/^@capacitor-plus\//, '').replace(/-/g, '_')}_version`,
-      getTelemetryVersion(v),
-    ]);
-
-    const options = getTelemetryOptions(cmd);
-
-    const data: CommandMetricData = {
-      app_id: await getAppIdentifier(config),
-      command,
-      arguments: getTelemetryArguments(cmd),
-      options: JSON.stringify(options),
-      duration,
-      error: getTelemetryError(cmd, error, config, options),
-      node_version: process.version,
-      os: config.cli.os,
-      ios_package_manager: await getIOSPackageManager(config),
-      ...Object.fromEntries(versions),
-    };
-
-    debug('metric payload: %O', data);
-
-    if (isInteractive()) {
-      let sysconfig = await readConfig();
-
-      if (!error && typeof sysconfig.telemetry === 'undefined') {
-        // Telemetry is opt-out; turn telemetry on then inform the user how to opt-out.
-        sysconfig = { ...sysconfig, telemetry: true };
-        await writeConfig(sysconfig);
-
-        output.write(THANK_YOU);
-      }
-
-      await sendMetric(sysconfig, 'capacitor_cli_command', data);
-    }
+    await reportCommand(config, cmd, end.getTime() - start.getTime(), error);
 
     if (error) {
       throw error;
     }
   };
+}
+
+/**
+ * Build and deliver the metric for one completed command.
+ */
+async function reportCommand(config: Config, cmd: Command, duration: number, error: any): Promise<void> {
+  if (isTelemetryDisabledByEnv(process.env)) {
+    debug('CAP_TELEMETRY_DISABLED is set--not collecting');
+
+    return;
+  }
+
+  const runContext = detectRunContext();
+
+  let sysconfig = await readConfig();
+
+  if (isInteractive() && !error && typeof sysconfig.telemetry === 'undefined') {
+    // Telemetry is opt-out; turn telemetry on then inform the user how to opt-out.
+    sysconfig = { ...sysconfig, telemetry: true };
+    await writeConfig(sysconfig);
+
+    output.write(THANK_YOU);
+  }
+
+  if (!isTelemetryEnabled(process.env, sysconfig, runContext)) {
+    debug('Telemetry is off for this run--not collecting');
+
+    return;
+  }
+
+  const packages = Object.entries({
+    ...config.app.package.devDependencies,
+    ...config.app.package.dependencies,
+  });
+
+  // Only collect packages in the capacitor-plus org:
+  // https://www.npmjs.com/org/capacitor-plus
+  const capacitorPackages = packages.filter(([k]) => k.startsWith('@capacitor-plus/'));
+
+  const versions = capacitorPackages.map(([k, v]): [string, string] => [
+    `${k.replace(/^@capacitor-plus\//, '').replace(/-/g, '_')}_version`,
+    getTelemetryVersion(v),
+  ]);
+
+  const firstCommit = await getFirstCommit(config);
+
+  const options = getTelemetryOptions(cmd);
+
+  const data: CommandMetricData = {
+    app_id: await getAppIdentifier(firstCommit),
+    ...(await getProjectIdentity(firstCommit, runContext)),
+    command: getFullCommandName(cmd),
+    arguments: getTelemetryArguments(cmd),
+    options: JSON.stringify(options),
+    duration,
+    error: getTelemetryError(cmd, error, config, options),
+    node_version: process.version,
+    os: config.cli.os,
+    ios_package_manager: await getIOSPackageManager(config),
+    ...runContextFields(runContext),
+    ...Object.fromEntries(versions),
+  };
+
+  debug('metric payload: %O', data);
+
+  await sendMetric(sysconfig, 'capacitor_cli_command', data, runContext);
 }
 
 /**
@@ -369,27 +399,6 @@ export async function sendMetric<D>(
   }
 }
 
-/**
- * Resolve the iOS dependency manager for telemetry. Returns 'unknown' for
- * non-iOS projects or when detection throws, so callers never have to handle
- * errors from this signal.
- */
-export async function getIOSPackageManager(config: Config): Promise<PackageManager | 'unknown'> {
-  try {
-    if (!(await pathExists(config.ios.platformDirAbs))) {
-      return 'unknown';
-    }
-
-    return await config.ios.packageManager;
-  } catch (e) {
-    debug('Could not resolve iOS package manager for telemetry: %O', e);
-    return 'unknown';
-  }
-}
-
-/**
- * Get a unique anonymous identifier for this app.
- */
 export function needsAwaitedDelivery(runContext: RunContext): boolean {
   return isAgentDriven(runContext) && runContext.surface === 'cloud-sandbox';
 }
@@ -490,11 +499,6 @@ async function getFirstCommit(config: Config): Promise<string | undefined> {
   return output?.split('\n')[0] || undefined;
 }
 
-/**
- * Resolve the iOS dependency manager for telemetry. Returns 'unknown' for
- * non-iOS projects or when detection throws, so callers never have to handle
- * errors from this signal.
- */
 export async function getIOSPackageManager(config: Config): Promise<PackageManager | 'unknown'> {
   try {
     if (!(await pathExists(config.ios.platformDirAbs))) {

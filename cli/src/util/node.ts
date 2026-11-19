@@ -58,7 +58,8 @@ function loadWithClassicCompiler(ts: typeof typescript, id: string): unknown {
     module._compile?.(sourceText, fileName);
   };
 
-  const m = require(id); // eslint-disable-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- CommonJS hook loader for legacy TypeScript
+  const m = require(id);
 
   delete require.extensions['.ts'];
 
@@ -74,7 +75,8 @@ function loadWithCliBundledCompiler(id: string): unknown | null {
     return null;
   }
 
-  const cliTs = require(cliTsPath) as typeof typescript; // eslint-disable-line @typescript-eslint/no-var-requires
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- resolve typescript from the CLI bundle
+  const cliTs = require(cliTsPath) as typeof typescript;
 
   if (!hasClassicCompilerAPI(cliTs)) {
     return null;
@@ -98,6 +100,7 @@ export const requireTS = async (ts: typeof typescript, p: string): Promise<unkno
           `Your installed version of TypeScript (${ts.version}) no longer provides the compiler API Capacitor previously used to load .ts config files, ` +
             `and your Node.js runtime (${process.version}) doesn't support loading them natively either.\n` +
             'Upgrade to Node.js 22.6+ (running with --experimental-strip-types), or Node.js 23.6+, to continue using capacitor.config.ts.',
+          { cause: e },
         );
       }
       if (e?.code === 'ERR_UNSUPPORTED_TYPESCRIPT_SYNTAX') {
@@ -108,6 +111,7 @@ export const requireTS = async (ts: typeof typescript, p: string): Promise<unkno
         throw new Error(
           `Your capacitor.config.ts uses TypeScript syntax that cannot be loaded with Node's native type stripping (${e.message}).\n` +
             'Use erasable TypeScript syntax in capacitor.config.ts, or install a TypeScript version that still exposes the compiler API.',
+          { cause: e },
         );
       }
       throw e;

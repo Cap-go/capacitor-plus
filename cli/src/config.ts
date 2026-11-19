@@ -114,7 +114,8 @@ async function loadExtConfigTS(
       );
     }
 
-    const ts = require(tsPath); // eslint-disable-line @typescript-eslint/no-var-requires
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- resolve the app's TypeScript install
+    const ts = require(tsPath);
     const extConfigObject = (await requireTS(ts, extConfigFilePath)) as any;
     const extConfig = extConfigObject.default ? await extConfigObject.default : extConfigObject;
 

@@ -15,7 +15,6 @@ import type { PlistObject } from 'plist';
 import { build, parse } from 'plist';
 import { extract } from 'tar';
 
-import { getCordovaPlugins } from '../cordova';
 import type { Config } from '../definitions';
 import { fatal } from '../errors';
 import { getMajorMinoriOSVersion } from '../ios/common';
@@ -105,7 +104,6 @@ export async function removeCocoapodsFiles(config: Config): Promise<void> {
 }
 
 export async function generatePackageText(config: Config, plugins: Plugin[]): Promise<string> {
-  const iosPlatformVersion = await getCapacitorPackageVersion(config, config.ios.name);
   const iosVersion = getMajorMinoriOSVersion(config);
   const packageTraits = config.app.extConfig.experimental?.ios?.spm?.packageTraits ?? {};
   const packageOptions = config.app.extConfig.experimental?.ios?.spm?.packageOptions ?? {};
@@ -260,7 +258,9 @@ export function removeInfoPlistDebug(config: Config): PlistDebugResult {
 }
 
 export type SceneManifestResult =
-  { status: 'written' } | { status: 'unchanged' } | { status: 'skipped'; reason: string };
+  | { status: 'written' }
+  | { status: 'unchanged' }
+  | { status: 'skipped'; reason: string };
 
 export function hasSceneManifest(config: Config): boolean {
   const infoPlist = resolve(config.ios.nativeTargetDirAbs, 'Info.plist');

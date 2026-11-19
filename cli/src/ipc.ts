@@ -102,7 +102,11 @@ export function deliver(data: Metric<string, unknown>, timeout: number = DELIVER
       (response) => {
         debug('Sent %O metric to events service (status: %O)', data.name, response.statusCode);
 
-        if (response.statusCode !== 202) {
+        if (response.statusCode === 202) {
+          // Draining is what lets the socket close; without it an awaited
+          // delivery sits until the timeout fires.
+          response.resume();
+        } else {
           response.on('data', (chunk) => {
             debug('Bad response from events service. Request body: %O', chunk.toString());
           });
@@ -113,15 +117,7 @@ export function deliver(data: Metric<string, unknown>, timeout: number = DELIVER
       },
     );
 
-    req.on('timeout', () => req.destroy());
-    req.on('error', (err) => {
-      debug('Failed to send metric to events service: %O', err);
-    });
-
-    const body = {
-      metrics: [data],
-      sent_at: now,
-    };
+    req.on('error', (e) => finish(`failed: ${e.message}`));
 
     req.end(body);
   });

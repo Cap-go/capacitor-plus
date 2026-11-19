@@ -16,7 +16,6 @@ import { extractTemplate } from '../util/template';
 
 import { migrateToUIScene } from './migrate-uiscene';
 
-// eslint-disable-next-line prefer-const
 let allDependencies: { [key: string]: any } = {};
 const libs = [
   '@capacitor-plus/core',
@@ -84,8 +83,6 @@ const coreVersion = '^8.0.0';
 const pluginVersion = '^8.0.0';
 const gradleVersion = '8.14.3';
 const iOSVersion = '15';
-const kotlinVersion = '2.2.20';
-
 export async function migrateCommand(config: Config, noprompt: boolean, packagemanager: string): Promise<void> {
   let installFailed = false;
   let scriptsBlocked = false;
@@ -228,6 +225,10 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
         } else {
           logger.warn('Skipped updating deployment target');
         }
+
+        await runTask(`Migrating AppDelegate.swift`, () => {
+          return updateAppDelegate(join(config.ios.nativeTargetDirAbs, 'AppDelegate.swift'));
+        });
 
         await migrateToUIScene(config);
       }

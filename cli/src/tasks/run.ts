@@ -15,7 +15,6 @@ import type { Config } from '../definitions';
 import { fatal, isFatal } from '../errors';
 import { runIOS } from '../ios/run';
 import { logger, output } from '../log';
-import type { Plugin } from '../plugin';
 import { CapLiveReloadHelper } from '../util/livereload';
 import { getPlatformTargets } from '../util/native-run';
 
