@@ -3,10 +3,10 @@ package com.getcapacitor.plugin;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -19,7 +19,6 @@ import android.view.Window;
 import android.webkit.WebView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
-import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.Bridge;
@@ -27,7 +26,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.MockedStatic;
 
 public class SystemBarsTest {
 
@@ -56,6 +54,26 @@ public class SystemBarsTest {
         verify(controller).show(WindowInsetsCompat.Type.navigationBars());
         verify(controller, never()).show(WindowInsetsCompat.Type.systemBars());
         verify(controller, never()).show(WindowInsetsCompat.Type.statusBars());
+    }
+
+    @Test
+    public void getSystemBarInsetsForCssUsesSystemBarsAndDisplayCutoutNotIme() {
+        WindowInsetsCompat insets = mock(WindowInsetsCompat.class);
+        Insets systemBarInsets = Insets.of(10, 20, 5, 15);
+        when(insets.getInsets(anyInt())).thenReturn(systemBarInsets);
+
+        int expectedMask = WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout();
+        int imeMask = WindowInsetsCompat.Type.ime();
+
+        SystemBars plugin = new SystemBars();
+        Insets result = plugin.getSystemBarInsetsForCss(insets);
+
+        ArgumentCaptor<Integer> maskCaptor = ArgumentCaptor.forClass(Integer.class);
+        verify(insets).getInsets(maskCaptor.capture());
+        int mask = maskCaptor.getValue();
+        assertEquals(expectedMask, mask);
+        assertEquals(0, mask & imeMask);
+        assertEquals(systemBarInsets, result);
     }
 
     @Test
@@ -137,7 +155,7 @@ public class SystemBarsTest {
     }
 
     private WindowInsetsControllerCompat invokeSetHidden(String bar) throws Exception {
-        SystemBars plugin = new SystemBars();
+        SystemBars plugin = spy(new SystemBars());
         Bridge bridge = mock(Bridge.class);
         AppCompatActivity activity = mock(AppCompatActivity.class);
         Window window = mock(Window.class);
@@ -147,16 +165,13 @@ public class SystemBarsTest {
         when(bridge.getActivity()).thenReturn(activity);
         when(activity.getWindow()).thenReturn(window);
         when(window.getDecorView()).thenReturn(decorView);
+        doReturn(controller).when(plugin).getInsetsController(window, decorView);
 
         plugin.setBridge(bridge);
 
-        try (MockedStatic<WindowCompat> windowCompat = mockStatic(WindowCompat.class)) {
-            windowCompat.when(() -> WindowCompat.getInsetsController(window, decorView)).thenReturn(controller);
-
-            Method setHidden = SystemBars.class.getDeclaredMethod("setHidden", boolean.class, String.class);
-            setHidden.setAccessible(true);
-            setHidden.invoke(plugin, false, bar);
-        }
+        Method setHidden = SystemBars.class.getDeclaredMethod("setHidden", boolean.class, String.class);
+        setHidden.setAccessible(true);
+        setHidden.invoke(plugin, false, bar);
 
         return controller;
     }

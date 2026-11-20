@@ -340,7 +340,7 @@ public class SystemBars extends Plugin {
         }
 
         Window window = getActivity().getWindow();
-        WindowInsetsControllerCompat windowInsetsControllerCompat = WindowCompat.getInsetsController(window, window.getDecorView());
+        WindowInsetsControllerCompat windowInsetsControllerCompat = getInsetsController(window, window.getDecorView());
         if (bar.isEmpty() || bar.equals(BAR_STATUS_BAR)) {
             currentStatusBarStyle = style;
             windowInsetsControllerCompat.setAppearanceLightStatusBars(!style.equals(STYLE_DARK));
@@ -354,9 +354,13 @@ public class SystemBars extends Plugin {
         getActivity().getWindow().getDecorView().setBackgroundColor(getThemeColor(getContext(), android.R.attr.windowBackground));
     }
 
+    WindowInsetsControllerCompat getInsetsController(Window window, View decorView) {
+        return WindowCompat.getInsetsController(window, decorView);
+    }
+
     private void setHidden(boolean hide, String bar) {
         Window window = getActivity().getWindow();
-        WindowInsetsControllerCompat windowInsetsControllerCompat = WindowCompat.getInsetsController(window, window.getDecorView());
+        WindowInsetsControllerCompat windowInsetsControllerCompat = getInsetsController(window, window.getDecorView());
 
         if (hide) {
             if (bar.isEmpty()) {
