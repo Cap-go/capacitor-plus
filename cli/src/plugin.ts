@@ -94,7 +94,7 @@ export async function resolvePlugin(config: Config, name: string): Promise<Plugi
       repository: meta.repository,
       xml: xmlMeta.plugin,
     };
-  } catch (e) {
+  } catch {
     // ignore
   }
   return null;
@@ -146,10 +146,8 @@ function isPathInside(parent: string, child: string): boolean {
 }
 
 export function getDependencies(config: Config): string[] {
-  return [
-    ...Object.keys(config.app.package.dependencies ?? {}),
-    ...Object.keys(config.app.package.devDependencies ?? {}),
-  ];
+  const pkg = config.app.package;
+  return [...Object.keys(pkg?.dependencies ?? {}), ...Object.keys(pkg?.devDependencies ?? {})];
 }
 
 export function fixName(name: string): string {

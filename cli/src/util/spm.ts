@@ -15,13 +15,19 @@ import type { PlistObject } from 'plist';
 import { build, parse } from 'plist';
 import { extract } from 'tar';
 
-import { getCapacitorPackageVersion } from '../common';
+import { getCordovaPlugins } from '../cordova';
 import type { Config } from '../definitions';
 import { fatal } from '../errors';
-import { getMajorMinoriOSVersion } from '../ios/common';
+import { getMajoriOSVersion } from '../ios/common';
 import { logger } from '../log';
 import type { Plugin } from '../plugin';
 import { getPlatformElement, getPluginPlatform, getPluginReferencePath, getPluginType, PluginType } from '../plugin';
+import {
+  CORDOVA_PRODUCT,
+  SOURCE_PACKAGE_IDENTITY,
+  renderCapacitorPackage,
+  resolveCapacitorPackagePath,
+} from '../util/capacitor-package';
 import { convertToUnixPath } from '../util/fs';
 import { runCommand } from '../util/subprocess';
 
@@ -80,17 +86,14 @@ export async function checkPluginsForPackageSwift(config: Config, plugins: Plugi
 export async function extractSPMPackageDirectory(config: Config): Promise<void> {
   const spmDirectory = join(config.ios.nativeProjectDirAbs, 'CapApp-SPM');
   const spmTemplate = join(config.cli.assetsDirAbs, 'ios-spm-template.tar.gz');
-  const debugConfig = join(config.ios.platformDirAbs, 'debug.xcconfig');
 
   logger.info('Extracting ' + spmTemplate + ' to ' + spmDirectory);
 
   try {
     const tempCapDir = await mkdtemp(join(tmpdir(), 'cap-'));
     const tempCapSPM = join(tempCapDir, 'App', 'CapApp-SPM');
-    const tempDebugXCConfig = join(tempCapDir, 'debug.xcconfig');
     await extract({ file: spmTemplate, cwd: tempCapDir });
     await move(tempCapSPM, spmDirectory);
-    await move(tempDebugXCConfig, debugConfig);
   } catch (err) {
     fatal('Failed to create ' + spmDirectory + ' with error: ' + err);
   }
@@ -108,10 +111,13 @@ export async function removeCocoapodsFiles(config: Config): Promise<void> {
 }
 
 export async function generatePackageText(config: Config, plugins: Plugin[]): Promise<string> {
-  const iosPlatformVersion = await getCapacitorPackageVersion(config, config.ios.name);
-  const iosVersion = getMajorMinoriOSVersion(config);
+  const iosVersion = getMajoriOSVersion(config);
+  const cordovaPlugins = await getCordovaPlugins(config, 'ios');
+  const enableCordova = cordovaPlugins.length > 0 || config.app.forceCordova;
   const packageTraits = config.app.extConfig.experimental?.ios?.spm?.packageTraits ?? {};
   const packageOptions = config.app.extConfig.experimental?.ios?.spm?.packageOptions ?? {};
+  const capacitorPackagePath = await resolveCapacitorPackagePath(config);
+  const spmDirectory = join(config.ios.nativeProjectDirAbs, 'CapApp-SPM');
   const swiftToolsVersion = config.app.extConfig.experimental?.ios?.spm?.swiftToolsVersion ?? '5.9';
 
   let packageSwiftText = `// swift-tools-version: ${swiftToolsVersion}
@@ -120,14 +126,14 @@ import PackageDescription
 // DO NOT MODIFY THIS FILE - managed by Capacitor CLI commands
 let package = Package(
     name: "CapApp-SPM",
-    platforms: [.iOS(${iosVersion.includes('.') ? `"${iosVersion}"` : `.v${iosVersion}`})],
+    platforms: [.iOS(.v${iosVersion})],
     products: [
         .library(
             name: "CapApp-SPM",
             targets: ["CapApp-SPM"])
     ],
     dependencies: [
-        .package(url: "https://github.com/ionic-team/capacitor-swift-pm.git", exact: "${iosPlatformVersion}")`;
+        ${renderCapacitorPackage(capacitorPackagePath, spmDirectory)}`;
 
   for (const plugin of plugins) {
     if (getPluginType(plugin, config.ios.name) === PluginType.Cordova) {
@@ -150,13 +156,10 @@ let package = Package(
       const symlink = options?.symlink;
       const symlinkFolder = join('symlinks', plugin.name);
       const relPath = symlink
-        ? convertToUnixPath(join('symlinks', plugin.name))
-        : convertToUnixPath(relative(config.ios.nativeXcodeProjDirAbs, getPluginReferencePath(config, plugin)));
+        ? symlinkFolder
+        : convertToUnixPath(relative(spmDirectory, getPluginReferencePath(config, plugin)));
       if (symlink) {
-        await ensureSymlink(
-          getPluginReferencePath(config, plugin),
-          resolve(config.ios.nativeProjectDirAbs, 'CapApp-SPM', symlinkFolder),
-        );
+        await ensureSymlink(plugin.rootPath, resolve(config.ios.nativeProjectDirAbs, 'CapApp-SPM', symlinkFolder));
       }
       const traits = packageTraits[plugin.id];
       const traitsSuffix = traits?.length
@@ -177,8 +180,11 @@ let package = Package(
         .target(
             name: "CapApp-SPM",
             dependencies: [
-                .product(name: "Capacitor", package: "capacitor-swift-pm"),
-                .product(name: "Cordova", package: "capacitor-swift-pm")`;
+                .product(name: "Capacitor", package: "${SOURCE_PACKAGE_IDENTITY}")`;
+
+  if (enableCordova) {
+    packageSwiftText += `,\n                .product(name: "${CORDOVA_PRODUCT}", package: "${SOURCE_PACKAGE_IDENTITY}")`;
+  }
 
   for (const plugin of plugins) {
     const aliases = Object.entries(packageOptions[plugin.id]?.moduleAliases ?? {});
@@ -193,7 +199,7 @@ let package = Package(
     if (getPluginType(plugin, config.ios.name) === PluginType.Cordova) {
       const platformTag = getPluginPlatform(plugin, config.ios.name);
       if (platformTag.$?.package) {
-        pluginText = `,\n                .product(name: "${plugin.id}", package: "${plugin.id}"${aliasText})`;
+        pluginText = `,\n                .product(name: "${plugin.id}", package: "${plugin.id}")`;
       } else {
         const sourceFiles = getPlatformElement(plugin, config.ios.name, 'source-file');
         const headerFiles = getPlatformElement(plugin, config.ios.name, 'header-file');
@@ -234,28 +240,35 @@ export async function runCocoapodsDeintegrate(config: Config): Promise<void> {
   }
 }
 
-export async function addInfoPlistDebugIfNeeded(config: Config): Promise<void> {
+export type PlistDebugResult = { status: 'removed' } | { status: 'unchanged' } | { status: 'skipped'; reason: string };
+
+/**
+ * Drop the CAPACITOR_DEBUG key from Info.plist. Capacitor 9 no longer reads it, and the
+ * debug.xcconfig that supplied its $(CAPACITOR_DEBUG) value is gone from the template.
+ */
+export function removeInfoPlistDebug(config: Config): PlistDebugResult {
   type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
   const infoPlist = resolve(config.ios.nativeTargetDirAbs, 'Info.plist');
-  logger.info('Checking ' + infoPlist + ' for CAPACITOR_DEBUG');
 
-  if (existsSync(infoPlist)) {
-    const infoPlistContents = readFileSync(infoPlist, 'utf-8');
-    const plistEntries = parse(infoPlistContents) as Mutable<PlistObject>;
-
-    if (plistEntries['CAPACITOR_DEBUG'] === undefined) {
-      logger.info('Writing CAPACITOR_DEBUG to ' + infoPlist);
-      plistEntries['CAPACITOR_DEBUG'] = '$(CAPACITOR_DEBUG)';
-      const plistToWrite = build(plistEntries);
-      writeFileSync(infoPlist, plistToWrite);
-    } else {
-      logger.warn('Found CAPACITOR_DEBUG set to ' + plistEntries['CAPACITOR_DEBUG'] + ', skipping.');
-    }
-  } else {
-    logger.warn(infoPlist + ' not found.');
+  if (!existsSync(infoPlist)) {
+    return { status: 'skipped', reason: `${infoPlist} not found.` };
   }
+
+  const entries = parse(readFileSync(infoPlist, 'utf-8')) as Mutable<PlistObject>;
+  if (entries['CAPACITOR_DEBUG'] === undefined) {
+    return { status: 'unchanged' };
+  }
+
+  delete entries['CAPACITOR_DEBUG'];
+  writeFileSync(infoPlist, build(entries));
+  return { status: 'removed' };
 }
+
+export type SceneManifestResult =
+  | { status: 'written' }
+  | { status: 'unchanged' }
+  | { status: 'skipped'; reason: string };
 
 export function hasSceneManifest(config: Config): boolean {
   const infoPlist = resolve(config.ios.nativeTargetDirAbs, 'Info.plist');
@@ -264,6 +277,75 @@ export function hasSceneManifest(config: Config): boolean {
   }
   const entries = parse(readFileSync(infoPlist, 'utf-8')) as PlistObject;
   return entries['UIApplicationSceneManifest'] !== undefined;
+}
+
+export function hasSwiftUISceneManifest(config: Config): boolean {
+  const infoPlist = resolve(config.ios.nativeTargetDirAbs, 'Info.plist');
+  if (!existsSync(infoPlist)) {
+    return false;
+  }
+  const entries = parse(readFileSync(infoPlist, 'utf-8')) as PlistObject;
+  const manifest = entries['UIApplicationSceneManifest'] as PlistObject | undefined;
+  return manifest !== undefined && manifest['UISceneConfigurations'] === undefined;
+}
+
+/**
+ * Point Info.plist at the SwiftUI App-struct scene setup: a scene manifest with no
+ * UISceneConfigurations (SwiftUI declares the scene itself) and no main storyboard.
+ *
+ * Preserves UIApplicationSupportsMultipleScenes when the project already set it, and
+ * refuses to touch a manifest that names a scene delegate class other than the stock
+ * SceneDelegate.
+ */
+export async function setSwiftUISceneManifest(config: Config): Promise<SceneManifestResult> {
+  type Mutable<T> = { -readonly [P in keyof T]: T[P] };
+
+  const infoPlist = resolve(config.ios.nativeTargetDirAbs, 'Info.plist');
+
+  if (!existsSync(infoPlist)) {
+    return { status: 'skipped', reason: `${infoPlist} not found.` };
+  }
+
+  const entries = parse(readFileSync(infoPlist, 'utf-8')) as Mutable<PlistObject>;
+  const manifest = entries['UIApplicationSceneManifest'] as PlistObject | undefined;
+
+  const customDelegates = customSceneDelegateClassNames(manifest);
+  if (customDelegates.length > 0) {
+    return {
+      status: 'skipped',
+      reason:
+        `UIApplicationSceneManifest names custom scene delegate(s): ${customDelegates.join(', ')}. ` +
+        'Remove UISceneConfigurations by hand once the delegate is ported to the SwiftUI scene body.',
+    };
+  }
+
+  if (
+    manifest !== undefined &&
+    manifest['UISceneConfigurations'] === undefined &&
+    !('UIMainStoryboardFile' in entries)
+  ) {
+    return { status: 'unchanged' };
+  }
+
+  entries['UIApplicationSceneManifest'] = {
+    UIApplicationSupportsMultipleScenes: manifest?.['UIApplicationSupportsMultipleScenes'] ?? false,
+  };
+  delete entries['UIMainStoryboardFile'];
+
+  writeFileSync(infoPlist, build(entries));
+  return { status: 'written' };
+}
+
+function customSceneDelegateClassNames(manifest: PlistObject | undefined): string[] {
+  const configurations = manifest?.['UISceneConfigurations'] as PlistObject | undefined;
+  if (!configurations) {
+    return [];
+  }
+  return Object.values(configurations)
+    .flatMap((roleConfigs) => (Array.isArray(roleConfigs) ? (roleConfigs as PlistObject[]) : []))
+    .map((roleConfig) => roleConfig['UISceneDelegateClassName'])
+    .filter((className): className is string => typeof className === 'string')
+    .filter((className) => className.split('.').pop() !== 'SceneDelegate');
 }
 
 function storyboardResourceExists(nativeTargetDirAbs: string, storyboardName: string): boolean {
@@ -362,6 +444,25 @@ export async function addSceneManifestIfNeeded(config: Config): Promise<void> {
   };
 
   writeFileSync(infoPlist, build(entries));
+}
+
+export async function ensureSPMGitignoreEntry(config: Config): Promise<void> {
+  const gitignorePath = join(config.ios.nativeProjectDirAbs, 'CapApp-SPM', '.gitignore');
+  const entry = '/Package.resolved';
+
+  if (!existsSync(gitignorePath)) {
+    logger.warn(gitignorePath + ' not found, skipping.');
+    return;
+  }
+
+  const contents = readFileSync(gitignorePath, 'utf-8');
+  if (contents.split('\n').some((line) => line.trim() === entry)) {
+    logger.warn('Found ' + entry + ' in ' + gitignorePath + ', skipping.');
+    return;
+  }
+
+  const updated = contents.endsWith('\n') ? contents + entry + '\n' : contents + '\n' + entry + '\n';
+  writeFileSync(gitignorePath, updated);
 }
 
 export async function checkSwiftToolsVersion(config: Config, version: string | undefined): Promise<string | null> {

@@ -1,6 +1,5 @@
 package com.getcapacitor.plugin;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.res.Configuration;
@@ -9,6 +8,7 @@ import android.os.Build;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.webkit.WebView;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -33,7 +33,6 @@ public class SystemBars extends Plugin {
     static final String BAR_STATUS_BAR = "StatusBar";
     static final String BAR_GESTURE_BAR = "NavigationBar";
 
-    // TODO: In Cap 9, add an additional option "full"
     static final String INSETS_HANDLING_CSS = "css";
     static final String INSETS_HANDLING_DISABLE = "disable";
     static final String INSETS_HANDLING_NATIVE = "native";
@@ -227,14 +226,18 @@ public class SystemBars extends Plugin {
 
             Insets systemBarsInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
             Insets imeInsets = insets.getInsets(WindowInsetsCompat.Type.ime());
-            boolean keyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime());
+            // With `adjustNothing` the keyboard overlays the WebView, so it is handled as if it is not there
+            boolean keyboardOverlaysWebView =
+                (getActivity().getWindow().getAttributes().softInputMode & WindowManager.LayoutParams.SOFT_INPUT_MASK_ADJUST) ==
+                WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING;
+            boolean keyboardVisible = !keyboardOverlaysWebView && insets.isVisible(WindowInsetsCompat.Type.ime());
 
             if (shouldPassthroughInsets) {
                 // We need to correct for a possible shown IME
                 v.setPadding(0, 0, 0, keyboardVisible ? imeInsets.bottom : 0);
 
-                WindowInsetsCompat newInsets = new WindowInsetsCompat.Builder(insets)
-                    .setInsets(
+                WindowInsetsCompat newInsets = withoutOverlayingKeyboard(
+                    new WindowInsetsCompat.Builder(insets).setInsets(
                         WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(),
                         Insets.of(
                             systemBarsInsets.left,
@@ -242,10 +245,11 @@ public class SystemBars extends Plugin {
                             systemBarsInsets.right,
                             getBottomInset(systemBarsInsets, imeInsets, keyboardVisible)
                         )
-                    )
-                    .build();
+                    ),
+                    keyboardOverlaysWebView
+                ).build();
 
-                injectSafeAreaCSS(newInsets, keyboardVisible);
+                injectSafeAreaCSS(newInsets);
 
                 return newInsets;
             }
@@ -261,24 +265,43 @@ public class SystemBars extends Plugin {
             // Returning `WindowInsetsCompat.CONSUMED` breaks recalculation of safe area insets
             // So we have to explicitly set insets to `0`
             // See: https://issues.chromium.org/issues/461332423
-            WindowInsetsCompat newInsets = new WindowInsetsCompat.Builder(insets)
-                .setInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(), Insets.of(0, 0, 0, 0))
-                .build();
+            WindowInsetsCompat newInsets = withoutOverlayingKeyboard(
+                new WindowInsetsCompat.Builder(insets).setInsets(
+                    WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout(),
+                    Insets.of(0, 0, 0, 0)
+                ),
+                keyboardOverlaysWebView
+            ).build();
 
-            injectSafeAreaCSS(newInsets, keyboardVisible);
+            injectSafeAreaCSS(newInsets);
 
             return newInsets;
         });
     }
 
-    // Take keyboardVisible from the listener's original insets. Below API 30, rebuilt insets
-    // mistake the navigation bar for an open keyboard, so the bottom inset would become 0.
-    private void injectSafeAreaCSS(WindowInsetsCompat insets, boolean keyboardVisible) {
+    private WindowInsetsCompat.Builder withoutOverlayingKeyboard(WindowInsetsCompat.Builder builder, boolean keyboardOverlaysWebView) {
+        if (!keyboardOverlaysWebView) {
+            return builder;
+        }
+
+        // WebView >= 139 shrinks its visual viewport for the IME insets it receives, which makes the page pannable above the keyboard.
+        // Unlike Chrome it ignores `VirtualKeyboard.overlaysContent` and `interactive-widget=overlays-content`,
+        // so not handing it the IME insets is the only way to opt out.
+        // Setting them to `0` rather than consuming them keeps the WebView's inset state up to date.
+        // See: https://developer.android.com/develop/ui/views/layout/webapps/understand-window-insets
+        return builder.setInsets(WindowInsetsCompat.Type.ime(), Insets.NONE).setVisible(WindowInsetsCompat.Type.ime(), false);
+    }
+
+    Insets getSystemBarInsetsForCss(WindowInsetsCompat insets) {
+        return insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+    }
+
+    private void injectSafeAreaCSS(WindowInsetsCompat insets) {
         if (!INSETS_HANDLING_CSS.equals(insetsHandling)) {
             return;
         }
 
-        Insets systemBarsInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+        Insets systemBarsInsets = getSystemBarInsetsForCss(insets);
 
         // Convert pixels to density-independent pixels
         float density = getActivity().getResources().getDisplayMetrics().density;
@@ -312,29 +335,32 @@ public class SystemBars extends Plugin {
     }
 
     private void setStyle(String style, String bar) {
-        String requestedStyle = style;
         if (style.equals(STYLE_DEFAULT)) {
             style = getStyleForTheme();
         }
 
         Window window = getActivity().getWindow();
-        WindowInsetsControllerCompat windowInsetsControllerCompat = WindowCompat.getInsetsController(window, window.getDecorView());
+        WindowInsetsControllerCompat windowInsetsControllerCompat = getInsetsController(window, window.getDecorView());
         if (bar.isEmpty() || bar.equals(BAR_STATUS_BAR)) {
-            currentStatusBarStyle = requestedStyle;
+            currentStatusBarStyle = style;
             windowInsetsControllerCompat.setAppearanceLightStatusBars(!style.equals(STYLE_DARK));
         }
 
         if (bar.isEmpty() || bar.equals(BAR_GESTURE_BAR)) {
-            currentGestureBarStyle = requestedStyle;
+            currentGestureBarStyle = style;
             windowInsetsControllerCompat.setAppearanceLightNavigationBars(!style.equals(STYLE_DARK));
         }
 
         getActivity().getWindow().getDecorView().setBackgroundColor(getThemeColor(getContext(), android.R.attr.windowBackground));
     }
 
+    WindowInsetsControllerCompat getInsetsController(Window window, View decorView) {
+        return WindowCompat.getInsetsController(window, decorView);
+    }
+
     private void setHidden(boolean hide, String bar) {
         Window window = getActivity().getWindow();
-        WindowInsetsControllerCompat windowInsetsControllerCompat = WindowCompat.getInsetsController(window, window.getDecorView());
+        WindowInsetsControllerCompat windowInsetsControllerCompat = getInsetsController(window, window.getDecorView());
 
         if (hide) {
             if (bar.isEmpty()) {

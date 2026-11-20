@@ -15,6 +15,7 @@ import type { Config } from '../definitions';
 import { fatal, isFatal } from '../errors';
 import { runIOS } from '../ios/run';
 import { logger, output } from '../log';
+import type { Plugin } from '../plugin';
 import { CapLiveReloadHelper } from '../util/livereload';
 import { getPlatformTargets } from '../util/native-run';
 
@@ -30,11 +31,8 @@ export interface RunCommandOptions {
   targetNameSdkVersion?: string;
   sync?: boolean;
   forwardPorts?: string;
-  liveReload?: boolean;
-  host?: string;
-  port?: string;
+  url?: string;
   configuration?: string;
-  https?: boolean;
 }
 
 export async function runCommand(
@@ -42,9 +40,16 @@ export async function runCommand(
   selectedPlatformName: string,
   options: RunCommandOptions,
 ): Promise<void> {
-  options.host = options.host ?? CapLiveReloadHelper.getIpAddress() ?? 'localhost';
-  if (!options.port) {
-    options.port = '3000';
+  if (options.url) {
+    let parsed: URL;
+    try {
+      parsed = new URL(options.url);
+    } catch {
+      fatal(`Invalid --url: "${options.url}" is not a valid URL`);
+    }
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      fatal(`Invalid --url: must use http:// or https:// (got "${parsed.protocol}//")`);
+    }
   }
   if (selectedPlatformName && !(await isValidPlatform(selectedPlatformName))) {
     const platformDir = resolvePlatform(config, selectedPlatformName);
@@ -89,40 +94,39 @@ export async function runCommand(
       return;
     }
 
-    let cordovaPlugins: Awaited<ReturnType<typeof getCordovaPlugins>> | undefined;
-    let liveReloadManifestUpdated = false;
+    let cordovaPlugins: Plugin[] | undefined;
     try {
-      cordovaPlugins = await getCordovaPlugins(config, platformName);
       if (options.sync) {
         await sync(config, platformName, false, true);
       }
-      if (options.liveReload) {
+      const plugins = await getCordovaPlugins(config, platformName);
+      cordovaPlugins = plugins;
+      if (options.url) {
         await CapLiveReloadHelper.editCapConfigForLiveReload(config, platformName, options);
         if (platformName === config.android.name) {
-          await writeCordovaAndroidManifest(cordovaPlugins, config, platformName, true);
-          liveReloadManifestUpdated = true;
+          await writeCordovaAndroidManifest(plugins, config, platformName, true);
         }
       }
       await run(config, platformName, options);
-      if (options.liveReload) {
+      if (options.url) {
         new Promise((resolve) => process.on('SIGINT', resolve))
           .then(async () => {
             await CapLiveReloadHelper.revertCapConfigForLiveReload();
-            if (liveReloadManifestUpdated && platformName === config.android.name && cordovaPlugins) {
-              await writeCordovaAndroidManifest(cordovaPlugins, config, platformName, false);
+            if (platformName === config.android.name) {
+              await writeCordovaAndroidManifest(plugins, config, platformName, false);
             }
           })
           .then(() => process.exit());
-        logger.info(
-          `App running with live reload listing for: ${options.https ? 'https' : 'http'}://${options.host}${options.port ? `:${options.port}` : ''}. Press Ctrl+C to quit.`,
-        );
+        logger.info(`App running with live reload listening for: ${options.url}. Press Ctrl+C to quit.`);
         await sleepForever();
       }
     } catch (e: any) {
-      if (options.liveReload) {
+      if (options.url) {
         await CapLiveReloadHelper.revertCapConfigForLiveReload();
-        if (liveReloadManifestUpdated && platformName === config.android.name && cordovaPlugins) {
-          await writeCordovaAndroidManifest(cordovaPlugins, config, platformName, false);
+        if (cordovaPlugins && platformName === config.android.name) {
+          await writeCordovaAndroidManifest(cordovaPlugins, config, platformName, false).catch((revertError) =>
+            logger.warn(`Could not revert the live reload cleartext configuration: ${revertError}`),
+          );
         }
       }
       if (!isFatal(e)) {

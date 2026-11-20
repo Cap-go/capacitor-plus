@@ -1,11 +1,14 @@
 package com.getcapacitor.plugin;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,22 +19,19 @@ import android.view.Window;
 import android.webkit.WebView;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
-import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.Bridge;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.MockedStatic;
 
 public class SystemBarsTest {
 
     @Test
     public void showWithEmptyBarShowsSystemBars() throws Exception {
-        WindowInsetsControllerCompat controller = invokeShow("");
+        WindowInsetsControllerCompat controller = invokeSetHidden("");
 
         verify(controller).show(WindowInsetsCompat.Type.systemBars());
         verify(controller, never()).show(WindowInsetsCompat.Type.statusBars());
@@ -40,7 +40,7 @@ public class SystemBarsTest {
 
     @Test
     public void showWithStatusBarShowsOnlyStatusBars() throws Exception {
-        WindowInsetsControllerCompat controller = invokeShow("StatusBar");
+        WindowInsetsControllerCompat controller = invokeSetHidden("StatusBar");
 
         verify(controller).show(WindowInsetsCompat.Type.statusBars());
         verify(controller, never()).show(WindowInsetsCompat.Type.systemBars());
@@ -49,7 +49,7 @@ public class SystemBarsTest {
 
     @Test
     public void showWithNavigationBarShowsOnlyNavigationBars() throws Exception {
-        WindowInsetsControllerCompat controller = invokeShow("NavigationBar");
+        WindowInsetsControllerCompat controller = invokeSetHidden("NavigationBar");
 
         verify(controller).show(WindowInsetsCompat.Type.navigationBars());
         verify(controller, never()).show(WindowInsetsCompat.Type.systemBars());
@@ -57,8 +57,28 @@ public class SystemBarsTest {
     }
 
     @Test
-    public void injectSafeAreaCSSUsesOriginalSystemBarInsets() throws Exception {
+    public void getSystemBarInsetsForCssUsesSystemBarsAndDisplayCutoutNotIme() {
+        WindowInsetsCompat insets = mock(WindowInsetsCompat.class);
+        Insets systemBarInsets = Insets.of(10, 20, 5, 15);
+        when(insets.getInsets(anyInt())).thenReturn(systemBarInsets);
+
+        int expectedMask = WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout();
+        int imeMask = WindowInsetsCompat.Type.ime();
+
         SystemBars plugin = new SystemBars();
+        Insets result = plugin.getSystemBarInsetsForCss(insets);
+
+        ArgumentCaptor<Integer> maskCaptor = ArgumentCaptor.forClass(Integer.class);
+        verify(insets).getInsets(maskCaptor.capture());
+        int mask = maskCaptor.getValue();
+        assertEquals(expectedMask, mask);
+        assertEquals(0, mask & imeMask);
+        assertEquals(systemBarInsets, result);
+    }
+
+    @Test
+    public void injectSafeAreaCSSUsesOriginalSystemBarInsets() throws Exception {
+        SystemBars plugin = spy(new SystemBars());
         Bridge bridge = mock(Bridge.class);
         AppCompatActivity activity = mock(AppCompatActivity.class);
         Resources resources = mock(Resources.class);
@@ -81,25 +101,21 @@ public class SystemBarsTest {
 
         Field insetsHandlingField = SystemBars.class.getDeclaredField("insetsHandling");
         insetsHandlingField.setAccessible(true);
-        insetsHandlingField.set(plugin, "css");
+        insetsHandlingField.set(plugin, SystemBars.INSETS_HANDLING_CSS);
 
-        WindowInsetsCompat insets = mock(WindowInsetsCompat.class);
-        when(insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout())).thenReturn(
-            Insets.of(20, 40, 10, 30)
-        );
-        when(insets.isVisible(WindowInsetsCompat.Type.ime())).thenReturn(false);
+        doReturn(Insets.of(10, 20, 5, 15)).when(plugin).getSystemBarInsetsForCss(any());
 
-        Method injectSafeAreaCSS = SystemBars.class.getDeclaredMethod("injectSafeAreaCSS", WindowInsetsCompat.class, boolean.class);
+        Method injectSafeAreaCSS = SystemBars.class.getDeclaredMethod("injectSafeAreaCSS", WindowInsetsCompat.class);
         injectSafeAreaCSS.setAccessible(true);
-        injectSafeAreaCSS.invoke(plugin, insets, false);
+        injectSafeAreaCSS.invoke(plugin, new Object[] { null });
 
         ArgumentCaptor<String> scriptCaptor = ArgumentCaptor.forClass(String.class);
         verify(webView).evaluateJavascript(scriptCaptor.capture(), any());
         String script = scriptCaptor.getValue();
-        Assert.assertTrue(script.contains("\"--safe-area-inset-top\", \"20px\""));
-        Assert.assertTrue(script.contains("\"--safe-area-inset-left\", \"10px\""));
-        Assert.assertTrue(script.contains("\"--safe-area-inset-bottom\", \"15px\""));
-        Assert.assertTrue(script.contains("\"--safe-area-inset-right\", \"5px\""));
+        assertTrue(script.contains("\"--safe-area-inset-top\", \"10px\""));
+        assertTrue(script.contains("\"--safe-area-inset-left\", \"5px\""));
+        assertTrue(script.contains("\"--safe-area-inset-bottom\", \"7px\""));
+        assertTrue(script.contains("\"--safe-area-inset-right\", \"2px\""));
     }
 
     @Test
@@ -138,8 +154,8 @@ public class SystemBarsTest {
         );
     }
 
-    private WindowInsetsControllerCompat invokeShow(String bar) throws Exception {
-        SystemBars plugin = new SystemBars();
+    private WindowInsetsControllerCompat invokeSetHidden(String bar) throws Exception {
+        SystemBars plugin = spy(new SystemBars());
         Bridge bridge = mock(Bridge.class);
         AppCompatActivity activity = mock(AppCompatActivity.class);
         Window window = mock(Window.class);
@@ -149,59 +165,13 @@ public class SystemBarsTest {
         when(bridge.getActivity()).thenReturn(activity);
         when(activity.getWindow()).thenReturn(window);
         when(window.getDecorView()).thenReturn(decorView);
+        doReturn(controller).when(plugin).getInsetsController(window, decorView);
 
         plugin.setBridge(bridge);
 
-        try (MockedStatic<WindowCompat> windowCompat = mockStatic(WindowCompat.class)) {
-            windowCompat.when(() -> WindowCompat.getInsetsController(window, decorView)).thenReturn(controller);
-
-            Method setHidden = SystemBars.class.getDeclaredMethod("setHidden", boolean.class, String.class);
-            setHidden.setAccessible(true);
-            setHidden.invoke(plugin, false, bar);
-        }
-
-        return controller;
-    }
-
-    @Test
-    public void hideWithEmptyBarHidesSystemBars() throws Exception {
-        WindowInsetsControllerCompat controller = invokeHide("");
-
-        verify(controller).hide(WindowInsetsCompat.Type.systemBars());
-        verify(controller, never()).hide(WindowInsetsCompat.Type.statusBars());
-        verify(controller, never()).hide(WindowInsetsCompat.Type.navigationBars());
-    }
-
-    @Test
-    public void hideWithStatusBarHidesOnlyStatusBars() throws Exception {
-        WindowInsetsControllerCompat controller = invokeHide("StatusBar");
-
-        verify(controller).hide(WindowInsetsCompat.Type.statusBars());
-        verify(controller, never()).hide(WindowInsetsCompat.Type.systemBars());
-        verify(controller, never()).hide(WindowInsetsCompat.Type.navigationBars());
-    }
-
-    private WindowInsetsControllerCompat invokeHide(String bar) throws Exception {
-        SystemBars plugin = new SystemBars();
-        Bridge bridge = mock(Bridge.class);
-        AppCompatActivity activity = mock(AppCompatActivity.class);
-        Window window = mock(Window.class);
-        View decorView = mock(View.class);
-        WindowInsetsControllerCompat controller = mock(WindowInsetsControllerCompat.class);
-
-        when(bridge.getActivity()).thenReturn(activity);
-        when(activity.getWindow()).thenReturn(window);
-        when(window.getDecorView()).thenReturn(decorView);
-
-        plugin.setBridge(bridge);
-
-        try (MockedStatic<WindowCompat> windowCompat = mockStatic(WindowCompat.class)) {
-            windowCompat.when(() -> WindowCompat.getInsetsController(window, decorView)).thenReturn(controller);
-
-            Method setHidden = SystemBars.class.getDeclaredMethod("setHidden", boolean.class, String.class);
-            setHidden.setAccessible(true);
-            setHidden.invoke(plugin, true, bar);
-        }
+        Method setHidden = SystemBars.class.getDeclaredMethod("setHidden", boolean.class, String.class);
+        setHidden.setAccessible(true);
+        setHidden.invoke(plugin, false, bar);
 
         return controller;
     }

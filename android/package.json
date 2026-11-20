@@ -17,10 +17,14 @@
     "capacitor/lint-baseline.xml",
     "capacitor/lint.xml",
     "capacitor/proguard-rules.pro",
-    "capacitor/src/main/"
+    "capacitor/src/main/",
+    "capacitor-cordova/build.gradle",
+    "capacitor-cordova/proguard-rules.pro",
+    "capacitor-cordova/src/main/"
   ],
   "scripts": {
-    "verify": "./gradlew clean lint build test -b capacitor/build.gradle"
+    "verify": "./gradlew :capacitor-android:lint :capacitor-android:build :capacitor-android:test",
+    "verify:clean": "./gradlew :capacitor-android:clean :capacitor-android:lint :capacitor-android:build :capacitor-android:test"
   },
   "peerDependencies": {
     "@capacitor-plus/core": "^8.6.0",

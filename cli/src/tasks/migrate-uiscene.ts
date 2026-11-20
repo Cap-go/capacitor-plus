@@ -320,7 +320,8 @@ function patchAppDelegate(config: Config, snippet: string): { patched: boolean; 
 }
 
 function extractConfigurationForConnecting(appDelegateSource: string): string | null {
-  const sigRegex = /^ {4}func application\(_ application: UIApplication,\n {21}configurationForConnecting\b/m;
+  const sigRegex =
+    /^ {4}func application\s*\(\s*\n\s*_ application: UIApplication,\s*\n\s*configurationForConnecting\b/m;
   const sigMatch = appDelegateSource.match(sigRegex);
   if (!sigMatch || sigMatch.index === undefined) {
     return null;

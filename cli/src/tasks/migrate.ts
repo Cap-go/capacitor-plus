@@ -11,49 +11,18 @@ import { getMajoriOSVersion } from '../ios/common';
 import { logger, logPrompt, logSuccess } from '../log';
 import { deleteFolderRecursive } from '../util/fs';
 import { getBlockedInstallScripts, hasBlockedCapacitorScripts, logBlockedInstallScripts } from '../util/npm';
+import { ensureSPMGitignoreEntry } from '../util/spm';
 import { runCommand } from '../util/subprocess';
 import { extractTemplate } from '../util/template';
 
-import { migrateToUIScene } from './migrate-uiscene';
+import { removeDebugXcconfig } from './migrate-debug-xcconfig';
+import { migrateToEdgeToEdge } from './migrate-edge-to-edge';
+import { migrateToSwiftUI } from './migrate-swiftui';
+import { migrateToModernProject } from './migrate-to-modern-project';
 
-// eslint-disable-next-line prefer-const
 let allDependencies: { [key: string]: any } = {};
-const libs = [
-  '@capacitor-plus/core',
-  '@capacitor-plus/cli',
-  '@capacitor-plus/ios',
-  '@capacitor-plus/android',
-  '@capacitor/core',
-  '@capacitor/cli',
-  '@capacitor/ios',
-  '@capacitor/android',
-];
+const libs = ['@capacitor/core', '@capacitor/cli', '@capacitor/ios', '@capacitor/android'];
 const plugins = [
-  '@capacitor-plus/action-sheet',
-  '@capacitor-plus/app',
-  '@capacitor-plus/app-launcher',
-  '@capacitor-plus/browser',
-  '@capacitor-plus/camera',
-  '@capacitor-plus/clipboard',
-  '@capacitor-plus/device',
-  '@capacitor-plus/dialog',
-  '@capacitor-plus/filesystem',
-  '@capacitor-plus/geolocation',
-  '@capacitor-plus/google-maps',
-  '@capacitor-plus/haptics',
-  '@capacitor-plus/keyboard',
-  '@capacitor-plus/local-notifications',
-  '@capacitor-plus/motion',
-  '@capacitor-plus/network',
-  '@capacitor-plus/preferences',
-  '@capacitor-plus/push-notifications',
-  '@capacitor-plus/screen-orientation',
-  '@capacitor-plus/screen-reader',
-  '@capacitor-plus/share',
-  '@capacitor-plus/splash-screen',
-  '@capacitor-plus/status-bar',
-  '@capacitor-plus/text-zoom',
-  '@capacitor-plus/toast',
   '@capacitor/action-sheet',
   '@capacitor/app',
   '@capacitor/app-launcher',
@@ -80,30 +49,46 @@ const plugins = [
   '@capacitor/text-zoom',
   '@capacitor/toast',
 ];
-const coreVersion = '^8.0.0';
-const pluginVersion = '^8.0.0';
-const gradleVersion = '8.14.3';
-const iOSVersion = '15';
-const kotlinVersion = '2.2.20';
+const coreVersion = 'next';
+const pluginVersion = 'next';
+const gradleVersion = '9.8.2';
+const iOSVersion = '16';
+let installFailed = false;
+let scriptsBlocked = false;
+
+// AGP 9 changed the defaults of these properties and Android Studio's AGP Upgrade Assistant
+// writes them into gradle.properties as compatibility shims. Capacitor apps need none of them,
+// most are deprecated and will be removed in AGP 10, and some (android.builtInKotlin,
+// android.sdk.defaultTargetSdkToCompileSdkIfUnset) break a Capacitor 9 build.
+const agpMigrationAssistantProperties = [
+  'android.builtInKotlin',
+  'android.defaults.buildfeatures.resvalues',
+  'android.dependency.useConstraints',
+  'android.enableAppCompileTimeRClass',
+  'android.newDsl',
+  'android.r8.optimizedResourceShrinking',
+  'android.r8.strictFullModeForKeepRules',
+  'android.sdk.defaultTargetSdkToCompileSdkIfUnset',
+  'android.uniquePackageNames',
+  'android.usesSdkInManifest.disallowed',
+];
+
+const jcenterLine = /^jcenter\(\)\s*(\/\/.*)?$/;
 
 export async function migrateCommand(config: Config, noprompt: boolean, packagemanager: string): Promise<void> {
-  let installFailed = false;
-  let scriptsBlocked = false;
-  let scriptsUnverified = false;
-
   if (config === null) {
     fatal('Config data missing');
   }
 
   const capMajor = await checkCapacitorMajorVersion(config);
-  if (capMajor < 7) {
-    fatal('Migrate can only be used on Capacitor 7, please use the CLI in Capacitor 7 to upgrade to 7 first');
+  if (capMajor < 8) {
+    fatal('Migrate can only be used on Capacitor 8, please use the CLI in Capacitor 8 to upgrade to 8 first');
   }
 
   const jdkMajor = await checkJDKMajorVersion();
 
   if (jdkMajor < 21) {
-    logger.warn('Capacitor 8 requires JDK 21 or higher. Some steps may fail.');
+    logger.warn('Capacitor 9 requires JDK 21 or higher. Some steps may fail.');
   }
 
   const variablesAndClasspaths:
@@ -124,13 +109,13 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
   };
 
   const monorepoWarning =
-    'Please note this tool is not intended for use in a mono-repo environment, you should migrate manually instead. Refer to https://capacitorjs.com/docs/next/updating/8-0';
+    'Please note this tool is not intended for use in a mono-repo environment, you should migrate manually instead. Refer to https://capacitorjs.com/docs/next/updating/9-0';
 
   logger.info(monorepoWarning);
 
   const { migrateconfirm } = noprompt
     ? { migrateconfirm: 'y' }
-    : await logPrompt(`Capacitor 8 sets a deployment target of iOS ${iOSVersion} and Android 16 (SDK 36). \n`, {
+    : await logPrompt(`Capacitor 9 sets a deployment target of iOS ${iOSVersion} and Android 17 (SDK 37). \n`, {
         type: 'text',
         name: 'migrateconfirm',
         message: `Are you sure you want to migrate? (Y/n)`,
@@ -176,7 +161,7 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
         await runTask(`Installing Latest Modules using ${installerType}.`, () => {
           return installLatestLibs(installerType, runNpmInstall, config);
         });
-      } catch (ex) {
+      } catch {
         logger.error(
           `${installerType} install failed. Try deleting node_modules folder and running ${c.input(
             `${installerType} install --force`,
@@ -187,19 +172,14 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
 
       if (runNpmInstall && !installFailed) {
         const blocked = await getBlockedInstallScripts(config.app.rootDir, installerType);
-        if (blocked === null) {
-          scriptsUnverified = true;
-        } else if (blocked.length > 0) {
+        if (blocked && blocked.length > 0) {
           logBlockedInstallScripts(blocked);
           scriptsBlocked = hasBlockedCapacitorScripts(blocked);
         }
       }
 
       // Update iOS Projects
-      if (
-        (allDependencies['@capacitor-plus/ios'] || allDependencies['@capacitor/ios']) &&
-        existsSync(config.ios.platformDirAbs)
-      ) {
+      if (allDependencies['@capacitor/ios'] && existsSync(config.ios.platformDirAbs)) {
         const currentiOSVersion = getMajoriOSVersion(config);
         if (parseInt(currentiOSVersion) < parseInt(iOSVersion)) {
           // ios template changes
@@ -229,7 +209,25 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
           logger.warn('Skipped updating deployment target');
         }
 
-        await migrateToUIScene(config);
+        await runTask(`Migrating AppDelegate.swift`, () => {
+          return updateAppDelegate(join(config.ios.nativeTargetDirAbs, 'AppDelegate.swift'));
+        });
+
+        await runTask(`Removing debug.xcconfig.`, () => {
+          return removeDebugXcconfig(config);
+        });
+
+        await runTask(`Migrating to recommended project settings`, () => {
+          return migrateToModernProject(config);
+        });
+
+        await migrateToSwiftUI(config);
+
+        if ((await config.ios.packageManager) === 'SPM') {
+          await runTask('Ensuring Package.resolved is in CapApp-SPM/.gitignore.', () => {
+            return ensureSPMGitignoreEntry(config);
+          });
+        }
       }
 
       if (!installFailed) {
@@ -240,20 +238,72 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
         logger.warn('Skipped Running cap sync.');
       }
 
-      if (
-        (allDependencies['@capacitor-plus/android'] || allDependencies['@capacitor/android']) &&
-        existsSync(config.android.platformDirAbs)
-      ) {
+      if (allDependencies['@capacitor/android'] && existsSync(config.android.platformDirAbs)) {
         // AndroidManifest.xml add "density"
         await runTask(`Migrating AndroidManifest.xml by adding density to Activity configChanges.`, () => {
           return updateAndroidManifest(join(config.android.srcMainDirAbs, 'AndroidManifest.xml'));
         });
 
-        const gradleWrapperVersion = getGradleWrapperVersion(
-          join(config.android.platformDirAbs, 'gradle', 'wrapper', 'gradle-wrapper.properties'),
-        );
+        await runTask(`Migrating the main Activity to enable edge-to-edge.`, () => {
+          return migrateToEdgeToEdge(config);
+        });
 
-        if (!installFailed && gte(gradleVersion, gradleWrapperVersion)) {
+        const gradleWrapperPath = join(config.android.platformDirAbs, 'gradle', 'wrapper', 'gradle-wrapper.properties');
+
+        const gradleWrapperVersion = getGradleWrapperVersion(gradleWrapperPath);
+
+        const outdatedGradle = gte(gradleVersion, gradleWrapperVersion);
+
+        if (outdatedGradle) {
+          await runTask(`Updating gradle-wrapper.properties`, () => {
+            return updateFile(
+              config,
+              gradleWrapperPath,
+              'services.gradle.org/distributions/gradle-',
+              '.zip',
+              `${gradleVersion}-all`,
+            );
+          });
+        }
+
+        await runTask(`Migrating app build.gradle file.`, () => {
+          return updateAppBuildGradle(join(config.android.appDirAbs, 'build.gradle'));
+        });
+
+        // settings.gradle
+        await runTask(`Migrating settings.gradle file.`, () => {
+          return (async (): Promise<void> => {
+            const settingsPath = join(config.android.platformDirAbs, 'settings.gradle');
+            let txt = readFile(settingsPath);
+            if (!txt) {
+              return;
+            }
+            txt = txt.replace(`include ':capacitor-cordova-android-plugins'\n`, '');
+            txt = txt.replace(
+              `project(':capacitor-cordova-android-plugins').projectDir = new File('./capacitor-cordova-android-plugins/')\n`,
+              '',
+            );
+            writeFileSync(settingsPath, txt, { encoding: 'utf-8' });
+          })();
+        });
+
+        // gradle.properties
+        await runTask(`Migrating gradle.properties file.`, () => {
+          return updateGradleProperties(join(config.android.platformDirAbs, 'gradle.properties'));
+        });
+
+        // Gradle 9 removed jcenter(), so it has to go before the wrapper upgrade below or the
+        // wrapper task itself fails at the configuration phase once it runs on Gradle 9
+        await runTask(`Removing jcenter() from gradle files.`, () => {
+          return removeJCenter(config);
+        });
+
+        // The wrapper task below already runs on the new Gradle, which can't load AGP 8, so AGP goes first
+        await runTask(`Migrating root build.gradle file.`, () => {
+          return updateBuildGradle(join(config.android.platformDirAbs, 'build.gradle'), variablesAndClasspaths);
+        });
+
+        if (!installFailed && outdatedGradle) {
           try {
             await runTask(`Upgrading gradle wrapper`, () => {
               return updateGradleWrapperFiles(config.android.platformDirAbs);
@@ -272,19 +322,12 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
                 )} to update the files manually`,
               );
             } else {
-              logger.error(`gradle wrapper files were not updated`);
+              logger.error(`gradle wrapper files were not updated\n${e}`);
             }
           }
         } else {
           logger.warn('Skipped upgrading gradle wrapper files');
         }
-        await runTask(`Migrating root build.gradle file.`, () => {
-          return updateBuildGradle(join(config.android.platformDirAbs, 'build.gradle'), variablesAndClasspaths);
-        });
-
-        await runTask(`Migrating app build.gradle file.`, () => {
-          return updateAppBuildGradle(join(config.android.appDirAbs, 'build.gradle'));
-        });
 
         // Variables gradle
         await runTask(`Migrating variables.gradle file.`, () => {
@@ -295,6 +338,9 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
               return;
             }
             txt = txt.replace(/= {2}'/g, `= '`);
+            if (txt.includes('androidxCoreKTXVersion')) {
+              logger.warn(`androidxCoreKTXVersion might not be needed anymore, check your plugins`);
+            }
             writeFileSync(variablesPath, txt, { encoding: 'utf-8' });
             for (const variable of Object.keys(variablesAndClasspaths.variables)) {
               let replaceStart = `${variable} = '`;
@@ -335,16 +381,16 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
             }
             const pluginVariables: { [key: string]: string } = {
               firebaseMessagingVersion: '25.0.1',
-              playServicesLocationVersion: '21.3.0',
-              androidxBrowserVersion: '1.9.0',
-              androidxMaterialVersion: '1.13.0',
-              androidxExifInterfaceVersion: '1.4.1',
-              androidxCoreKTXVersion: '1.17.0',
-              googleMapsPlayServicesVersion: '19.2.0',
-              googleMapsUtilsVersion: '3.19.1',
-              googleMapsKtxVersion: '5.2.1',
-              googleMapsUtilsKtxVersion: '5.2.1',
-              kotlinxCoroutinesVersion: '1.10.2',
+              playServicesLocationVersion: '21.4.0',
+              androidxBrowserVersion: '1.10.0',
+              androidxCoreKTXVersion: '1.19.1',
+              androidxMaterialVersion: '1.14.0',
+              androidxExifInterfaceVersion: '1.4.2',
+              googleMapsPlayServicesVersion: '20.1.0',
+              googleMapsUtilsVersion: '5.0.0',
+              googleMapsKtxVersion: '6.0.1',
+              googleMapsUtilsKtxVersion: '6.0.1',
+              kotlinxCoroutinesVersion: '1.11.0',
               coreSplashScreenVersion: '1.2.0',
             };
             for (const variable of Object.keys(pluginVariables)) {
@@ -361,7 +407,7 @@ export async function migrateCommand(config: Config, noprompt: boolean, packagem
         return writeBreakingChanges();
       });
 
-      if (!installFailed && !scriptsBlocked && !scriptsUnverified) {
+      if (!installFailed && !scriptsBlocked) {
         logSuccess(`Migration to Capacitor ${coreVersion} is complete. Run and test your app!`);
       } else if (scriptsBlocked) {
         logger.warn(
@@ -400,14 +446,23 @@ async function installLatestLibs(dependencyManager: string, runInstall: boolean,
   for (const devDepKey of Object.keys(pkgJson['devDependencies'] || {})) {
     if (libs.includes(devDepKey)) {
       pkgJson['devDependencies'][devDepKey] = coreVersion;
-    } else if (plugins.includes(devDepKey)) {
+    } else if (
+      plugins.includes(devDepKey) &&
+      !(
+        pkgJson['devDependencies'][devDepKey].startsWith('file:') ||
+        pkgJson['devDependencies'][devDepKey].startsWith('workspace:')
+      )
+    ) {
       pkgJson['devDependencies'][devDepKey] = pluginVersion;
     }
   }
   for (const depKey of Object.keys(pkgJson['dependencies'] || {})) {
     if (libs.includes(depKey)) {
       pkgJson['dependencies'][depKey] = coreVersion;
-    } else if (plugins.includes(depKey)) {
+    } else if (
+      plugins.includes(depKey) &&
+      !(pkgJson['dependencies'][depKey].startsWith('file:') || pkgJson['dependencies'][depKey].startsWith('workspace:'))
+    ) {
       pkgJson['dependencies'][depKey] = pluginVersion;
     }
   }
@@ -417,7 +472,6 @@ async function installLatestLibs(dependencyManager: string, runInstall: boolean,
   });
 
   if (runInstall) {
-    rimraf.sync(join(config.app.rootDir, 'node_modules/@capacitor-plus/!(cli)'));
     rimraf.sync(join(config.app.rootDir, 'node_modules/@capacitor/!(cli)'));
     await runCommand(dependencyManager, ['install']);
     if (dependencyManager == 'yarn') {
@@ -426,32 +480,21 @@ async function installLatestLibs(dependencyManager: string, runInstall: boolean,
       await runCommand(dependencyManager, ['update']);
     }
   } else {
-    logger.info(`Please run an install command with your package manager of choice. (ex: yarn add)`);
+    logger.info(`Please run an install command with your package manager of choice. (ex: yarn install)`);
   }
 }
 
 async function writeBreakingChanges() {
   const breaking = [
-    '@capacitor-plus/action-sheet',
-    '@capacitor-plus/barcode-scanner',
-    '@capacitor-plus/browser',
-    '@capacitor-plus/camera',
-    '@capacitor-plus/geolocation',
-    '@capacitor-plus/google-maps',
-    '@capacitor-plus/push-notifications',
-    '@capacitor-plus/screen-orientation',
-    '@capacitor-plus/splash-screen',
-    '@capacitor-plus/status-bar',
     '@capacitor/action-sheet',
     '@capacitor/barcode-scanner',
     '@capacitor/browser',
     '@capacitor/camera',
     '@capacitor/geolocation',
     '@capacitor/google-maps',
+    '@capacitor/inappbrowser',
     '@capacitor/push-notifications',
-    '@capacitor/screen-orientation',
     '@capacitor/splash-screen',
-    '@capacitor/status-bar',
   ];
   const broken = [];
   for (const lib of breaking) {
@@ -461,15 +504,22 @@ async function writeBreakingChanges() {
   }
   if (broken.length > 0) {
     logger.info(
-      `IMPORTANT: Review https://capacitorjs.com/docs/next/updating/8-0#plugins for breaking changes in these plugins that you use: ${broken.join(
+      `IMPORTANT: Review https://capacitorjs.com/docs/next/updating/9-0#plugins for breaking changes in these plugins that you use: ${broken.join(
         ', ',
       )}.`,
     );
   }
-  if (allDependencies['@capacitor/ios'] || allDependencies['@capacitor-plus/ios']) {
+  if (allDependencies['@capacitor/android']) {
     logger.info(
-      'IMPORTANT: Capacitor 8.5 adopts UIScene on iOS. ' +
-        'See https://capacitorjs.com/docs/updating/8-5 for the full 8.4 → 8.5 migration guide.',
+      `IMPORTANT: The SystemBars 'insetsHandling' option now defaults to 'native' instead of 'css'. ` +
+        `If your app reads the '--safe-area-inset-*' CSS variables that Capacitor injected, ` +
+        `set 'plugins.SystemBars.insetsHandling' to 'css' in your Capacitor configuration file.`,
+    );
+  }
+  if (allDependencies['@capacitor/ios']) {
+    logger.info(
+      'IMPORTANT: Capacitor 9.0 boots iOS apps from a SwiftUI App struct with UIScene. ' +
+        'See https://capacitorjs.com/docs/next/updating/9-0 for the full migration guide.',
     );
   }
 }
@@ -529,7 +579,7 @@ function getGradleWrapperVersion(filename: string): string {
   if (!txt) {
     return '0.0.0';
   }
-  const version = txt.substring(txt.indexOf('gradle-') + 7, txt.indexOf('-all.zip'));
+  const version = txt.substring(txt.indexOf('gradle-') + 7, txt.indexOf('.zip', txt.indexOf('gradle-')));
   const semverVersion = coerce(version)?.version;
   return semverVersion ? semverVersion : '0.0.0';
 }
@@ -573,41 +623,108 @@ async function updateBuildGradle(
     }
   }
 
-  const beforeKotlinVersionUpdate = replaced;
-  replaced = replaceVersion(replaced, /(ext\.kotlin_version\s*=\s*['"])([^'"]+)(['"])/, kotlinVersion);
-  replaced = replaceVersion(replaced, /(org\.jetbrains\.kotlin:kotlin[^:]*:)([\d.]+)(['"])/, kotlinVersion);
-  if (beforeKotlinVersionUpdate !== replaced) {
-    logger.info(`Set Kotlin version to ${kotlinVersion}`);
-  }
   writeFileSync(filename, replaced, 'utf-8');
 }
 
-function replaceVersion(text: string, regex: RegExp, newVersion: string): string {
-  return text.replace(regex, (match, prefix, currentVersion, suffix) => {
-    const semVer = coerce(currentVersion)?.version;
-    if (gte(newVersion, semVer ? semVer : '0.0.0')) {
-      return `${prefix || ''}${newVersion}${suffix || ''}`;
-    }
-    return match;
-  });
-}
-
-async function updateAppBuildGradle(filename: string) {
+async function updateAppBuildGradle(filename: string): Promise<void> {
   const txt = readFile(filename);
   if (!txt) {
     return;
   }
   let replaced = txt;
 
-  const gradlePproperties = ['compileSdk', 'namespace', 'ignoreAssetsPattern'];
-  for (const prop of gradlePproperties) {
-    // Use updated Groovy DSL syntax with " = " assignment
-    const regex = new RegExp(`(^\\s*${prop})\\s+(?!=)(.+)$`, 'gm');
-    replaced = replaced.replace(regex, (_match, key, value) => {
-      return `${key} = ${value.trim()}`;
-    });
+  replaced = replaced.replace(`proguard-android.txt`, `proguard-android-optimize.txt`);
+  const releaseMinify = /(\brelease\s*\{[^}]*?minifyEnabled\s+)(true|false)/;
+  if (releaseMinify.test(replaced)) {
+    replaced = replaced.replace(releaseMinify, '$1true');
+  } else {
+    logger.warn(`Unable to set minifyEnabled true in the release block of ${filename}. Set it manually to turn on R8.`);
   }
+  replaced = replaced.replace('        targetSdkVersion rootProject.ext.targetSdkVersion\n', '');
+  replaced = replaced.replace(`    implementation project(':capacitor-cordova-android-plugins')\n`, '');
+  replaced = replaced.replace(
+    `repositories {
+    flatDir{
+        dirs '../capacitor-cordova-android-plugins/src/main/libs', 'libs'
+    }
+}
+
+`,
+    '',
+  );
+
+  if (!replaced.includes('def androidxAppCompatVersion = rootProject.ext.androidxAppCompatVersion')) {
+    replaced = replaced.replace(
+      `apply plugin: 'com.android.application'\n\n`,
+      `apply plugin: 'com.android.application'
+
+def androidxAppCompatVersion = rootProject.ext.androidxAppCompatVersion
+def androidxCoordinatorLayoutVersion = rootProject.ext.androidxCoordinatorLayoutVersion
+def coreSplashScreenVersion = rootProject.ext.coreSplashScreenVersion
+def junitVersion = rootProject.ext.junitVersion
+def androidxJunitVersion = rootProject.ext.androidxJunitVersion
+def androidxEspressoCoreVersion = rootProject.ext.androidxEspressoCoreVersion
+
+`,
+    );
+  }
+
   writeFileSync(filename, replaced, 'utf-8');
+}
+
+async function updateGradleProperties(filename: string): Promise<void> {
+  const txt = readFile(filename);
+  if (!txt) {
+    return;
+  }
+
+  const replaced = removeAGPMigrationProperties(txt);
+  if (replaced !== txt) {
+    writeFileSync(filename, replaced, 'utf-8');
+  }
+}
+
+function removeAGPMigrationProperties(txt: string): string {
+  return txt
+    .split('\n')
+    .filter((line) => {
+      const property = line.split('=')[0].trim();
+      if (!agpMigrationAssistantProperties.includes(property)) {
+        return true;
+      }
+      logger.info(`Removed ${property} from gradle.properties.`);
+      return false;
+    })
+    .join('\n');
+}
+
+async function removeJCenter(config: Config): Promise<void> {
+  // jcenter() has only ever been in the root build.gradle of our templates, never in app/build.gradle
+  const filename = join(config.android.platformDirAbs, 'build.gradle');
+  const txt = readFile(filename);
+  if (!txt) {
+    return;
+  }
+
+  const replaced = removeJCenterFromGradleFile(txt);
+  if (replaced !== txt) {
+    writeFileSync(filename, replaced, 'utf-8');
+  }
+}
+
+// mavenCentral() is not added back: it has been in the template since Capacitor 4 and the
+// 3 to 4 migrator always added it, so every app is assumed to declare it already
+function removeJCenterFromGradleFile(txt: string): string {
+  return txt
+    .split('\n')
+    .filter((line) => {
+      if (!jcenterLine.test(line.trim())) {
+        return true;
+      }
+      logger.info(`Removed jcenter().`);
+      return false;
+    })
+    .join('\n');
 }
 
 async function updateFile(
@@ -703,3 +820,29 @@ async function updateAndroidManifest(filename: string) {
     writeFileSync(filename, replaced, 'utf-8');
   }
 }
+
+async function updateAppDelegate(filename: string) {
+  const txt = readFile(filename);
+  if (!txt) {
+    return;
+  }
+
+  if (txt.includes('@main')) {
+    return; // Probably already updated
+  }
+  const replaced = txt.replace('@UIApplicationMain', '@main');
+  if (!replaced.includes('@main')) {
+    logger.error(`Unable to replace @UIApplicationMain to @main in ${filename}. Try replacing it manually`);
+  } else {
+    writeFileSync(filename, replaced, 'utf-8');
+  }
+}
+
+export const __testables = {
+  agpMigrationAssistantProperties,
+  removeAGPMigrationProperties,
+  removeJCenter,
+  removeJCenterFromGradleFile,
+  updateAppBuildGradle,
+  updateGradleProperties,
+};

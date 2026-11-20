@@ -68,7 +68,6 @@ public class MessageHandlerTest {
                 new MessageHandler(
                     bridge,
                     webView,
-                    null,
                     new MessageHandler.WebMessagePolicy(scopedRules, (origin) -> TRUSTED_ORIGIN.equals(origin.toString()))
                 ) {
                     @Override
@@ -120,7 +119,6 @@ public class MessageHandlerTest {
                 MessageHandler handler = new MessageHandler(
                     bridge,
                     webView,
-                    null,
                     new MessageHandler.WebMessagePolicy(Collections.singleton(TRUSTED_ORIGIN), (origin) -> true)
                 );
                 handler.sendResponseMessage(call, new PluginResult(), null);
@@ -153,7 +151,6 @@ public class MessageHandlerTest {
                 new MessageHandler(
                     bridge,
                     webView,
-                    null,
                     new MessageHandler.WebMessagePolicy(scopedRules, (origin) -> TRUSTED_ORIGIN.equals(origin.toString()))
                 );
 
@@ -176,11 +173,38 @@ public class MessageHandlerTest {
             ) {
                 webViewFeature.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)).thenReturn(true);
 
-                new MessageHandler(bridge, webView, null, new MessageHandler.WebMessagePolicy(Collections.emptySet(), (origin) -> false));
+                new MessageHandler(bridge, webView, new MessageHandler.WebMessagePolicy(Collections.emptySet(), (origin) -> false));
 
                 webViewCompat.verifyNoInteractions();
                 verify(webView, never()).addJavascriptInterface(any(), anyString());
             }
+        }
+    }
+
+    @Test
+    public void unscopedRegistrationUsesBridgeAllowedOriginRules() {
+        WebView webView = mock(WebView.class);
+        Bridge bridge = mock(Bridge.class);
+        CapConfig config = mock(CapConfig.class);
+        Set<String> rules = new LinkedHashSet<>();
+        rules.add("https://localhost");
+        rules.add("https://auth.example.com");
+
+        when(bridge.getAllowedOriginRules()).thenReturn(rules);
+        when(bridge.getConfig()).thenReturn(config);
+        when(config.isUsingLegacyBridge()).thenReturn(false);
+
+        try (
+            MockedStatic<WebViewFeature> webViewFeature = mockStatic(WebViewFeature.class);
+            MockedStatic<WebViewCompat> webViewCompat = mockStatic(WebViewCompat.class);
+            MockedStatic<Logger> logger = mockStatic(Logger.class)
+        ) {
+            webViewFeature.when(() -> WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)).thenReturn(true);
+
+            new MessageHandler(bridge, webView);
+
+            webViewCompat.verify(() -> WebViewCompat.addWebMessageListener(eq(webView), eq("androidBridge"), eq(rules), any()));
+            verify(webView, never()).addJavascriptInterface(any(), anyString());
         }
     }
 

@@ -11,7 +11,6 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
-import org.apache.cordova.PluginManager;
 
 /**
  * MessageHandler handles messages from the WebView, dispatching them
@@ -19,11 +18,10 @@ import org.apache.cordova.PluginManager;
  */
 public class MessageHandler {
 
-    private Bridge bridge;
-    private WebView webView;
-    private PluginManager cordovaPluginManager;
-    private JavaScriptReplyProxy javaScriptReplyProxy;
-    private final boolean scopedWebMessages;
+    @FunctionalInterface
+    public interface Interceptor {
+        void intercept(JSObject object);
+    }
 
     public static final class WebMessagePolicy {
 
@@ -44,14 +42,18 @@ public class MessageHandler {
         }
     }
 
-    public MessageHandler(Bridge bridge, WebView webView, PluginManager cordovaPluginManager) {
-        this(bridge, webView, cordovaPluginManager, null);
+    private Bridge bridge;
+    private WebView webView;
+    private JavaScriptReplyProxy javaScriptReplyProxy;
+    private final boolean scopedWebMessages;
+
+    public MessageHandler(Bridge bridge, WebView webView) {
+        this(bridge, webView, null);
     }
 
-    MessageHandler(Bridge bridge, WebView webView, PluginManager cordovaPluginManager, WebMessagePolicy policy) {
+    MessageHandler(Bridge bridge, WebView webView, WebMessagePolicy policy) {
         this.bridge = bridge;
         this.webView = webView;
-        this.cordovaPluginManager = cordovaPluginManager;
         this.scopedWebMessages = policy != null;
 
         Set<String> originRules = scopedWebMessages ? policy.originRules() : bridge.getAllowedOriginRules();
@@ -81,20 +83,13 @@ public class MessageHandler {
                     Logger.error("Unable to register scoped Android bridge", ex);
                     return;
                 }
+                webView.addJavascriptInterface(this, "androidBridge");
             }
-        }
-
-        // The legacy interface has no way to identify the caller's frame or origin.
-        if (scopedWebMessages) {
+        } else if (scopedWebMessages) {
             Logger.warn("Scoped Android bridge unavailable on this WebView");
         } else {
             webView.addJavascriptInterface(this, "androidBridge");
         }
-    }
-
-    void onModernBridgeMessage(String data, JavaScriptReplyProxy replyProxy) {
-        javaScriptReplyProxy = replyProxy;
-        postMessage(data);
     }
 
     /**
@@ -110,43 +105,11 @@ public class MessageHandler {
 
             String type = postData.getString("type");
 
-            boolean typeIsNotNull = type != null;
-            boolean isCordovaPlugin = typeIsNotNull && type.equals("cordova");
-            boolean isJavaScriptError = typeIsNotNull && type.equals("js.error");
+            if (type == null) type = "message";
 
-            String callbackId = postData.getString("callbackId");
-
-            if (isCordovaPlugin) {
-                String service = postData.getString("service");
-                String action = postData.getString("action");
-                String actionArgs = postData.getString("actionArgs");
-
-                Logger.verbose(
-                    Logger.tags("Plugin"),
-                    "To native (Cordova plugin): callbackId: " +
-                        callbackId +
-                        ", service: " +
-                        service +
-                        ", action: " +
-                        action +
-                        ", actionArgs: " +
-                        actionArgs
-                );
-
-                this.callCordovaPluginMethod(callbackId, service, action, actionArgs);
-            } else if (isJavaScriptError) {
-                Logger.error("JavaScript Error: " + jsonStr);
-            } else {
-                String pluginId = postData.getString("pluginId");
-                String methodName = postData.getString("methodName");
-                JSObject methodData = postData.getJSObject("options", new JSObject());
-
-                Logger.verbose(
-                    Logger.tags("Plugin"),
-                    "To native (Capacitor plugin): callbackId: " + callbackId + ", pluginId: " + pluginId + ", methodName: " + methodName
-                );
-
-                this.callPluginMethod(callbackId, pluginId, methodName, methodData);
+            Interceptor interceptor = bridge.getCallInterceptor(type);
+            if (interceptor != null) {
+                interceptor.intercept(postData);
             }
         } catch (Exception ex) {
             Logger.error("Post message error:", ex);
@@ -197,16 +160,5 @@ public class MessageHandler {
         final String runScript = "window.Capacitor.fromNative(" + data.toString() + ")";
         final WebView webView = this.webView;
         webView.post(() -> webView.evaluateJavascript(runScript, null));
-    }
-
-    private void callPluginMethod(String callbackId, String pluginId, String methodName, JSObject methodData) {
-        PluginCall call = new PluginCall(this, pluginId, callbackId, methodName, methodData);
-        bridge.callPluginMethod(pluginId, methodName, call);
-    }
-
-    private void callCordovaPluginMethod(String callbackId, String service, String action, String actionArgs) {
-        bridge.execute(() -> {
-            cordovaPluginManager.exec(service, action, callbackId, actionArgs);
-        });
     }
 }
