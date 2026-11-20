@@ -6,6 +6,7 @@ import UniformTypeIdentifiers
 open class WebViewAssetHandler: NSObject, WKURLSchemeHandler {
     private var router: Router
     private var serverUrl: URL?
+    private var configuration: InstanceConfiguration?
     private var routeWithFallback: Bool = false
 
     public init(router: Router) {
