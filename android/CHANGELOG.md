@@ -15,10 +15,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 * **android:** allow scoping WebView bridge origin policy ([#235](https://github.com/Cap-go/capacitor-plus/issues/235)) ([bf662fe](https://github.com/Cap-go/capacitor-plus/commit/bf662fe75f96141f4927a501ac552ede7a2342ec))
 
-
-
-
-
 ## [8.6.5](https://github.com/Cap-go/capacitor-plus/compare/8.6.4...8.6.5) (2026-11-11)
 
 
@@ -26,25 +22,13 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 
 * **sync:** cherry-pick upstream PRs instead of merging their branches ([#243](https://github.com/Cap-go/capacitor-plus/issues/243)) ([a2d646e](https://github.com/Cap-go/capacitor-plus/commit/a2d646ed19ae21cc9fa080ff6f6b1276a6dd7548)), closes [#223](https://github.com/Cap-go/capacitor-plus/issues/223) [#223](https://github.com/Cap-go/capacitor-plus/issues/223) [#223](https://github.com/Cap-go/capacitor-plus/issues/223) [#8692](https://github.com/Cap-go/capacitor-plus/issues/8692) [#8692](https://github.com/Cap-go/capacitor-plus/issues/8692) [#8692](https://github.com/Cap-go/capacitor-plus/issues/8692)
 
-
-
-
-
 ## [8.6.4](https://github.com/Cap-go/capacitor-plus/compare/8.6.3...8.6.4) (2026-11-11)
 
 **Note:** Version bump only for package @capacitor-plus/android
 
-
-
-
-
 ## [8.6.3](https://github.com/Cap-go/capacitor-plus/compare/8.6.2...8.6.3) (2026-11-10)
 
 **Note:** Version bump only for package @capacitor-plus/android
-
-
-
-
 
 ## [8.6.2](https://github.com/Cap-go/capacitor-plus/compare/8.6.1...8.6.2) (2026-11-10)
 
@@ -52,10 +36,6 @@ See [Conventional Commits](https://conventionalcommits.org) for commit guideline
 ### Bug Fixes
 
 * **android:** keep plugin annotation types from R8 full mode ([#229](https://github.com/Cap-go/capacitor-plus/issues/229)) ([54d3d89](https://github.com/Cap-go/capacitor-plus/commit/54d3d896d4b4e1e7c8ae30e8b4c0537d9660eb48))
-
-
-
-
 
 ## [8.6.1](https://github.com/Cap-go/capacitor-plus/compare/8.5.3...8.6.1) (2026-11-05)
 
