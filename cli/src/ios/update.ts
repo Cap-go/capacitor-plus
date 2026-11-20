@@ -1,33 +1,34 @@
-import { copy, remove, pathExists, readFile, realpath, writeFile } from 'fs-extra';
+import { pathExists, readFile, realpath, writeFile } from 'fs-extra';
 import { basename, dirname, join, relative } from 'path';
 import { major, prerelease, valid } from 'semver';
 
 import c from '../colors';
 import { checkPlatformVersions, getCapacitorPackageVersion, runTask } from '../common';
-import { checkPluginDependencies, handleCordovaPluginsJS, logCordovaManualSteps, needsStaticPod } from '../cordova';
+import { checkPluginDependencies, handleCordovaPluginsJS, logCordovaManualSteps } from '../cordova';
 import type { Config } from '../definitions';
 import { fatal } from '../errors';
 import { logger } from '../log';
 import type { Plugin } from '../plugin';
-import {
-  PluginType,
-  getAllElements,
-  getFilePath,
-  getPlatformElement,
-  getPluginPlatform,
-  getPluginType,
-  getPlugins,
-  printPlugins,
-  resolvePlugin,
-} from '../plugin';
+import { PluginType, getPluginType, getPlugins, printPlugins } from '../plugin';
 import { copy as copyTask } from '../tasks/copy';
-import { setAllStringIn } from '../tasks/migrate';
+import {
+  findCapacitorDependencyVersion,
+  patchPackageSwiftDeploymentTarget,
+  resolveCapacitorPackagePath,
+  rewriteCapacitorDependency,
+} from '../util/capacitor-package';
+import {
+  generateCordovaPodspecs,
+  generateCordovaPackageFiles,
+  copyPluginsNativeFiles,
+  removePluginsNativeFiles,
+  cordovaPodfileLines,
+} from '../util/cordova-ios';
 import { convertToUnixPath } from '../util/fs';
 import { generateIOSPackageJSON } from '../util/iosplugin';
 import { resolveNode } from '../util/node';
 import { generatePackageFile, checkPluginsForPackageSwift } from '../util/spm';
 import { runCommand, isInstalled } from '../util/subprocess';
-import { extractTemplate } from '../util/template';
 
 import { getIOSPlugins, getMajoriOSVersion } from './common';
 
@@ -47,16 +48,26 @@ export async function updateIOS(config: Config, deployment: boolean): Promise<vo
 async function updatePluginFiles(config: Config, plugins: Plugin[], deployment: boolean) {
   await removePluginsNativeFiles(config);
   const cordovaPlugins = plugins.filter((p) => getPluginType(p, platform) === PluginType.Cordova);
-  if (cordovaPlugins.length > 0) {
+  const enableCordova = cordovaPlugins.length > 0 || config.app.forceCordova;
+
+  if (enableCordova) {
+    logger.info('Found Cordova Plugins: Including iOS Cordova Support');
+    if (config.app.forceCordova) {
+      logger.info('Cordova support installation has been forced');
+    }
     await copyPluginsNativeFiles(config, cordovaPlugins);
   }
+
   if (!(await pathExists(await config.ios.webDirAbs))) {
     await copyTask(config, platform);
   }
+
   await handleCordovaPluginsJS(cordovaPlugins, config, platform);
   await checkPluginDependencies(plugins, platform, config.app.extConfig.cordova?.failOnUninstalledPlugins);
   if ((await config.ios.packageManager) === 'SPM') {
-    await generateCordovaPackageFiles(cordovaPlugins, config);
+    if (enableCordova) {
+      await generateCordovaPackageFiles(cordovaPlugins, config);
+    }
 
     const validSPMPackages = await checkPluginsForPackageSwift(config, plugins);
     await generatePackageFile(config, validSPMPackages.concat(cordovaPlugins));
@@ -101,8 +112,25 @@ async function updatePluginFiles(config: Config, plugins: Plugin[], deployment: 
       }
     }
   } else {
+    await installCocoaPodsPlugins(config, plugins, deployment, enableCordova);
+  }
+
+  if (enableCordova) {
+    await logCordovaManualSteps(cordovaPlugins, config, platform);
+    const incompatibleCordovaPlugins = plugins.filter((p) => getPluginType(p, platform) === PluginType.Incompatible);
+    printPlugins(incompatibleCordovaPlugins, platform, 'incompatible');
+  }
+}
+
+export async function installCocoaPodsPlugins(
+  config: Config,
+  plugins: Plugin[],
+  deployment: boolean,
+  enableCordova: boolean,
+): Promise<void> {
+  if (enableCordova) {
+    const cordovaPlugins = plugins.filter((p) => getPluginType(p, platform) === PluginType.Cordova);
     await generateCordovaPodspecs(cordovaPlugins, config);
-    await installCocoaPodsPlugins(config, plugins, deployment);
   }
   await logCordovaManualSteps(cordovaPlugins, config, platform);
 
@@ -330,18 +358,23 @@ let package = Package(
 
 export async function installCocoaPodsPlugins(config: Config, plugins: Plugin[], deployment: boolean): Promise<void> {
   await runTask(`Updating iOS native dependencies with ${c.input(`${await config.ios.podPath} install`)}`, () => {
-    return updatePodfile(config, plugins, deployment);
+    return updatePodfile(config, plugins, deployment, enableCordova);
   });
 }
 
-async function updatePodfile(config: Config, plugins: Plugin[], deployment: boolean): Promise<void> {
-  const dependenciesContent = await generatePodFile(config, plugins);
+async function updatePodfile(
+  config: Config,
+  plugins: Plugin[],
+  deployment: boolean,
+  enableCordova: boolean,
+): Promise<void> {
+  const dependenciesContent = await generatePodFile(config, plugins, enableCordova);
   const relativeCapacitoriOSPath = await getRelativeCapacitoriOSPath(config);
   const podfilePath = join(config.ios.nativeProjectDirAbs, 'Podfile');
   let podfileContent = await readFile(podfilePath, { encoding: 'utf-8' });
   podfileContent = podfileContent.replace(/(def capacitor_pods)[\s\S]+?(\nend)/, `$1${dependenciesContent}$2`);
   podfileContent = podfileContent.replace(
-    /(require_relative)[\s\S]+?(@capacitor\/ios\/scripts\/pods_helpers')/,
+    /(require_relative)[\s\S]+?(ios\/scripts\/pods_helpers')/,
     `require_relative '${relativeCapacitoriOSPath}/scripts/pods_helpers'`,
   );
   await writeFile(podfilePath, podfileContent, { encoding: 'utf-8' });
@@ -388,10 +421,12 @@ async function getRelativeCapacitoriOSPath(config: Config) {
   return convertToUnixPath(relative(config.ios.nativeProjectDirAbs, await realpath(dirname(capacitoriOSPath))));
 }
 
-async function generatePodFile(config: Config, plugins: Plugin[]): Promise<string> {
+async function generatePodFile(config: Config, plugins: Plugin[], enableCordova: boolean): Promise<string> {
   const relativeCapacitoriOSPath = await getRelativeCapacitoriOSPath(config);
 
   const capacitorPlugins = plugins.filter((p) => getPluginType(p, platform) === PluginType.Core);
+  const cordovaPodlines = cordovaPodfileLines(config, plugins);
+
   const pods = await Promise.all(
     capacitorPlugins.map(async (p) => {
       if (!p.ios) {
@@ -403,58 +438,14 @@ async function generatePodFile(config: Config, plugins: Plugin[]): Promise<strin
       )}'\n`;
     }),
   );
-  const cordovaPlugins = plugins.filter((p) => getPluginType(p, platform) === PluginType.Cordova);
-  cordovaPlugins.map(async (p) => {
-    const podspecs = getPlatformElement(p, platform, 'podspec');
-    podspecs.map((podspec: any) => {
-      podspec.pods.map((pPods: any) => {
-        pPods.pod.map((pod: any) => {
-          if (pod.$.git) {
-            let gitRef = '';
-            if (pod.$.tag) {
-              gitRef = `, :tag => '${pod.$.tag}'`;
-            } else if (pod.$.branch) {
-              gitRef = `, :branch => '${pod.$.branch}'`;
-            } else if (pod.$.commit) {
-              gitRef = `, :commit => '${pod.$.commit}'`;
-            }
-            pods.push(`  pod '${pod.$.name}', :git => '${pod.$.git}'${gitRef}\n`);
-          }
-        });
-      });
-    });
-  });
-  const staticPlugins = cordovaPlugins.filter((p) => needsStaticPod(p));
-  const noStaticPlugins = cordovaPlugins.filter((el) => !staticPlugins.includes(el));
-  if (noStaticPlugins.length > 0) {
-    pods.push(`  pod 'CordovaPlugins', :path => '../capacitor-cordova-ios-plugins'\n`);
-  }
-  if (staticPlugins.length > 0) {
-    pods.push(`  pod 'CordovaPluginsStatic', :path => '../capacitor-cordova-ios-plugins'\n`);
-  }
-  const resourcesPlugins = cordovaPlugins.filter(filterResources);
-  if (resourcesPlugins.length > 0) {
-    pods.push(`  pod 'CordovaPluginsResources', :path => '../capacitor-cordova-ios-plugins'\n`);
-  }
-  return `
-  pod 'Capacitor', :path => '${relativeCapacitoriOSPath}'
-  pod 'CapacitorCordova', :path => '${relativeCapacitoriOSPath}'
-${pods.join('').trimRight()}`;
-}
 
-function getFrameworkName(framework: any) {
-  if (isFramework(framework)) {
-    if (framework.$.custom && framework.$.custom === 'true') {
-      return framework.$.src;
-    }
-    return framework.$.src.substr(0, framework.$.src.indexOf('.'));
-  }
-  return framework.$.src.substr(0, framework.$.src.indexOf('.')).replace('lib', '');
-}
+  let podfileString = '\n';
+  podfileString += `  pod 'Capacitor', :path => '${relativeCapacitoriOSPath}'\n`;
 
-function isFramework(framework: any) {
-  return framework.$.src.split('.').pop().includes('framework');
-}
+  if (enableCordova) {
+    podfileString += `  pod 'CapacitorCordova', :path => '${relativeCapacitoriOSPath}'\n`;
+    podfileString += cordovaPodlines.join('').trimEnd() + '\n';
+  }
 
 async function generateCordovaPodspecs(cordovaPlugins: Plugin[], config: Config) {
   const staticPlugins = cordovaPlugins.filter((p) => needsStaticPod(p));
@@ -736,14 +727,4 @@ async function getPluginsTask(config: Config) {
     const iosPlugins = await getIOSPlugins(allPlugins);
     return iosPlugins;
   });
-}
-
-async function replaceFrameworkVariables(config: Config, prefsArray: any[], frameworkString: string) {
-  prefsArray.map((preference: any) => {
-    frameworkString = frameworkString.replace(
-      new RegExp(('$' + preference.$.name).replace('$', '\\$&'), 'g'),
-      preference.$.default,
-    );
-  });
-  return frameworkString;
 }
