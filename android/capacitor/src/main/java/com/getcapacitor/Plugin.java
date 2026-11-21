@@ -542,7 +542,7 @@ public class Plugin {
             return;
         }
 
-        CopyOnWriteArrayList<PluginCall> listenersCopy = new CopyOnWriteArrayList(listeners);
+        CopyOnWriteArrayList<PluginCall> listenersCopy = new CopyOnWriteArrayList<>(listeners);
         for (PluginCall call : listenersCopy) {
             call.resolve(data);
         }
