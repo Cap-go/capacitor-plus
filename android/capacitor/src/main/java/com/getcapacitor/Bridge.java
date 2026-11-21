@@ -114,6 +114,10 @@ public class Bridge {
     private Boolean canInjectJS = true;
     // A reference to the main WebView for the app
     private final WebView webView;
+    private volatile boolean webViewDestroyed = false;
+    public final MockCordovaInterfaceImpl cordovaInterface;
+    private CordovaWebView cordovaWebView;
+    private CordovaPreferences preferences;
     private BridgeWebViewClient webViewClient;
     private App app;
 
@@ -814,7 +818,11 @@ public class Bridge {
      */
     public void eval(final String js, final ValueCallback<String> callback) {
         Handler mainHandler = new Handler(context.getMainLooper());
-        mainHandler.post(() -> webView.evaluateJavascript(js, callback));
+        mainHandler.post(() -> {
+            if (!webViewDestroyed) {
+                webView.evaluateJavascript(js, callback);
+            }
+        });
     }
 
     public void logToJs(final String message, final String level) {
@@ -1306,6 +1314,7 @@ public class Bridge {
      * Handle onDetachedFromWindow lifecycle event
      */
     public void onDetachedFromWindow() {
+        webViewDestroyed = true;
         webView.removeAllViews();
         webView.destroy();
     }
