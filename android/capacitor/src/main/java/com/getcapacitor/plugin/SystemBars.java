@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.os.Build;
 import android.util.TypedValue;
 import android.view.View;
 import android.view.Window;
@@ -41,17 +40,17 @@ public class SystemBars extends Plugin {
     private static final int WEBVIEW_VERSION_WITH_SAFE_AREA_FIX = 140;
 
     static final String viewportMetaJSFunction = """
-        function capacitorSystemBarsCheckMetaViewport() {
-            const meta = document.querySelectorAll("meta[name=viewport]");
-            if (meta.length == 0) {
-                return false;
-            }
-            // get the last found meta viewport tag
-            const metaContent = meta[meta.length - 1].content;
-            return metaContent.includes("viewport-fit=cover");
+    function capacitorSystemBarsCheckMetaViewport() {
+        const meta = document.querySelectorAll("meta[name=viewport]");
+        if (meta.length == 0) {
+            return false;
         }
-        capacitorSystemBarsCheckMetaViewport();
-        """;
+        // get the last found meta viewport tag
+        const metaContent = meta[meta.length - 1].content;
+        return metaContent.includes("viewport-fit=cover");
+    }
+    capacitorSystemBarsCheckMetaViewport();
+    """;
 
     private String insetsHandling = INSETS_HANDLING_CSS;
     private boolean hasViewportCover = false;
