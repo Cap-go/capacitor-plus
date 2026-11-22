@@ -20,7 +20,7 @@ public class CapacitorCookies extends Plugin {
 
     @Override
     public void load() {
-        if (!bridge.hasScopedWebMessages()) {
+        if (isEnabled()) {
             this.bridge.getWebView().addJavascriptInterface(this, "CapacitorCookiesAndroidInterface");
         }
         this.cookieManager = new CapacitorCookieManager(null, java.net.CookiePolicy.ACCEPT_ALL, this.bridge);
