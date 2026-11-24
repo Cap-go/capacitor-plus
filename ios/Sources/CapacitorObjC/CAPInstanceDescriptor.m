@@ -3,7 +3,7 @@
 // Swift extensions marked as @objc and internal are available to the Obj-C runtime but are not available at compile time.
 // so we need this declaration to avoid compiler complaints
 @interface CAPInstanceDescriptor (InternalSwiftExtension)
-- (void)_parseConfigurationAt:(NSURL *)configURL cordovaConfiguration:(NSURL *)cordovaURL;
+- (void)_parseConfigurationAt:(NSURL *)configURL;
 @end
 
 NSString* const CAPInstanceDescriptorDefaultScheme = @"capacitor";
@@ -32,7 +32,7 @@ NSString* const CAPInstanceDescriptorDefaultHostname = @"localhost";
     if (self = [super init]) {
         _instanceType = CAPInstanceTypeVariable;
         [self _setDefaultsWithAppLocation:appURL];
-        [self _parseConfigurationAt:configURL cordovaConfiguration:cordovaURL];
+        [self _parseConfigurationAt:configURL];
     }
     return self;
 }
