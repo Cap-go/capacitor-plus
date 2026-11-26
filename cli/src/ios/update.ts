@@ -30,7 +30,7 @@ import { resolveNode } from '../util/node';
 import { generatePackageFile, checkPluginsForPackageSwift } from '../util/spm';
 import { runCommand, isInstalled } from '../util/subprocess';
 
-import { getIOSPlugins, getMajoriOSVersion } from './common';
+import { getIOSPlugins } from './common';
 
 const platform = 'ios';
 
