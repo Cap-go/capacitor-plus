@@ -53,10 +53,16 @@ export async function migrateToUIScene(config: Config): Promise<void> {
     const bridgeClass = existsSync(storyboardPath)
       ? getStoryboardBridgeSubclass(readFileSync(storyboardPath, 'utf-8'))
       : null;
-    const sceneDelegate = bridgeClass ? useBridgeSubclass(assets.sceneDelegate, bridgeClass) : assets.sceneDelegate;
+    const { content: sceneDelegate, applied: bridgeSubclassApplied } = bridgeClass
+      ? applyBridgeSubclass(assets.sceneDelegate, bridgeClass)
+      : { content: assets.sceneDelegate, applied: false };
     const { written } = writeSceneDelegate(config, sceneDelegate);
-    if (written && bridgeClass) {
+    if (written && bridgeClass && bridgeSubclassApplied) {
       logger.info(`SceneDelegate.swift uses your ${bridgeClass} from Main.storyboard as the root view controller.`);
+    } else if (written && bridgeClass && !bridgeSubclassApplied) {
+      logger.warn(
+        `Could not wire ${bridgeClass} into SceneDelegate.swift automatically; set the root view controller in SceneDelegate manually.`,
+      );
     }
     if (!written) {
       logger.warn('SceneDelegate.swift already exists, skipping.');
@@ -317,7 +323,49 @@ function getStoryboardBridgeSubclass(storyboard: string): string | null {
 }
 
 function useBridgeSubclass(sceneDelegate: string, className: string): string {
-  return sceneDelegate.replace('rootViewController = CAPBridgeViewController()', `rootViewController = ${className}()`);
+  return applyBridgeSubclass(sceneDelegate, className).content;
+}
+
+function applyBridgeSubclass(sceneDelegate: string, className: string): { content: string; applied: boolean } {
+  const needle = 'rootViewController = CAPBridgeViewController()';
+  if (sceneDelegate.includes(needle)) {
+    return {
+      content: sceneDelegate.replace(needle, `rootViewController = ${className}()`),
+      applied: true,
+    };
+  }
+  if (/class SceneDelegate:\s*UIResponder,\s*UIWindowSceneDelegate\s*\{\s*\}/s.test(sceneDelegate)) {
+    return { content: sceneDelegateWithRoot(className), applied: true };
+  }
+  return { content: sceneDelegate, applied: false };
+}
+
+function sceneDelegateWithRoot(className: string): string {
+  return `import UIKit
+import Capacitor
+
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    var window: UIWindow?
+
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        guard let windowScene = scene as? UIWindowScene else { return }
+
+        window = UIWindow(windowScene: windowScene)
+        window?.rootViewController = ${className}()
+        window?.makeKeyAndVisible()
+
+        SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
+    }
+
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        SceneDelegateProxy.shared.scene(scene, openURLContexts: URLContexts)
+    }
+
+    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        SceneDelegateProxy.shared.scene(scene, continue: userActivity)
+    }
+}
+`;
 }
 
 function writeSceneDelegate(config: Config, contents: string): { written: boolean } {

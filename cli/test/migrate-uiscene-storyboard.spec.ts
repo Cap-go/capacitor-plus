@@ -1,19 +1,34 @@
-import { readFileSync } from 'fs-extra';
-import { resolve } from 'path';
-
 import { __testables } from '../src/tasks/migrate-uiscene';
 
 const { getStoryboardBridgeSubclass, useBridgeSubclass } = __testables;
 
-const REPO_ROOT = resolve(__dirname, '..', '..');
-const SHIPPED_STORYBOARD = readFileSync(
-  resolve(REPO_ROOT, 'ios-spm-template/App/App/Base.lproj/Main.storyboard'),
-  'utf-8',
-);
-const SHIPPED_SCENE_DELEGATE = readFileSync(
-  resolve(REPO_ROOT, 'ios-spm-template/App/App/SceneDelegate.swift'),
-  'utf-8',
-);
+const SHIPPED_STORYBOARD = `<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" initialViewController="BYZ-38-t0r">
+    <viewController id="BYZ-38-t0r" customClass="CAPBridgeViewController" customModule="Capacitor"/>
+</document>`;
+
+const SHIPPED_SCENE_DELEGATE = `import UIKit
+import Capacitor
+
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+    var window: UIWindow?
+
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        guard let windowScene = scene as? UIWindowScene else { return }
+
+        window = UIWindow(windowScene: windowScene)
+        window?.rootViewController = CAPBridgeViewController()
+        window?.makeKeyAndVisible()
+
+        SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
+    }
+}
+`;
+
+const MINIMAL_SCENE_DELEGATE = `import UIKit
+
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {}
+`;
 
 describe('getStoryboardBridgeSubclass', () => {
   it('returns null for the shipped storyboard', () => {
@@ -38,5 +53,11 @@ describe('useBridgeSubclass', () => {
     const result = useBridgeSubclass(SHIPPED_SCENE_DELEGATE, 'MyViewController');
     expect(result).toContain('window?.rootViewController = MyViewController()');
     expect(result).not.toContain('CAPBridgeViewController()');
+  });
+
+  it('generates a window setup when the template SceneDelegate is empty', () => {
+    const result = useBridgeSubclass(MINIMAL_SCENE_DELEGATE, 'MyViewController');
+    expect(result).toContain('window?.rootViewController = MyViewController()');
+    expect(result).toContain('SceneDelegateProxy.shared');
   });
 });
