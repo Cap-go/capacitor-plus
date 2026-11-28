@@ -822,8 +822,6 @@ export interface PluginsConfig {
     /**
      * The style of the text and icons of the system bars.
      *
-     * This option is only supported on Android.
-     *
      * @default `DEFAULT`
      */
     style?: string;
