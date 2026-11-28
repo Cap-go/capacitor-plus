@@ -1,4 +1,5 @@
 import {
+  ensureDir,
   ensureSymlink,
   pathExists,
   existsSync,
@@ -7,10 +8,13 @@ import {
   remove,
   move,
   mkdtemp,
+  realpath,
+  lstat,
+  readlink,
   readdirSync,
 } from 'fs-extra';
 import { tmpdir } from 'os';
-import { join, relative, resolve } from 'path';
+import { basename, dirname, join, relative, resolve } from 'path';
 import type { PlistObject } from 'plist';
 import { build, parse } from 'plist';
 import { extract } from 'tar';
@@ -159,7 +163,25 @@ let package = Package(
         ? symlinkFolder
         : convertToUnixPath(relative(spmDirectory, getPluginReferencePath(config, plugin)));
       if (symlink) {
-        await ensureSymlink(plugin.rootPath, resolve(config.ios.nativeProjectDirAbs, 'CapApp-SPM', symlinkFolder));
+        const linkPath = resolve(config.ios.nativeProjectDirAbs, 'CapApp-SPM', symlinkFolder);
+        await ensureDir(dirname(linkPath));
+        const realLinkDir = await realpath(dirname(linkPath));
+        const relativePluginPath = relative(realLinkDir, getPluginReferencePath(config, plugin));
+        const destLink = join(realLinkDir, basename(linkPath));
+        const existingTarget = await readlink(destLink).catch(() => undefined);
+        if (existingTarget !== relativePluginPath) {
+          if (existingTarget !== undefined) {
+            await remove(destLink);
+          } else if (existsSync(destLink)) {
+            const destStat = await lstat(destLink);
+            if (destStat.isSymbolicLink()) {
+              await remove(destLink);
+            } else {
+              fatal(`Cannot create SPM plugin symlink at ${destLink}: path exists and is not a symlink`);
+            }
+          }
+          await ensureSymlink(relativePluginPath, destLink);
+        }
       }
       const traits = packageTraits[plugin.id];
       const traitsSuffix = traits?.length
