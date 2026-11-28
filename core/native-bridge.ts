@@ -30,42 +30,13 @@ const readFileAsBase64 = (file: Blob): Promise<string> =>
     reader.readAsBinaryString(file);
   });
 
-const readArrayBufferAsBase64 = (arrayBuffer: ArrayBufferLike): string => {
-  const bytes = new Uint8Array(arrayBuffer);
+const uint8ArrayToBase64 = (bytes: Uint8Array): string => {
   const chunkSize = 0x8000;
-  let binary = '';
-
+  const chunks: string[] = [];
   for (let i = 0; i < bytes.length; i += chunkSize) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    chunks.push(String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize) as unknown as number[]));
   }
-
-  return btoa(binary);
-};
-
-const readBlobAsBase64 = (blob: Blob): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = reader.result as string;
-      resolve(result.indexOf(',') >= 0 ? result.split(',')[1] : result);
-    };
-    reader.onerror = reject;
-
-    reader.readAsDataURL(blob);
-  });
-
-const readDataViewAsBase64 = (dataView: ArrayBufferView): string =>
-  readArrayBufferAsBase64(dataView.buffer.slice(dataView.byteOffset, dataView.byteOffset + dataView.byteLength));
-
-const base64StringToArrayBuffer = (base64: string): ArrayBuffer => {
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i);
-  }
-
-  return bytes.buffer as ArrayBuffer;
+  return btoa(chunks.join(''));
 };
 
 const convertFormData = async (formData: FormData): Promise<any> => {
@@ -93,36 +64,14 @@ const convertBody = async (
   body: Document | XMLHttpRequestBodyInit | ReadableStream<any> | undefined,
   contentType?: string,
 ): Promise<any> => {
-  if (body instanceof File) {
-    const fileData = await readFileAsBase64(body);
-    return {
-      data: fileData,
-      type: 'file',
-      headers: { 'Content-Type': body.type },
-    };
-  } else if (body instanceof Blob) {
-    return {
-      data: await readBlobAsBase64(body),
-      type: 'binary',
-      headers: { 'Content-Type': contentType || body.type || 'application/octet-stream' },
-    };
-  } else if (body instanceof ArrayBuffer) {
-    return {
-      data: readArrayBufferAsBase64(body),
-      type: 'binary',
-      headers: { 'Content-Type': contentType || 'application/octet-stream' },
-    };
-  } else if (ArrayBuffer.isView(body)) {
-    return {
-      data: readDataViewAsBase64(body),
-      type: 'binary',
-      headers: { 'Content-Type': contentType || 'application/octet-stream' },
-    };
-  }
-
-  if ((typeof ReadableStream !== 'undefined' && body instanceof ReadableStream) || body instanceof Uint8Array) {
+  const isReadableStream = typeof ReadableStream !== 'undefined' && body instanceof ReadableStream;
+  if (isReadableStream || body instanceof ArrayBuffer || ArrayBuffer.isView(body)) {
     let encodedData: Uint8Array;
-    if (typeof ReadableStream !== 'undefined' && body instanceof ReadableStream) {
+    if (body instanceof ArrayBuffer) {
+      encodedData = new Uint8Array(body);
+    } else if (ArrayBuffer.isView(body)) {
+      encodedData = new Uint8Array(body.buffer, body.byteOffset, body.byteLength);
+    } else {
       const reader = body.getReader();
       const chunks: Uint8Array[] = [];
       while (true) {
@@ -137,35 +86,11 @@ const convertBody = async (
         position += chunk.length;
       }
       encodedData = concatenated;
-    } else {
-      encodedData = body as Uint8Array;
-    }
-
-    let data =
-      contentType?.startsWith('image') || contentType === 'application/octet-stream'
-        ? readDataViewAsBase64(encodedData)
-        : new TextDecoder().decode(encodedData);
-    let type;
-    if (contentType === 'application/json') {
-      try {
-        data = JSON.parse(data);
-      } catch {
-        // ignore
-      }
-      type = 'json';
-    } else if (contentType === 'multipart/form-data') {
-      type = 'formData';
-    } else if (contentType?.startsWith('image')) {
-      type = 'binary';
-    } else if (contentType === 'application/octet-stream') {
-      type = 'binary';
-    } else {
-      type = 'text';
     }
 
     return {
-      data,
-      type,
+      data: uint8ArrayToBase64(encodedData),
+      type: 'file',
       headers: { 'Content-Type': contentType || 'application/octet-stream' },
     };
   } else if (body instanceof URLSearchParams) {
@@ -177,6 +102,13 @@ const convertBody = async (
     return {
       data: await convertFormData(body),
       type: 'formData',
+    };
+  } else if (typeof Blob !== 'undefined' && body instanceof Blob) {
+    const fileData = await readFileAsBase64(body);
+    return {
+      data: fileData,
+      type: 'file',
+      headers: { 'Content-Type': body.type || contentType || 'application/octet-stream' },
     };
   }
 
