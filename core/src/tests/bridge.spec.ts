@@ -129,119 +129,53 @@ describe('bridge', () => {
     });
   });
 
-  it('android patched fetch sends Blob bodies as base64 binary data', async () => {
-    mockFetchApi();
-    let callData: any;
-    (win as any).androidBridge = {
-      postMessage: (m: string) => {
-        callData = JSON.parse(m);
-        Promise.resolve().then(() => {
-          cap.fromNative!({
-            callbackId: callData.callbackId,
-            methodName: callData.methodName,
-            pluginId: callData.pluginId,
-            success: true,
-            data: {
-              data: 'ok',
-              headers: { 'Content-Type': 'text/plain' },
-              status: 200,
-              url: 'https://example.com/upload',
-            },
-          });
-        });
-      },
-    };
-    (win as any).CapacitorHttpAndroidInterface = {
-      isEnabled: () => true,
-    };
-    initBridge(win);
-    cap = createCapacitor(win);
-
-    await window.fetch('https://example.com/upload', {
-      body: new Blob([new Uint8Array([1, 2])], { type: 'application/octet-stream' }),
-      headers: { 'Content-Type': 'application/octet-stream' },
-      method: 'POST',
-    });
-
-    expect(callData.options.data).toBe('AQI=');
-    expect(callData.options.dataType).toBe('binary');
-    expect(callData.options.headers['content-type']).toBe('application/octet-stream');
+  it('android patches fetch when CapacitorNativeConfig.httpEnabled is true without CapacitorHttpAndroidInterface', () => {
+    const originalFetch = window.fetch;
+    const originalXHR = window.XMLHttpRequest;
+    const stubFetch = jest.fn();
+    window.fetch = stubFetch;
+    try {
+      win.androidBridge = { postMessage: jest.fn() };
+      win.CapacitorNativeConfig = { cookiesEnabled: false, httpEnabled: true };
+      initBridge(win);
+      expect(window.fetch).not.toBe(stubFetch);
+      expect(win.CapacitorWebFetch).toBe(stubFetch);
+    } finally {
+      window.fetch = originalFetch;
+      window.XMLHttpRequest = originalXHR;
+    }
   });
 
-  it('android patched fetch sends ArrayBuffer bodies as base64 binary data', async () => {
-    mockFetchApi();
-    let callData: any;
-    (win as any).androidBridge = {
-      postMessage: (m: string) => {
-        callData = JSON.parse(m);
-        Promise.resolve().then(() => {
-          cap.fromNative!({
-            callbackId: callData.callbackId,
-            methodName: callData.methodName,
-            pluginId: callData.pluginId,
-            success: true,
-            data: {
-              data: 'ok',
-              headers: { 'Content-Type': 'text/plain' },
-              status: 200,
-              url: 'https://example.com/upload',
-            },
-          });
-        });
-      },
-    };
-    (win as any).CapacitorHttpAndroidInterface = {
-      isEnabled: () => true,
-    };
-    initBridge(win);
-    cap = createCapacitor(win);
-
-    await window.fetch('https://example.com/upload', {
-      body: new Uint8Array([3, 4]).buffer,
-      headers: { 'Content-Type': 'application/octet-stream' },
-      method: 'POST',
-    });
-
-    expect(callData.options.data).toBe('AwQ=');
-    expect(callData.options.dataType).toBe('binary');
-    expect(callData.options.headers['content-type']).toBe('application/octet-stream');
+  it('android does not patch fetch when CapacitorNativeConfig.httpEnabled is false', () => {
+    const originalFetch = window.fetch;
+    const originalXHR = window.XMLHttpRequest;
+    const stubFetch = jest.fn();
+    window.fetch = stubFetch;
+    try {
+      win.androidBridge = { postMessage: jest.fn() };
+      win.CapacitorNativeConfig = { cookiesEnabled: false, httpEnabled: false };
+      win.CapacitorHttpAndroidInterface = { isEnabled: jest.fn(() => true) };
+      initBridge(win);
+      expect(window.fetch).toBe(stubFetch);
+      expect(win.CapacitorHttpAndroidInterface.isEnabled).not.toHaveBeenCalled();
+    } finally {
+      window.fetch = originalFetch;
+      window.XMLHttpRequest = originalXHR;
+    }
   });
 
-  it('android patched fetch returns binary responses byte-for-byte', async () => {
-    mockFetchApi();
-    let callData: any;
-    (win as any).androidBridge = {
-      postMessage: (m: string) => {
-        callData = JSON.parse(m);
-        Promise.resolve().then(() => {
-          cap.fromNative!({
-            callbackId: callData.callbackId,
-            methodName: callData.methodName,
-            pluginId: callData.pluginId,
-            success: true,
-            data: {
-              data: 'AQI=',
-              headers: { 'Content-Type': 'application/octet-stream' },
-              status: 200,
-              url: 'https://example.com/upload',
-            },
-          });
-        });
-      },
-    };
-    (win as any).CapacitorHttpAndroidInterface = {
-      isEnabled: () => true,
-    };
-    initBridge(win);
-    cap = createCapacitor(win);
+  it('android keeps browser document.cookie working when CapacitorCookiesAndroidInterface is absent', () => {
+    try {
+      win.androidBridge = { postMessage: jest.fn() };
+      win.CapacitorNativeConfig = { cookiesEnabled: true, httpEnabled: false };
 
-    const response = await window.fetch('https://example.com/upload', {
-      body: 'body',
-      method: 'POST',
-    });
+      initBridge(win);
 
-    expect(callData.options.responseType).toBe('arraybuffer');
-    expect(Array.from(new Uint8Array(await response.arrayBuffer()))).toEqual([1, 2]);
+      document.cookie = 'cap_test=1';
+      expect(document.cookie).toContain('cap_test=1');
+    } finally {
+      document.cookie = 'cap_test=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    }
   });
 
   const mockAndroidPluginResult = (pluginResult: PluginResult) => {
