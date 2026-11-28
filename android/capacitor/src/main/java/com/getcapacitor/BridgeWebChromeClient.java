@@ -46,19 +46,8 @@ public class BridgeWebChromeClient extends WebChromeClient {
         void onActivityResult(ActivityResult result);
     }
 
-    // Static variables to store pending file chooser state to survive activity recreation
-    private static ValueCallback<Uri[]> pendingFilePathCallback;
-    private static Uri pendingImageFileUri;
-    private static FileChooserType pendingFileChooserType;
-
-    private enum FileChooserType {
-        IMAGE_CAPTURE,
-        VIDEO_CAPTURE,
-        FILE_PICKER
-    }
-
-    private ActivityResultLauncher permissionLauncher;
-    private ActivityResultLauncher activityLauncher;
+    private ActivityResultLauncher<String[]> permissionLauncher;
+    private ActivityResultLauncher<Intent> activityLauncher;
     private PermissionListener permissionListener;
     private ActivityResultListener activityListener;
 
