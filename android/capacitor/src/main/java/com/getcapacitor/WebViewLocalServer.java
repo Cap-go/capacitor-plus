@@ -25,6 +25,7 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import com.getcapacitor.plugin.util.CapacitorHttpUrlConnection;
 import com.getcapacitor.plugin.util.HttpRequestHandler;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -171,6 +172,12 @@ public class WebViewLocalServer {
     public WebResourceResponse shouldInterceptRequest(WebResourceRequest request) {
         Uri loadingUrl = request.getUrl();
 
+        if (Bridge.isInternalProxyPath(loadingUrl.getPath()) && !isProxyRequestAllowed(request)) {
+            // Internal proxy routes are only for sub-resources requested at the app's own origin.
+            Logger.warn("Blocked request to internal proxy route: " + loadingUrl);
+            return buildBlockedResponse();
+        }
+
         if (null != loadingUrl.getPath() && loadingUrl.getPath().startsWith(Bridge.CAPACITOR_HTTP_INTERCEPTOR_START)) {
             // Only fetch/XHR should reach the proxy; a document would run remote content at the app origin.
             boolean httpEnabled = bridge.getConfig().getPluginConfiguration("CapacitorHttp").getBoolean("enabled", false);
@@ -221,8 +228,7 @@ public class WebViewLocalServer {
     }
 
     private boolean isLocalFile(Uri uri) {
-        String path = uri.getPath();
-        return path.startsWith(capacitorContentStart) || path.startsWith(capacitorFileStart);
+        return Bridge.isLocalFilePath(uri.getPath());
     }
 
     private boolean isErrorUrl(Uri uri) {
@@ -326,7 +332,9 @@ public class WebViewLocalServer {
                         encoding = encodingParts[1].trim();
                     }
                 }
-            } else {
+            } else if (!"Access-Control-Allow-Origin".equalsIgnoreCase(entry.getKey())) {
+                // The target's CORS grant is not forwarded: the request is made natively (with the app's cookies), so a
+                // grant meant for the target's own callers would let another origin read the response.
                 responseHeaders.put(entry.getKey(), builder.toString());
             }
         }
@@ -347,6 +355,27 @@ public class WebViewLocalServer {
         responseHeaders.put("Content-Security-Policy", "sandbox; frame-ancestors 'none'");
 
         return new WebResourceResponse(mimeType, encoding, responseCode, reasonPhrase, responseHeaders, inputStream);
+    }
+
+    /**
+     * A fixed rejection for a blocked proxy route request. Returning null would let the WebView send the request
+     * to the network itself, which for a remote server.url puts the local path in a request to that server.
+     */
+    private WebResourceResponse buildBlockedResponse() {
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Content-Security-Policy", "sandbox; frame-ancestors 'none'");
+        headers.put("Cache-Control", "no-store");
+        return new WebResourceResponse("text/plain", "UTF-8", 403, "Forbidden", headers, new ByteArrayInputStream(new byte[0]));
+    }
+
+    /**
+     * Files served through the file/content proxy routes are data, not pages. If anything ends up rendering one,
+     * the sandbox keeps it inert and off the app origin, and it cannot be framed.
+     */
+    void addProxyRouteSecurityHeaders(Uri uri, Map<String, String> responseHeaders) {
+        if (isLocalFile(uri)) {
+            responseHeaders.put("Content-Security-Policy", "sandbox; frame-ancestors 'none'");
+        }
     }
 
     private WebResourceResponse handleLocalRequest(WebResourceRequest request, PathHandler handler) {
@@ -394,12 +423,14 @@ public class WebViewLocalServer {
             InputStream responseStream = new LollipopLazyInputStream(handler, request);
             String mimeType = getMimeType(request.getUrl().getPath(), responseStream);
             int statusCode = getStatusCode(responseStream, handler.getStatusCode());
+            Map<String, String> localResponseHeaders = handler.buildDefaultResponseHeaders();
+            addProxyRouteSecurityHeaders(request.getUrl(), localResponseHeaders);
             return new WebResourceResponse(
                 mimeType,
                 handler.getEncoding(),
                 statusCode,
                 handler.getReasonPhrase(),
-                handler.buildDefaultResponseHeaders(),
+                localResponseHeaders,
                 responseStream
             );
         }
@@ -673,13 +704,14 @@ public class WebViewLocalServer {
                     if (path.startsWith(capacitorContentStart)) {
                         stream = protocolHandler.openContentUrl(url);
                     } else if (path.startsWith(capacitorFileStart)) {
-                        stream = protocolHandler.openFile(path);
+                        stream = protocolHandler.openProxiedFile(path);
                     } else if (!isAsset) {
                         if (routeProcessor == null) {
-                            path = basePath + url.getPath();
+                            // The decoded path can contain ".." that must not leave the base path.
+                            stream = protocolHandler.openBasePathFile(basePath, basePath + url.getPath());
+                        } else {
+                            stream = protocolHandler.openRoutedFile(url.getPath(), path);
                         }
-
-                        stream = protocolHandler.openFile(path);
                     } else if (ignoreAssetPath) {
                         stream = protocolHandler.openAsset(path);
                     } else {
